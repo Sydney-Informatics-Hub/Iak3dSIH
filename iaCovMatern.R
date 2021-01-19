@@ -356,9 +356,9 @@ maternCov <- function(D , pars){
   ########################################################
   
   if((c1 > 0) & (a > 0) & (nu >= 0.05)  & (nu <= 20)){
-####################################################    
-### below block updated below, 27/2/20, to save memory...
-####################################################    
+    ####################################################    
+    ### below block updated below, 27/2/20, to save memory...
+    ####################################################    
     # iD0 <- which(D == 0)
     # iDGT0 <- which(D > 0)
     # 
@@ -383,27 +383,28 @@ maternCov <- function(D , pars){
     # C[ibesGT0] <- c1 * exp(lnconstmatern[ibesGT0]+log(bes[ibesGT0]))
     # C[iD0] <- c1
     # C[which(is.infinite(bes))] <- c1
-
+    
     ####################################################    
     ### range is approx rho * 3...this is from wiki, 
     ### and is i think what stein's parameterization was supposed to be.
     sqrt2nuOVERa <- sqrt(2 * nu) / a 
-
+    
     # C <- 0 * D # initiate.
     # C[D==0] <- c1
     # C[D > 0] <- c1 * exp(nu * log(sqrt2nuOVERa * D[D > 0]) - (nu - 1) * log(2) - lgamma(nu) + log(besselK(sqrt2nuOVERa * D[D > 0] , nu)))
     # C[is.infinite(C)] <- c1
     # 
     # C <- as(C , class(D)) # takes a bit longer, but should save memory. not sure why class changes when C[D==0] <- c1 is done.
-
-    if(class(D) == "dspMatrix"){
+    
+    # if(class(D) == "dspMatrix"){
+    if(is(D , "dspMatrix")){
       xC <- 0 * D@x # initiate.
       xC[D@x==0] <- c1
       xC[D@x > 0] <- c1 * exp(nu * log(sqrt2nuOVERa * D@x[D@x > 0]) - (nu - 1) * log(2) - lgamma(nu) + log(besselK(sqrt2nuOVERa * D@x[D@x > 0] , nu)))
       xC[is.infinite(xC)] <- c1
-      C <- D 
+      C <- D
       C@x <- xC
-
+      
     }else{
       C <- 0 * D # initiate.
       C[D==0] <- c1
@@ -423,11 +424,11 @@ maternCov <- function(D , pars){
 ##################################################################
 ### to set up random-effects design matrices and disc pts (if needed)
 ##################################################################
-setupIAK3D <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE){
+setupIAK3D <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE , sdfdType_cd1 = 0 , sdfdType_cxd0 = 0 , sdfdType_cxd1 = 0 , sdfdKnots = NULL){
   ### note, I only use 'U' for unique in xU and dIU.
   ### Dx and other mats are defined with the unique locations, 
   ### but for simpler notation I don't use the 'U' notation there. 
-
+  
   # if(is.null(ncol(dIData))){
   #   dIData <- matrix(dIData , ncol = 2)
   # }else{}
@@ -460,7 +461,8 @@ setupIAK3D <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE){
   ### can return here if partSetup is TRUE...
   #################################################    
   if(partSetup){
-    return(list('xU' = xU , 'Kx' = Kx , 'dIU' = dIU , 'Kd' = Kd , 'maxd' = maxd))  
+    ### added 3/12/2020 - add sdfdKnots to setupMats...
+    return(list('xU' = xU , 'Kx' = Kx , 'dIU' = dIU , 'Kd' = Kd , 'maxd' = maxd , 'sdfdKnots' = sdfdKnots))  
   }else{}
   
   Dx <- xyDist(xU , xU) # save as symmetric matrix, upper triangle saved.
@@ -475,7 +477,7 @@ setupIAK3D <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE){
   utriKdIdxdKd <- Kd %*% Idxd %*% t(Kd)
   utriKdIdxdKd <- utriKdIdxdKd[upper.tri(utriKdIdxdKd , diag = TRUE)] # get in col form...
   rm(Idxd)
-
+  
   ### get summary of KxKx and get which indices within the upp tri of KxKx are 1?
   summKxKx <- summary(as(Kx %*% t(Kx) , "symmetricMatrix"))
   summKxKx$idxUtri <- summKxKx$j * (summKxKx$j - 1) / 2 + summKxKx$i
@@ -512,26 +514,52 @@ setupIAK3D <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE){
   iTmp <- which(iTmp == 2)
   if(length(iTmp) > 0){ abcd[iTmp,] <- abcd[iTmp,c(3,4,1,2),drop=FALSE] }else{}
   
+  ### added 15-8-20
+  if(sdfdType_cd1 > 0){
+    # XsdfdSplineU_cd1 <- makeXnsClampedUG0(x = dIU , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cd1)[,-1,drop=FALSE]
+    XsdfdSplineU_cd1 <- makeXnsClampedUG0(x = dIU , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cd1 , paramVs = 1)
+  }else{
+    XsdfdSplineU_cd1 <- NULL
+  }
+  
+  if(sdfdType_cxd0 > 0){
+    # XsdfdSplineU_cxd0 <- makeXnsClampedUG0(x = dIU , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cxd0)[,-1,drop=FALSE]
+    XsdfdSplineU_cxd0 <- makeXnsClampedUG0(x = dIU , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cxd0 , paramVs = 1)
+  }else{
+    XsdfdSplineU_cxd0 <- NULL
+  }
+  
+  if(sdfdType_cxd1 > 0){
+    # XsdfdSplineU_cxd1 <- makeXnsClampedUG0(x = dIU , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cxd1)[,-1,drop=FALSE]
+    XsdfdSplineU_cxd1 <- makeXnsClampedUG0(x = dIU , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cxd1 , paramVs = 1)
+  }else{
+    XsdfdSplineU_cxd1 <- NULL
+  }
+  
+  ### added 3/12/2020 - add sdfdKnots to setupMats...
   return(list('xU' = xU , 'Kx' = Kx , 'Dx' = Dx , 'dIU' = dIU , 'Kd' = Kd ,  
               'dDsc' = dDsc , 'KdDsc' = KdDsc , 'DdDsc' = DdDsc , 'nDscPts' = nDscPts , 
-              'dIUabcd' = abcd , 'dIUiUElements' = iUElements , 'maxd' = maxd , 
-              'utriKxIdxxKx' = utriKxIdxxKx , 'utriKdIdxdKd' = utriKdIdxdKd , 'summKxKx' = summKxKx))  
+              'dIUabcd' = abcd , 'dIUiUElements' = iUElements , 'maxd' = maxd ,
+              'utriKxIdxxKx' = utriKxIdxxKx , 'utriKdIdxdKd' = utriKdIdxdKd , 'summKxKx' = summKxKx , 
+              'XsdfdSplineU_cd1' = XsdfdSplineU_cd1 , 'XsdfdSplineU_cxd0' = XsdfdSplineU_cxd0 , 'XsdfdSplineU_cxd1' = XsdfdSplineU_cxd1 , 'sdfdKnots' = sdfdKnots))  
 }
 
 ### compLik version...
-setupIAK3D_CL <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE , compLikMats = NULL){
+setupIAK3D_CL <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE , compLikMats = NULL , sdfdType_cd1 = 0 , sdfdType_cxd0 = 0 , sdfdType_cxd1 = 0 , sdfdKnots = NULL){
   if(is.null(compLikMats)){ stop('Error - enter compLikMats for function setupIAK3D_CL!') }else{}
-
+  
   setupMats <- list()
   ### order is all adj subset pairs, then all individual subsets (which can be used to get non-adj subset pairs)
   for (i in 1:nrow(compLikMats$subsetPairsAdj)){
     iThis <- c(compLikMats$listBlocks[[compLikMats$subsetPairsAdj[i,1]]]$i , compLikMats$listBlocks[[compLikMats$subsetPairsAdj[i,2]]]$i)
-    setupMats[[i]] <- setupIAK3D(xData[iThis,,drop = FALSE] , dIData[iThis,,drop = FALSE] , nDscPts = nDscPts ,  partSetup = partSetup)
+    setupMats[[i]] <- setupIAK3D(xData[iThis,,drop = FALSE] , dIData[iThis,,drop = FALSE] , nDscPts = nDscPts ,  partSetup = partSetup , 
+                                 sdfdType_cd1 = sdfdType_cd1 , sdfdType_cxd0 = sdfdType_cxd0 , sdfdType_cxd1 = sdfdType_cxd1 , sdfdKnots = sdfdKnots)
   }
   ### now all individual subsets...      
   for (i in 1:length(compLikMats$listBlocks)){
     iThis <- compLikMats$listBlocks[[i]]$i
-    setupMats[[nrow(compLikMats$subsetPairsAdj)+i]] <- setupIAK3D(xData[iThis,,drop = FALSE] , dIData[iThis,,drop = FALSE] , nDscPts = nDscPts ,  partSetup = partSetup)
+    setupMats[[nrow(compLikMats$subsetPairsAdj)+i]] <- setupIAK3D(xData[iThis,,drop = FALSE] , dIData[iThis,,drop = FALSE] , nDscPts = nDscPts ,  partSetup = partSetup , 
+                                                                  sdfdType_cd1 = sdfdType_cd1 , sdfdType_cxd0 = sdfdType_cxd0 , sdfdType_cxd1 = sdfdType_cxd1 , sdfdKnots = sdfdKnots)
   }
   return(setupMats)
 }
@@ -540,7 +568,7 @@ setupIAK3D_CL <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE , com
 ### as above, but for non-symmetric case...
 ### no option of disc pts here, and abcd not calculated (done in calcC fn)
 ##################################################################
-setupIAK3D2 <- function(xData , dIData , xData2 , dIData2){
+setupIAK3D2 <- function(xData , dIData , xData2 , dIData2 , sdfdType_cd1 = 0 , sdfdType_cxd0 = 0 , sdfdType_cxd1 = 0 , sdfdKnots = NULL){
   ### note, I only use 'U' for unique in xU and dIU.
   ### Dx and other mats are defined with the unique locations, 
   ### but for simpler notation I don't use the 'U' notation there. 
@@ -571,7 +599,7 @@ setupIAK3D2 <- function(xData , dIData , xData2 , dIData2){
   #   jK <- c(jK , matrix(i , length(iKThis) , 1))
   # }
   # Kd <- sparseMatrix(i = iK , j = jK , x = 1)
-
+  
   ijTmp = lapply(seq(nxU) , function(i){ which((xData[,1] == xU[i,1]) & (xData[,2] == xU[i,2])) })
   Kx <- sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
   rm(ijTmp)
@@ -596,7 +624,7 @@ setupIAK3D2 <- function(xData , dIData , xData2 , dIData2){
   #   jK <- c(jK , matrix(i , length(iKThis) , 1))
   # }
   # Kd2 <- sparseMatrix(i = iK , j = jK , x = 1)
-
+  
   ijTmp = lapply(seq(nxU2) , function(i){ which((xData2[,1] == xU2[i,1]) & (xData2[,2] == xU2[i,2])) })
   Kx2 <- sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
   rm(ijTmp)
@@ -608,9 +636,65 @@ setupIAK3D2 <- function(xData , dIData , xData2 , dIData2){
   
   Dx <- xyDist(xU , xU2)
   
-  return(list('xU' = xU , 'Kx' = Kx , 'Dx' = Dx , 'dIU' = dIU , 'Kd' = Kd , 'xU2' = xU2 , 'Kx2' = Kx2 , 'dIU2' = dIU2 , 'Kd2' = Kd2))  
+  ### added 15-8-20
+  if(sdfdType_cd1 > 0){
+    # XsdfdSplineU_cd1 <- makeXnsClampedUG0(x = dIU , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cd1)[,-1,drop=FALSE]
+    # XsdfdSplineU_cd12 <- makeXnsClampedUG0(x = dIU2 , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cd1)[,-1,drop=FALSE]
+    XsdfdSplineU_cd1 <- makeXnsClampedUG0(x = dIU , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cd1 , paramVs = 1)
+    XsdfdSplineU_cd12 <- makeXnsClampedUG0(x = dIU2 , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cd1 , paramVs = 1)
+  }else{
+    XsdfdSplineU_cd1 <- XsdfdSplineU_cd12 <- NULL
+  }
+  
+  if(sdfdType_cxd0 > 0){
+    # XsdfdSplineU_cxd0 <- makeXnsClampedUG0(x = dIU , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cxd0)[,-1,drop=FALSE]
+    # XsdfdSplineU_cxd02 <- makeXnsClampedUG0(x = dIU2 , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cxd0)[,-1,drop=FALSE]
+    XsdfdSplineU_cxd0 <- makeXnsClampedUG0(x = dIU , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cxd0 , paramVs = 1)
+    XsdfdSplineU_cxd02 <- makeXnsClampedUG0(x = dIU2 , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cxd0 , paramVs = 1)
+  }else{
+    XsdfdSplineU_cxd0 <- XsdfdSplineU_cxd02 <- NULL
+  }
+  
+  if(sdfdType_cxd1 > 0){
+    # XsdfdSplineU_cxd1 <- makeXnsClampedUG0(x = dIU , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cxd1)[,-1,drop=FALSE]
+    # XsdfdSplineU_cxd12 <- makeXnsClampedUG0(x = dIU2 , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cxd1)[,-1,drop=FALSE]
+    XsdfdSplineU_cxd1 <- makeXnsClampedUG0(x = dIU , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cxd1 , paramVs = 1)
+    XsdfdSplineU_cxd12 <- makeXnsClampedUG0(x = dIU2 , bdryKnots = sdfdKnots$bdryKnots , intKnots = sdfdKnots$intKnots_cxd1 , paramVs = 1)
+  }else{
+    XsdfdSplineU_cxd1 <- XsdfdSplineU_cxd12 <- NULL
+  }
+  
+  ### added 3/12/2020 - add sdfdKnots to setupMats...
+  return(list('xU' = xU , 'Kx' = Kx , 'Dx' = Dx , 'dIU' = dIU , 'Kd' = Kd , 'xU2' = xU2 , 'Kx2' = Kx2 , 'dIU2' = dIU2 , 'Kd2' = Kd2 , 
+              'XsdfdSplineU_cd1' = XsdfdSplineU_cd1 , 'XsdfdSplineU_cxd0' = XsdfdSplineU_cxd0 , 'XsdfdSplineU_cxd1' = XsdfdSplineU_cxd1 , 
+              'XsdfdSplineU_cd12' = XsdfdSplineU_cd12 , 'XsdfdSplineU_cxd02' = XsdfdSplineU_cxd02 , 'XsdfdSplineU_cxd12' = XsdfdSplineU_cxd12 , 'sdfdKnots' = sdfdKnots))  
 }
 
+################################################################################
+### fn to set knots for spline sdfd fns 
+### should be called early in fit fn
+################################################################################
+setKnots4sdfd <- function(dI , sdfdType_cd1 , sdfdType_cxd0 , sdfdType_cxd1){
+  sdfdKnots <- list()
+  # sdfdKnots$bdryKnots <- c(quantile(dI[,1] , 0.1) , quantile(dI[,2] , 0.9))
+  sdfdKnots$bdryKnots <- quantile(rowMeans(dI) , c(0.05 , 0.95))
+  if(sdfdType_cd1 > 0){
+    sdfdKnots$intKnots_cd1 <- getQuantileKnots(rowMeans(dI) , bdryKnots = sdfdKnots$bdryKnots , nIntKnots = sdfdType_cd1)
+  }else{
+    sdfdKnots['intKnots_cd1'] <- list(NULL)
+  }
+  if(sdfdType_cxd0 > 0){
+    sdfdKnots$intKnots_cxd0 <- getQuantileKnots(rowMeans(dI) , bdryKnots = sdfdKnots$bdryKnots , nIntKnots = sdfdType_cxd0)
+  }else{
+    sdfdKnots['intKnots_cxd0'] <- list(NULL)
+  }
+  if(sdfdType_cxd1 > 0){
+    sdfdKnots$intKnots_cxd1 <- getQuantileKnots(rowMeans(dI) , bdryKnots = sdfdKnots$bdryKnots , nIntKnots = sdfdType_cxd1)
+  }else{
+    sdfdKnots['intKnots_cxd1'] <- list(NULL)
+  }
+  return(sdfdKnots)  
+}
 
 ##########################################################
 ### compute ia covs with matern correlation, exp fn for vars, using discretization approach...
@@ -650,18 +734,20 @@ iaCovDsc <- function(dIData , ad , nud , sdfdPars , sdfdType , dDsc , DdDsc , Kd
 ##################################################
 ### empirical horizontal variogram with hxBins (2 cols, lower and upper for each bin)...
 ##################################################
-varioCloud <- function(xData , zData , decl = 0){
+varioCloud <- function(xData , zData , sepDists = NULL , decl = 0){
   
-  sepDists <- xyDist(xData , xData)
+  if(is.null(sepDists)){ sepDists <- xyDist(xData , xData) }else{}
+  
   if(decl > 0){
     #    wData <- rowSums(sepDists < (max(sepDists)/50))
     wData <- rowSums(sepDists < decl)
     wData <- 1 / wData
     wData <- wData / sum(wData)
+    ww <- matrix(wData , ncol = 1) %*% matrix(wData , nrow = 1)
   }else{
-    wData <- rep(1 / nrow(xData) , nrow(xData))
+    # wData <- rep(1 / nrow(xData) , nrow(xData))
+    # ww <- matrix(wData , ncol = 1) %*% matrix(wData , nrow = 1)
   }
-  ww <- matrix(wData , ncol = 1) %*% matrix(wData , nrow = 1)
   
   semivar <- 0.5 * (xyDist(zData , zData) ^ 2)
   
@@ -671,18 +757,23 @@ varioCloud <- function(xData , zData , decl = 0){
   ijTmp <- ijTmp[which(ijTmp[,2] > ijTmp[,1]),]
   sepDists <- sepDists[ijTmp]
   semivar <- semivar[ijTmp]
-  ww <- ww[ijTmp]
+  if(decl > 0){
+    ww <- ww[ijTmp]
+  }else{}
   
   iGT0 <- which(sepDists > 0)
   sepDists <- sepDists[iGT0]
   semivar <- semivar[iGT0] 
-  ww <- ww[iGT0]
-  
+  if(decl > 0){
+    ww <- ww[iGT0]
+  }else{
+    ww <- rep(1 / (nrow(xData) ^ 2) , length(semivar))
+  }
   return(list('sepDists' = sepDists , 'semivar' = semivar , 'ww' = ww))
 }
 
-vario <- function(hxBins , xData , zData , decl = 0){
-  vTmp <- varioCloud(xData = xData , zData = zData , decl = decl)
+vario <- function(hxBins , xData , zData , sepDists = NULL , decl = 0){
+  vTmp <- varioCloud(xData = xData , zData = zData , sepDists = sepDists , decl = decl)
   
   vgm <- hxAv <- nAv <- NA * hxBins[,1]
   for(ihx in 1:nrow(hxBins)){
@@ -736,8 +827,17 @@ xyDist <- function(xData , yData){
     yData <- matrix(yData , ncol = 1)
   }else{}
   
-  if(!is.element(class(xData) , c('matrix' , 'Matrix' , 'dgeMatrix' , 'data.frame'))){ stop('Error - xyDist function programmed for matrices or data.frames!') }
-  if(!is.element(class(yData) , c('matrix' , 'Matrix' , 'dgeMatrix' , 'data.frame'))){ stop('Error - xyDist function programmed for matrices or data.frames!') }
+  # if((length(class(xData)) > 1)){
+  #   print('class of xData is:')
+  #   print(class(xData))
+  #   print(head(xData))
+  #   stop('Stopping.')
+  # }
+  
+  # if(!is.element(class(xData) , c('matrix' , 'Matrix' , 'dgeMatrix' , 'data.frame'))){ stop('Error - xyDist function programmed for matrices or data.frames!') }
+  # if(!is.element(class(yData) , c('matrix' , 'Matrix' , 'dgeMatrix' , 'data.frame'))){ stop('Error - xyDist function programmed for matrices or data.frames!') }
+  if(!(is.matrix(xData) | is.data.frame(xData))){ stop('Error - xyDist function programmed for matrices or data.frames!') }
+  if(!(is.matrix(yData) | is.data.frame(yData))){ stop('Error - xyDist function programmed for matrices or data.frames!') }
   
   nd <- ncol(xData)
   if(ncol(yData) != nd){ stop('Error - both xData and yData must have the same number of columns!') }else{}
@@ -778,10 +878,11 @@ plotCovx <- function(lmm.fit , hx , dIPlot , addExpmntlV = TRUE , hzntlUnits = '
     hrmnzdResDataEAS <- tmp$hrmnzdDataEAS    
     xDataH <- data.frame('profIDDataH' = profIDDataH)
     df2Tmp <- data.frame('profIDDataH' = profIDTmp , 'Eastings' = lmm.fit$xData[,1] , 'Northings' = lmm.fit$xData[,2])
+    df2Tmp <- df2Tmp[!duplicated(df2Tmp),,drop=FALSE] # line added 11/8/20
     xDataH <- merge(x = xDataH, y = df2Tmp, by = "profIDDataH", all.x = TRUE)
-    xDataH <- as.matrix(xDataH[,c('Eastings','Northings',drop=FALSE)])
+    xDataH <- as.matrix(xDataH[,c('Eastings','Northings'),drop=FALSE])
     rm(df2Tmp , profIDTmp , tmp)
-
+    
   }else{
     ### round dIFit to nearest roundTo cm...
     dIFitRnd <- lmm.fit$dIData
@@ -800,7 +901,8 @@ plotCovx <- function(lmm.fit , hx , dIPlot , addExpmntlV = TRUE , hzntlUnits = '
   for(i in 1:nrow(dIPlot)){
     if(!is.null(lmm.fit$parsBTfmd)){
       dITmp <- cbind(rep(dIPlot[i,1] , length(hxModelPlot)) , rep(dIPlot[i,2] , length(hxModelPlot)))
-      setupMats <- setupIAK3D(xData = cbind(0 , hxModelPlot) , dIData = dITmp , nDscPts = 0)
+      setupMats <- setupIAK3D(xData = cbind(0 , hxModelPlot) , dIData = dITmp , nDscPts = 0 , 
+                              sdfdType_cd1 = lmm.fit$sdfdType_cd1 , sdfdType_cxd0 = lmm.fit$sdfdType_cxd0 , sdfdType_cxd1 = lmm.fit$sdfdType_cxd1 , sdfdKnots = lmm.fit$sdfdKnots)
       tmp <- setCIAK3D(parsBTfmd = lmm.fit$parsBTfmd , modelx = lmm.fit$modelx , 
                        sdfdType_cd1 = lmm.fit$sdfdType_cd1 , sdfdType_cxd0 = lmm.fit$sdfdType_cxd0 , sdfdType_cxd1 = lmm.fit$sdfdType_cxd1 , cmeOpt = lmm.fit$cmeOpt , setupMats = setupMats)
       
@@ -808,7 +910,8 @@ plotCovx <- function(lmm.fit , hx , dIPlot , addExpmntlV = TRUE , hzntlUnits = '
       VTmp[i,] <- CTmp[i,1] - CTmp[i,]
       
       dITmp <- cbind(rep(dIPlot[i,1] , 2) , rep(dIPlot[i,2] , 2))
-      setupMats <- setupIAK3D(xData = cbind(0 , c(0, 1E-18)) , dIData = dITmp , nDscPts = 0)
+      setupMats <- setupIAK3D(xData = cbind(0 , c(0, 1E-18)) , dIData = dITmp , nDscPts = 0 , 
+                              sdfdType_cd1 = lmm.fit$sdfdType_cd1 , sdfdType_cxd0 = lmm.fit$sdfdType_cxd0 , sdfdType_cxd1 = lmm.fit$sdfdType_cxd1 , sdfdKnots = lmm.fit$sdfdKnots)
       tmp <- setCIAK3D(parsBTfmd = lmm.fit$parsBTfmd , modelx = lmm.fit$modelx , 
                        sdfdType_cd1 = lmm.fit$sdfdType_cd1 , sdfdType_cxd0 = lmm.fit$sdfdType_cxd0 , sdfdType_cxd1 = lmm.fit$sdfdType_cxd1 , cmeOpt = lmm.fit$cmeOpt , setupMats = setupMats)
       
@@ -929,7 +1032,8 @@ getCovs4Plot <- function(lmm.fit = NULL , dIPlot , roundTo = NULL , singlesByReg
   dIPlotMdPts <- rowMeans(dIPlot)
   
   if(!is.null(lmm.fit$parsBTfmd)){
-    setupMats <- setupIAK3D(xData = cbind(0 , rep(0 , nrow(dIPlot))) , dIData = dIPlot , nDscPts = 0)
+    setupMats <- setupIAK3D(xData = cbind(0 , rep(0 , nrow(dIPlot))) , dIData = dIPlot , nDscPts = 0 , 
+                            sdfdType_cd1 = lmm.fit$sdfdType_cd1 , sdfdType_cxd0 = lmm.fit$sdfdType_cxd0 , sdfdType_cxd1 = lmm.fit$sdfdType_cxd1 , sdfdKnots = lmm.fit$sdfdKnots)
     tmp <- setCIAK3D(parsBTfmd = lmm.fit$parsBTfmd , modelx = lmm.fit$modelx , 
                      sdfdType_cd1 = lmm.fit$sdfdType_cd1 , sdfdType_cxd0 = lmm.fit$sdfdType_cxd0 , sdfdType_cxd1 = lmm.fit$sdfdType_cxd1 , cmeOpt = lmm.fit$cmeOpt , setupMats = setupMats)
     modelC <- tmp$C
@@ -947,10 +1051,11 @@ getCovs4Plot <- function(lmm.fit = NULL , dIPlot , roundTo = NULL , singlesByReg
     
     xDataH <- data.frame('profIDDataH' = profIDDataH)
     df2Tmp <- data.frame('profIDDataH' = profIDTmp , 'Eastings' = lmm.fit$xData[,1] , 'Northings' = lmm.fit$xData[,2])
+    df2Tmp <- df2Tmp[!duplicated(df2Tmp),,drop=FALSE] # line added 11/8/20
     xDataH <- merge(x = xDataH, y = df2Tmp, by = "profIDDataH", all.x = TRUE)
-    xDataH <- as.matrix(xDataH[,c('Eastings','Northings',drop=FALSE)])
+    xDataH <- as.matrix(xDataH[,c('Eastings','Northings'),drop=FALSE])
     rm(df2Tmp , profIDTmp , tmp)
-
+    
     nProfs <- nrow(xDataH)
     
     dfCovariances <- NULL
@@ -1004,9 +1109,9 @@ getCovs4Plot <- function(lmm.fit = NULL , dIPlot , roundTo = NULL , singlesByReg
   return(list('empiricalC' = empiricalC , 'nempiricalC' = nempiricalC , 'modelC' = modelC , 'dfCovariances' = dfCovariances))
 }
 
-plotCovd <- function(lmm.fit , dIPlot , vrtclUnits = 'm' , breaksVec = NULL , addScalebar = FALSE , roundTo = NULL , overlapsByRegression = TRUE){
+plotCovd <- function(lmm.fit , dIPlot , vrtclUnits = 'm' , breaksVec = NULL , addScalebar = FALSE , roundTo = NULL , singlesByRegression = TRUE){
   
-  tmp <- getCovs4Plot(lmm.fit = lmm.fit , dIPlot = dIPlot , roundTo = roundTo , overlapsByRegression = overlapsByRegression)
+  tmp <- getCovs4Plot(lmm.fit = lmm.fit , dIPlot = dIPlot , roundTo = roundTo , singlesByRegression = singlesByRegression)
   empiricalC <- tmp$empiricalC 
   modelC <- tmp$modelC 
   dfCovariances <- tmp$dfCovariances
@@ -1160,19 +1265,22 @@ getVarComp <- function(lmm.fit , dPlot , compPlot = 'cxd1'){
     vTmp <- lmm.fit$parsBTfmd$cd1
     sdfdPars <- lmm.fit$parsBTfmd$sdfdPars_cd1
     sdfdType <- lmm.fit$sdfdType_cd1
+    XSplinesdfd <- makeXnsClampedUG0(x = dPlot , bdryKnots = lmm.fit$sdfdKnots$bdryKnots , intKnots = lmm.fit$sdfdKnots$intKnots_cd1 , paramVs = 1)
   }else if(compPlot == 'cxd0'){
     vTmp <- lmm.fit$parsBTfmd$cxd0
     sdfdPars <- lmm.fit$parsBTfmd$sdfdPars_cxd0
     sdfdType <- lmm.fit$sdfdType_cxd0
+    XSplinesdfd <- makeXnsClampedUG0(x = dPlot , bdryKnots = lmm.fit$sdfdKnots$bdryKnots , intKnots = lmm.fit$sdfdKnots$intKnots_cxd0 , paramVs = 1)
   }else if(compPlot == 'cxd1'){
     vTmp <- lmm.fit$parsBTfmd$cxd1
     sdfdPars <- lmm.fit$parsBTfmd$sdfdPars_cxd1
     sdfdType <- lmm.fit$sdfdType_cxd1
+    XSplinesdfd <- makeXnsClampedUG0(x = dPlot , bdryKnots = lmm.fit$sdfdKnots$bdryKnots , intKnots = lmm.fit$sdfdKnots$intKnots_cxd1 , paramVs = 1)
   }else{
     stop('Error - enter one of cd1, cxd0 or cxd1 for compPlot!')
   }  
   
-  vdTmp <- sdfd(dPlot , sdfdPars , sdfdType)
+  vdTmp <- sdfd(dPlot , sdfdPars , sdfdType , XSplinesdfd)
   vdTmp <- vTmp * (vdTmp ^ 2) 
   
   return(vdTmp)

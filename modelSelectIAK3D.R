@@ -54,7 +54,7 @@ selectCovIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx ,
       lmm.fit.Selectnud <- list()
       for (i in 1:3){
         print(paste0('nud = ' , nudVec[i] , ', sdfdType_cd1 = ' , sdfdTypeANDcmeOpt[1] , ', sdfdType_cxd0 = ' , sdfdTypeANDcmeOpt[2] , 
-                     ', sdfdType_wacxd1 = ' , sdfdTypeANDcmeOpt[3] , ', cmeOpt = ' , sdfdTypeANDcmeOpt[4] , '...'))
+                     ', sdfdType_cxd1 = ' , sdfdTypeANDcmeOpt[3] , ', cmeOpt = ' , sdfdTypeANDcmeOpt[4] , '...'))
         
         namePlot <- paste0(dirPlot , '/lmm.fit.Selectnud' , floor(nudVec[i]) , '.pdf')
         lmm.fit.Selectnud[[i]] <- fitIAK3D(xData = xData , dIData = dIData , zData = zData , covsData = covsData , modelX = modelX , modelx = modelx , nud = nudVec[i] , allKnotsd = allKnotsd ,
@@ -707,10 +707,15 @@ lmGivenX <- function(zData , XData , method = 'ML' , XFULL = NULL){
     zRes <- zData - XData %*% betahat
     if(method == 'ML'){
         if(!is.null(XFULL)){ stop('Error - XFULL should only be included for comparison based on REML fits!') }else{}
-        sigma2hat <- t(zRes) %*% zRes / n
+        sigma2hat <- as.numeric(t(zRes) %*% zRes / n)
         nll <- 0.5 * n * (log(2 * pi) + log(sigma2hat) + 1)
+        
+        vbetahat <- sigma2hat * solve(XX)
+        
     }else if(method == 'REML'){
-        sigma2hat <- t(zRes) %*% zRes / (n - p)
+        sigma2hat <- as.numeric(t(zRes) %*% zRes / (n - p))
+        vbetahat <- sigma2hat * solve(XX)
+        
         if(is.null(XFULL)){
             nll <- 0.5 * (n - p) * (log(2 * pi) + log(sigma2hat) + 1) + 0.5 * lndetXX
         }else{
@@ -728,5 +733,5 @@ lmGivenX <- function(zData , XData , method = 'ML' , XFULL = NULL){
         stop('Method should be ML or REML!')
     }
 
-    return(list('nll' = nll , 'AIC' = 2 * nll + 2 * p , 'betahat' = betahat))
+    return(list('nll' = nll , 'AIC' = 2 * nll + 2 * p , 'AICc' = 2 * nll + 2 * p + 2 * p * (p + 1) / (n - p - 1) , 'betahat' = betahat , 'vbetahat' = vbetahat))
 }
