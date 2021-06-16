@@ -1,4 +1,4 @@
-Package: SIHIak3d
+Package: Iak3dSIH
 Type: Package
 Title: Increment Average kriging for 3d predicted soil samples
 Version: 0.1.0
@@ -29,6 +29,6 @@ Imports:
   parallel,
   here
 Suggests: 
-    testthat (>= 2.0.0)
-Config/testthat/edition: 2
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
 RoxygenNote: 7.1.1

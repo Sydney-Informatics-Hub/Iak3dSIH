@@ -38,8 +38,8 @@ library(parallel)
 library(here)
 
 wDir <- here()
-iakDir <- here('iakTests')
-lmm2Dir <- here('fLMM2')
+iakDir <- here('R/iakTests')
+lmm2Dir <- here('R/fLMM2')
 dataDir <- here('tests/run_results')
 
 setwd(wDir)
@@ -61,7 +61,7 @@ source(here('R/fLMM2.R'))
 
 source(here('R/splineBasisFns.R'))
 source(here('R/makeXvX_gam2.R'))
-
+source(here('R/testCase.R'))
 printnllTime <<- FALSE
 
 crsAusAlbers <- CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
@@ -243,7 +243,7 @@ if(useCubistForTrend){
 
   modelX$colnamesX <- colnames(XcnsTmp)
   
-  rm(tmp , XcnsTmp , q4BdryKnots , nIntKnots , sType , covNames)
+  rm(tmp , XcnsTmp , q4BdryKnots , nIntKnots , sType)
 }
 
 
@@ -445,59 +445,64 @@ if(val4PlotNow){
                   profNames = paste0('Profile ' , rand6ForPlot) , xlim = xlim , xlab = xlab) 
 
 }else{}
+
+setUptests()
+
 ### plot pred vs obs for 6 gsm layers...
 
-stop('Fitting and validation done!')
-
-########################################################################
-### set up covaraites for mapping, based on the grid that all covariates are on in rList...
-########################################################################
-if(mapNow){
-
-#  dIMap <- data.frame('dU' = c(0 , 0.05 , 0.15 , 0.3 , 0.6 , 1.0) , 'dL' = c(0.05 , 0.15 , 0.3 , 0.6 , 1.0 , 2.0))
-  dIMap <- data.frame('dU' = c(0 , 0.15 , 0.6) , 'dL' = c(0.05 , 0.3 , 1.0))
-
-  firstRow <- 1
-  lastRow <- 10
-  
-### get which rows are needed in this batch...
-  rowsToDo <- firstRow:lastRow
-
-  for(irow in rowsToDo){
-
-### cell centres for this row...
-    xVecMap <- seq(xFromCol(rList[[1]] , 1) , xFromCol(rList[[1]] , ncol(rList[[1]])) , res(rList[[1]])[1])
-    yVecMap <- yFromRow(rList[[1]] , irow)
-    
-### get coordinates and covariates for this row...
-    cMap <- data.frame('Eastings' = xVecMap , 'Northings' = yVecMap)
-    
-### define cMap and extract covsMap for this row...
-    covsMap <- data.frame(matrix(NA , ncol(rList[[1]]) , length(rList)))
-    for (icov in 1:length(rList)){ 
-      covsMap[,icov] <- extract(rList[[icov]] , cMap) 
-    }
-    names(covsMap) <- names(rList)
-    iIn <- which(!is.na(rowSums((covsMap))))
-
-    covsMap[['dIMidPts']] <- NA
-    
-################################################
-### calculate the predictions for the mapping depth...
-################################################
-    lmm.map.tmp <- predictIAK3D(xMap = cMap[iIn,,drop=FALSE] , covsMap = covsMap[iIn,,drop=FALSE] , dIMap = dIMap , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
-    lmm.map <- list()
-    for (j in 1:length(lmm.map.tmp)){
-      lmm.map[[names(lmm.map.tmp)[j]]] <- matrix(NA , nrow(dIMap) , ncol(rList[[1]]))
-      lmm.map[[names(lmm.map.tmp)[j]]][,iIn] <- lmm.map.tmp[[names(lmm.map.tmp)[j]]]
-    }
-
-    save(lmm.map , file = paste0(dataDir , '/map.row' , irow , '.RData'))
-
-  }
-  
-  print(paste0('Mapped for row ' , irow))
-  
-} ### done
-
-stop(paste0('Mapped for batch ' , iBatch))
+# 
+# 
+# stop('Fitting and validation done!')
+# 
+# ########################################################################
+# ### set up covaraites for mapping, based on the grid that all covariates are on in rList...
+# ########################################################################
+# if(mapNow){
+# 
+# #  dIMap <- data.frame('dU' = c(0 , 0.05 , 0.15 , 0.3 , 0.6 , 1.0) , 'dL' = c(0.05 , 0.15 , 0.3 , 0.6 , 1.0 , 2.0))
+#   dIMap <- data.frame('dU' = c(0 , 0.15 , 0.6) , 'dL' = c(0.05 , 0.3 , 1.0))
+# 
+#   firstRow <- 1
+#   lastRow <- 10
+#   
+# ### get which rows are needed in this batch...
+#   rowsToDo <- firstRow:lastRow
+# 
+#   for(irow in rowsToDo){
+# 
+# ### cell centres for this row...
+#     xVecMap <- seq(xFromCol(rList[[1]] , 1) , xFromCol(rList[[1]] , ncol(rList[[1]])) , res(rList[[1]])[1])
+#     yVecMap <- yFromRow(rList[[1]] , irow)
+#     
+# ### get coordinates and covariates for this row...
+#     cMap <- data.frame('Eastings' = xVecMap , 'Northings' = yVecMap)
+#     
+# ### define cMap and extract covsMap for this row...
+#     covsMap <- data.frame(matrix(NA , ncol(rList[[1]]) , length(rList)))
+#     for (icov in 1:length(rList)){ 
+#       covsMap[,icov] <- extract(rList[[icov]] , cMap) 
+#     }
+#     names(covsMap) <- names(rList)
+#     iIn <- which(!is.na(rowSums((covsMap))))
+# 
+#     covsMap[['dIMidPts']] <- NA
+#     
+# ################################################
+# ### calculate the predictions for the mapping depth...
+# ################################################
+#     lmm.map.tmp <- predictIAK3D(xMap = cMap[iIn,,drop=FALSE] , covsMap = covsMap[iIn,,drop=FALSE] , dIMap = dIMap , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
+#     lmm.map <- list()
+#     for (j in 1:length(lmm.map.tmp)){
+#       lmm.map[[names(lmm.map.tmp)[j]]] <- matrix(NA , nrow(dIMap) , ncol(rList[[1]]))
+#       lmm.map[[names(lmm.map.tmp)[j]]][,iIn] <- lmm.map.tmp[[names(lmm.map.tmp)[j]]]
+#     }
+# 
+#     save(lmm.map , file = paste0(dataDir , '/map.row' , irow , '.RData'))
+# 
+#   }
+#   
+#   print(paste0('Mapped for row ' , irow))
+#   
+# } ### done
+# 
+# stop(paste0('Mapped for batch ' , iBatch))
