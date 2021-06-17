@@ -24,7 +24,7 @@ RunEdgeroi <- function(){
   ### Parameters 
   ##############################################################
   fitCubistModelNow <- TRUE
-  fitModelNow <- TRUE
+  fitModelNow <- TRUE # creates object lmm.fit.selected.RData, otherwise set up in future as argument to feed into
   plotVargiogramFit <- TRUE
   valNow <- TRUE
   val4PlotNow <- TRUE
@@ -43,7 +43,8 @@ RunEdgeroi <- function(){
   lnTfmdData <- FALSE # something about log whether data is log transformed or not
   rqrBTfmdPreds <- FALSE # only relevant if data were log-transformed - back transforms via exp(z + 0.5 * v), ie to minimize expected sqd err
   useReml <- TRUE
-  testCL <- FALSE # use the composite likelihood approximation (to speed up for big datasets)?
+  testCL <- FALSE # Keep False for now until associated compLikMats.RData sourced and fed as 
+                  # argument in a modular function 
 
   # directory setups
   wDir <- here()
@@ -52,20 +53,15 @@ RunEdgeroi <- function(){
   setwd(wDir)
   # load all in R package development used instead of sourcing various files
 
-  if(useCubistForTrend){
-    allKnotsd <- c() # use this to have no d spline, d sum component will be included in cov model then
-    # allKnotsd <- c(0 , 0.3 , 1 , 7.13) # final is the max lower depth. d component will not be included in cov model in this case
-    if(length(allKnotsd) > 0){ incdSpline <- TRUE }else{ incdSpline <- FALSE }
-  }else{
-    allKnotsd <- c() # spline info will be included in modelX, added below in script
-    incdSpline <- FALSE
-  }
+#previously conditional parameters but logic made is unconditional
+  allKnotsd <- c()
+  incdSpline <- FALSE
 
-  if((!useCubistForTrend) | (length(allKnotsd) > 0)){
-    sdfdTypeANDcmeInit <- c(-9 , -1 , -1 , 1) # no d component in prodSum model because spline used instead (-9), non-stat cxd0 (-1) and cxd1 (-1), meas err included (1)
-  }else{
-    sdfdTypeANDcmeInit <- c(0 , -1 , -1 , 1) # stationary d component in prodSum model (0), non-stat cxd0 (-1) and cxd1 (-1), meas err included (1)
-  }
+ # if(!(useCubistForTrend)){
+ #   sdfdTypeANDcmeInit <- c(-9 , -1 , -1 , 1) # no d component in prodSum model because spline used instead (-9), non-stat cxd0 (-1) and cxd1 (-1), meas err included (1)
+ # }else{
+ #   sdfdTypeANDcmeInit <- c(0 , -1 , -1 , 1) # stationary d component in prodSum model (0), non-stat cxd0 (-1) and cxd1 (-1), meas err included (1)
+ # }
 
   ##############################################
   ### load the edgeroi dataset (from GSIF package) and put into format for iak3d...
@@ -88,6 +84,7 @@ RunEdgeroi <- function(){
   #################################################################################################
   ### set knots for sdfd spline fn (if used)
   #################################################################################################
+  sdfdTypeANDcmeInit <- c(0 , -1 , -1 , 1) # useCubistForTrend = TRUE....stationary d component in prodSum model (0), non-stat cxd0 (-1) and cxd1 (-1), meas err included (1)
   sdfdKnots <- setKnots4sdfd(dIFit , sdfdType_cd1 = sdfdTypeANDcmeInit[1] , sdfdType_cxd0 = sdfdTypeANDcmeInit[2] , sdfdType_cxd1 = sdfdTypeANDcmeInit[3])
 
   if(useCubistForTrend){
@@ -176,20 +173,10 @@ RunEdgeroi <- function(){
     rm(tmp , XcnsTmp , q4BdryKnots , nIntKnots , sType)
   }
 
-
-  if(testCL){
-  ### if fitting different models, save out the compLikMats so that it is the same each time.
-  #  compLikMats <- setVoronoiBlocksWrap(x = cFit , nPerBlock = 50 , plotVor = T , optnBalance = 2)
-  ### also attach compLikOptn
-  #  compLikMats$compLikOptn <- 2
-  #  save(compLikMats , file = paste0(dataDir , '/compLikMats.RData'))
-
-    load(file = paste0(dataDir , '/compLikMats.RData'))
-
-  }else{
-    compLikMats <- list()
-    compLikMats$compLikOptn <- 0
-  }
+  # if testCL = TRUE, the model expected to load a file compLikMats.RData and store in 
+  # compLikMats object. Have turned this possible feature of for now as now RData given. Hence 2 defaults below
+  compLikMats <- list()
+  compLikMats$compLikOptn <- 0
 
   lmmFitFile <- paste0(dataDir , '/lmm.fit.selected.RData') # for the fitted model
   nmplt <- paste0(dataDir , '/plot.selected.gam2.pdf') # for a plot with the internal 'predictions' = predictions through profiles of sampled profiles (not validation, can be a check of what's going on)
@@ -197,7 +184,7 @@ RunEdgeroi <- function(){
   if(fitModelNow){
   ### refit cubist model as lmm...if selectCovIAK3D was run don't need to do this bit
     start_time <- Sys.time()
-    
+    sdfdTypeANDcmeInit <- c(-9 , -1 , -1 , 1) #!useCubistForTrend condition
     tmp <- fitIAK3D(xData = cFit , dIData = dIFit , zData = zFit , covsData = covsFit , modelX = modelX , modelx = 'matern' , nud = nud , allKnotsd = allKnotsd , 
                       sdfdType_cd1 = sdfdTypeANDcmeInit[1] , sdfdType_cxd0 = sdfdTypeANDcmeInit[2] , sdfdType_cxd1 = sdfdTypeANDcmeInit[3] , 
                       cmeOpt = sdfdTypeANDcmeInit[4] , sdfdKnots = sdfdKnots , prodSum = prodSum , lnTfmdData = lnTfmdData , useReml = useReml , compLikMats = compLikMats ,
@@ -354,7 +341,7 @@ RunEdgeroi <- function(){
 
   }else{}
 
-  setUptests()
+  setUptests(lmm.fit.selected,vkVal,zkVal)
 }
 
 
