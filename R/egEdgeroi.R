@@ -23,6 +23,7 @@ FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit,
   ### alternatively, set up for fitting a spline model.
   ### include interactions between depth and spatial covariates (but here not between different spatial covariates)
   ###################################################################################
+  print("FitSplineModel is engaged")
   modelX <- list('type' = 'gam2')
   scaleCovs <- TRUE
   nIntKnotsd <- 4 # number of internal knots for the spline function (nat spline, clamped to have grad=0 at upper bdry) of depth; if this is complex enough, probably no need for the depth component in prod-sum covariance model
@@ -31,6 +32,7 @@ FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit,
     ### don't include depth here.   
   spatialCovs <- c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
   if(scaleCovs){
+    print("Scaled covariates created")
     ### to work with scaled covariates
     spatialCovs <- paste0(spatialCovs , '_SCALED')
   }else{
@@ -76,19 +78,24 @@ FitCubistModel <- function(paramaters, tmp,cFit, dIFit, covsFit, zFit, profIDFit
     
   ###############################################################
   ### fit or load the Cubist model... related to above
-  print("fit orload Cubist model")
-  print(paramaters$fitCubistModelNow)
+  
+  
   if(paramaters$FitCubits){
     ### fit cubist model...
+    print("fitCubistModelNow is run. ......................")
+    
+    
+    
     cmFit <- cubist(x = covsFit , y = zFit , committees = 1 , cubistControl(rules = nRules))
-    print(summary(cmFit))
+   
     ### convert to des mtx
     tmp <- cubist2X(cubistModel = cmFit, dataFit = covsFit , zFit = zFit , profIDFit = profIDFit , allKnotsd = allKnotsd , refineCubistModel = refineCubistModel)
     cmFit <- tmp$cubistModel
     XFit <- tmp$X
     matRulesFit <- tmp$matRuleData
     save(cmFit , file = paste0(dataDir , '/cmFit.RData'))
-      
+
+    
   }
     
   modelX <- cmFit
@@ -109,10 +116,10 @@ LoadModel <- function(paramaters) {
 #       data=tmp)
   #unpack data stuff # cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList 
   print("in LoadModel......................")
-  print(paramaters$FitCubits)
-  print(paramaters$useCubistForTrend)
-  print(paramaters$LoadModel)
-  print(paramaters$otherparamaters)
+  #print(paramaters$FitCubits)
+  #print(paramaters$useCubistForTrend)
+  #print(paramaters$LoadModel)
+  #print(paramaters$otherparamaters)
   
   
   tmp <- paramaters$data
@@ -129,14 +136,6 @@ LoadModel <- function(paramaters) {
   profIDVal <- tmp$profIDVal
   rList <- tmp$rList
 
-  print("choosing model........")
-  print("optinA")
-  print(paramaters$FitCubits)
-  
-  print("Option B")
-  print(paramaters$LoadModel)
-  
-  
   if(paramaters$FitCubits){
     print("doing cubist")
     ModelOutput <- FitCubistModel(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList) #................
@@ -164,31 +163,32 @@ LoadData <- function(paramaters){
   tmp <- getEdgeroiData()
   
   #determin model options from flags and be able to pass all other paramaters needed
-  print("does creating more modeloptions work??")
+  print("Print constructed ModelOptions")
   ModelOptions <- list(FitCubits=paramaters$fitCubistModelNow, 
                        useCubistForTrend = paramaters$useCubistForTrend, 
                       LoadModel = !paramaters$fitModelNow, 
                       otherparamaters=paramaters$otherparamaters,
                       data=tmp)
-  print("load the model are")
-  print(ModelOptions$LoadModel)
-  print("other parameters are ......")
-  print(ModelOptions$otherparamaters)
+  #print("ModelOptions$LoadModel")
+  #print(ModelOptions$LoadModel)
+  #print("other parameters are ......")
+  #print(ModelOptions$otherparamaters)
   output <- LoadModel(ModelOptions)
-  print("model has been loaded..........")
+  
   return(output)
   
 }
 RunEdgeroi <- function(){
-    
+  sink(here('analysis-output.txt'),append=FALSE)
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
   ##############################################################
-  fitCubistModelNow <- FALSE # fit cubist model, spline if no LoadModel given
-  LoadModel <- FALSE
-  useCubistForTrend <- FALSE # an algorithm to select number of rules for cubist model
-  fitModelNow <- TRUE # creates object lmm.fit.selected.RData, otherwise set up in future as argument to feed into
+  fitCubistModelNow <- TRUE # fit cubist model, spline if no LoadModel given
+  LoadModel <- FALSE # expect a cmFit.RData file to load 
+  useCubistForTrend <- TRUE # an algorithm to select number of rules for cubist model
+  fitModelNow <- TRUE #  runs fitIAK3D assume is generally true. 
+                      #creates object lmm.fit.selected.RData, otherwise lmmFitFile (lmm.fit.selected.RData) is expected and loaded
 
   #other paramaters
   plotVargiogramFit <- TRUE
@@ -220,8 +220,6 @@ RunEdgeroi <- function(){
   
   #Create main parameter list
   paramaters <- list(fitCubistModelNow=fitCubistModelNow,useCubistForTrend=useCubistForTrend,fitModelNow=fitModelNow, otherparamaters=otherparamaters)
-  print("does this fitModelNow have info.......")
-  print(paramaters$fitModelNow)
   ModelOutput <- LoadData(paramaters)
   
   # ModelOutput is 
@@ -246,17 +244,48 @@ RunEdgeroi <- function(){
   ### refit cubist model as lmm...if selectCovIAK3D was run don't need to do this bit
     start_time <- Sys.time()
     
-    if(!paramaters$useCubistForTrend) {
-      sdfdTypeANDcmeInit <- c(-9 , -1 , -1 , 1)
+    if(paramaters$fitCubistModelNow) { # cubist model
+      #sdfdTypeANDcmeInit <- c(-9 , -1 , -1 , 1)
+      sdfdTypeANDcmeInit <- c(0 , -1 , -1 , 1)
       
       sdfdKnots <- setKnots4sdfd(dIFit , sdfdType_cd1 = sdfdTypeANDcmeInit[1] , sdfdType_cxd0 = sdfdTypeANDcmeInit[2] , sdfdType_cxd1 = sdfdTypeANDcmeInit[3])
-    } else {
-      sdfdTypeANDcmeInit <- c(0 , -1 , -1 , 1)  # Not sure on logic when this is supposed to be used.
+    } else { #spline model
+      sdfdTypeANDcmeInit <- c(-9 , -1 , -1 , 1)  # Not sure on logic when this is supposed to be used.
       sdfdKnots <- setKnots4sdfd(dIFit , sdfdType_cd1 = sdfdTypeANDcmeInit[1] , sdfdType_cxd0 = sdfdTypeANDcmeInit[2] , sdfdType_cxd1 = sdfdTypeANDcmeInit[3])
     }
-    print("check final params before fitIAK3D")
+    print("check final params before fitIAK3D........")
+ 
+    print("all parameters of fitIAK in order are ..........")
+    print("xData")
+    print(ModelOutput$cFit)
+    print("dIData")
+    print(ModelOutput$dIFit)
+    print("zFit")
+    print(ModelOutput$zFit)
+    print("covsData")
+    print(ModelOutput$covsFit )
+    print("ModelX")
+    print(ModelOutput$modelX)
+    print("nud")
+    print(paramaters$otherparamaters$nud)
+    print("allKnotsd")
+    print(paramaters$otherparamaters$allKnotsd)
+    print("sdfdTypeANDcmeInit")
     print(sdfdTypeANDcmeInit)
+    print("sdfdKnots")
     print(sdfdKnots)
+    print("prodSum ")
+    print(paramaters$otherparamaters$prodSum)
+    print("lnTfmdData")
+    print(lnTfmdData)
+    print("useReml")
+    print(useReml)
+    print("compLikMats")
+    print(compLikMats)
+    print("rqrBTfmdPreds")
+    print(rqrBTfmdPreds)
+    print("namePlot")
+    print(nmplt)
     #Feed model output to main function...
     tmp <- fitIAK3D(xData = ModelOutput$cFit , dIData = ModelOutput$dIFit , zData = ModelOutput$zFit , covsData = ModelOutput$covsFit , 
                       modelX = ModelOutput$modelX , modelx = 'matern' , nud = paramaters$otherparamaters$nud , 
@@ -270,7 +299,8 @@ RunEdgeroi <- function(){
     print(end_time - start_time)
 
     lmm.fit.selected <- tmp$lmmFit
-
+    print("the trouble maker is:")
+    print(lmm.fit.selected)
     save(lmm.fit.selected , file = lmmFitFile)
 
   }else{
@@ -417,6 +447,7 @@ RunEdgeroi <- function(){
   }else{}
 
   setUptests(lmm.fit.selected,vkVal,zkVal)
+  sink() #stop printint  too file
 }
 
 
@@ -472,6 +503,5 @@ PostFitValidate <- function() {
     print(paste0('Mapped for row ' , irow))
     
   } ### done
-  
 }
 

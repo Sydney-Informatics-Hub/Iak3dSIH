@@ -1,0 +1,31 @@
+
+OPTIONS DECLARED AT START OF RUN
+
+printnllTime <<- FALSE
+
+crsAusAlbers <- CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+crsAusAlbersNEW <- CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+crsLongLat <- CRS('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+
+
+useCubistForTrend <- TRUE # otherwise, will use a spline model ORIGINALLY FALSE
+
+nRules <- 5 # number of rules for Cubist model. If NA, then a x val routine to select nRules will be used. 
+
+refineCubistModel <- TRUE # use a stepwise algorithm (refineXIAK3D in cubist2XIAK3D.R) to remove predictors from the fitted Cubist model? # If NA, a x val routine will be used to select T/F
+
+constrainX4Pred <- FALSE # use the limits of each column of X (non-zeros only) from the fitting data to constrain the columns of X for prediction?
+
+prodSum <- TRUE # product sum model? If FALSE, product model is used.  
+
+# nud <- NULL # use this if running the modelSelectIAK3D function.
+nud <- 0.5
+
+# if data have been log-transformed, can put TRUE here 
+# to consider that each untransformed data value was an arithmetic average 
+# of untransformed pt-support variable over the depth interval
+# putting FALSE assumes averaging occurs on the log-transformed scale. 
+lnTfmdData <- FALSE 
+rqrBTfmdPreds <- FALSE # only relevant if data were log-transformed - back transforms via exp(z + 0.5 * v), ie to minimize expected sqd err
+
+useReml <- TRUE
