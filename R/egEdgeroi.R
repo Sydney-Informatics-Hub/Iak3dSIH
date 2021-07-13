@@ -84,21 +84,34 @@ FitCubistModel <- function(paramaters, tmp,cFit, dIFit, covsFit, zFit, profIDFit
     ### fit cubist model...
     print("fitCubistModelNow is run. ......................")
     
+    saveRDS(covsFit, file = here("tests/run_results/check_x_cubits.rds"))
+    saveRDS(zFit, file = here("tests/run_results/check_y_cubits.rds"))
+    saveRDS(paramaters$otherparamaters$nRules, file = here("tests/run_results/check_nRules.rds"))
     
-    
-    cmFit <- cubist(x = covsFit , y = zFit , committees = 1 , cubistControl(rules = nRules))
+    cmFit <- cubist(x = covsFit , y = zFit , committees = 1 , cubistControl(rules = paramaters$otherparamaters$nRules))
    
+    
+    saveRDS(cmFit, file = here("tests/run_results/check_cubistModel.rds")) # just make sure
+    saveRDS(covsFit, file = here("tests/run_results/check_dataFit.rds")) # just make sure
+    saveRDS(zFit, file = here("tests/run_results/check_zFit.rds")) # just make sure
+    saveRDS(profIDFit, file = here("tests/run_results/check_profIDFit.rds"))
+    saveRDS(paramaters$otherparamaters$allKnotsd, file = here("tests/run_results/check_allKnotsd.rds"))
+    saveRDS(paramaters$otherparamaters$refineCubistModel, file = here("tests/run_results/check_refineCubistModel.rds"))
+    
+    
     ### convert to des mtx
-    tmp <- cubist2X(cubistModel = cmFit, dataFit = covsFit , zFit = zFit , profIDFit = profIDFit , allKnotsd = allKnotsd , refineCubistModel = refineCubistModel)
+    tmp <- cubist2X(cubistModel = cmFit, dataFit = covsFit , zFit = zFit , profIDFit = profIDFit , allKnotsd = paramaters$otherparamaters$allKnotsd , refineCubistModel = paramaters$otherparamaters$refineCubistModel)
     cmFit <- tmp$cubistModel
     XFit <- tmp$X
     matRulesFit <- tmp$matRuleData
     save(cmFit , file = paste0(dataDir , '/cmFit.RData'))
 
+    saveRDS(cmFit, file = here("tests/run_results/check_cmFit.rds")) #problem
     
   }
     
   modelX <- cmFit
+  # cfit something different now.......
   return(list(modelX=modelX,cFit=cFit, dIFit=dIFit, covsFit=covsFit, zFit=zFit, profIDFit=profIDFit, cVal=cVal, dIVal=dIVal, covsVal=covsVal, zVal=zVal, profIDVal=profIDVal, rList=rList))
 }
 
@@ -109,19 +122,15 @@ LoadModelDirectly <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDF
     
 }
 LoadModel <- function(paramaters) {
- # list(FitCubits=paramaters$fitCubistModelNow, 
+ #  input : list(FitCubits=paramaters$fitCubistModelNow, 
 #       useCubistForTrend = paramaters$useCubistForTrend, 
 #       LoadModel = paramaters$fitModelNow, #NEGATE THIS
 #       otherparamaters=paramaters$otherparamaters,
 #       data=tmp)
-  #unpack data stuff # cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList 
+#   output: ModelX plus parameters
+  
   print("in LoadModel......................")
-  #print(paramaters$FitCubits)
-  #print(paramaters$useCubistForTrend)
-  #print(paramaters$LoadModel)
-  #print(paramaters$otherparamaters)
-  
-  
+
   tmp <- paramaters$data
   cFit <- tmp$cFit
   dIFit <- tmp$dIFit
@@ -169,22 +178,17 @@ LoadData <- function(paramaters){
                       LoadModel = !paramaters$fitModelNow, 
                       otherparamaters=paramaters$otherparamaters,
                       data=tmp)
-  #print("ModelOptions$LoadModel")
-  #print(ModelOptions$LoadModel)
-  #print("other parameters are ......")
-  #print(ModelOptions$otherparamaters)
   output <- LoadModel(ModelOptions)
   
   return(output)
   
 }
 RunEdgeroi <- function(){
-  sink(here('analysis-output.txt'),append=FALSE)
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
   ##############################################################
-  fitCubistModelNow <- TRUE # fit cubist model, spline if no LoadModel given
+  fitCubistModelNow <- FALSE # fit cubist model, spline if no LoadModel given
   LoadModel <- FALSE # expect a cmFit.RData file to load 
   useCubistForTrend <- TRUE # an algorithm to select number of rules for cubist model
   fitModelNow <- TRUE #  runs fitIAK3D assume is generally true. 
@@ -219,20 +223,14 @@ RunEdgeroi <- function(){
                     testCL=testCL,allKnotsd=allKnotsd)
   
   #Create main parameter list
-  paramaters <- list(fitCubistModelNow=fitCubistModelNow,useCubistForTrend=useCubistForTrend,fitModelNow=fitModelNow, otherparamaters=otherparamaters)
+  paramaters <<- list(fitCubistModelNow=fitCubistModelNow,useCubistForTrend=useCubistForTrend,fitModelNow=fitModelNow, otherparamaters=otherparamaters)
   ModelOutput <- LoadData(paramaters)
-  
-  # ModelOutput is 
   #iftestCL logic was here
   wDir <- here()
   lmm2Dir <- here('R/fLMM2')
   dataDir <- here('tests/run_results')
   setwd(wDir)
-
-  #This was seperated -----> link modeloutput to below  -------------->>>>>>>>>>>
   
-  # if testCL = TRUE, the model expected to load a file compLikMats.RData and store in 
-  # compLikMats object. Have turned this possible feature of for now as now RData given. Hence 2 defaults below
   compLikMats <- list()
   compLikMats$compLikOptn <- 0
 
@@ -255,37 +253,22 @@ RunEdgeroi <- function(){
     }
     print("check final params before fitIAK3D........")
  
-    print("all parameters of fitIAK in order are ..........")
-    print("xData")
-    print(ModelOutput$cFit)
-    print("dIData")
-    print(ModelOutput$dIFit)
-    print("zFit")
-    print(ModelOutput$zFit)
-    print("covsData")
-    print(ModelOutput$covsFit )
-    print("ModelX")
-    print(ModelOutput$modelX)
-    print("nud")
-    print(paramaters$otherparamaters$nud)
-    print("allKnotsd")
-    print(paramaters$otherparamaters$allKnotsd)
-    print("sdfdTypeANDcmeInit")
-    print(sdfdTypeANDcmeInit)
-    print("sdfdKnots")
-    print(sdfdKnots)
-    print("prodSum ")
-    print(paramaters$otherparamaters$prodSum)
-    print("lnTfmdData")
-    print(lnTfmdData)
-    print("useReml")
-    print(useReml)
-    print("compLikMats")
-    print(compLikMats)
-    print("rqrBTfmdPreds")
-    print(rqrBTfmdPreds)
-    print("namePlot")
-    print(nmplt)
+    print("For Testing only - all parameters of fitIAK in order are ..........")
+    saveRDS(ModelOutput$cFit, file = here("tests/run_results/check_cFit.rds"))
+    saveRDS(ModelOutput$dIFit, file = here("tests/run_results/check_dIFit.rds"))
+    saveRDS(ModelOutput$zFit, file = here("tests/run_results/check_zFit.rds"))
+    saveRDS(ModelOutput$covsFit, file = here("tests/run_results/check_covsFit.rds"))
+    saveRDS(ModelOutput$modelX, file = here("tests/run_results/check_modelX.rds"))
+    saveRDS(paramaters$otherparamaters$nud, file = here("tests/run_results/check_nud.rds"))
+    saveRDS(paramaters$otherparamaters$allKnotsd, file = here("tests/run_results/check_allKnotsd.rds"))
+    saveRDS(sdfdTypeANDcmeInit, file = here("tests/run_results/check_sdfdTypeANDcmeInit.rds"))
+    saveRDS(sdfdKnots, file = here("tests/run_results/check_sdfdKnots.rds"))
+    saveRDS(paramaters$otherparamaters$prodSum, file = here("tests/run_results/check_prodSum.rds"))
+    saveRDS(lnTfmdData, file = here("tests/run_results/check_lnTfmdData.rds"))
+    saveRDS(useReml, file = here("tests/run_results/check_useReml.rds"))
+    saveRDS(compLikMats, file = here("tests/run_results/check_compLikMats.rds"))
+    saveRDS(rqrBTfmdPreds, file = here("tests/run_results/check_rqrBTfmdPreds.rds"))
+    saveRDS(nmplt, file = here("tests/run_results/check_nmplt.rds"))
     #Feed model output to main function...
     tmp <- fitIAK3D(xData = ModelOutput$cFit , dIData = ModelOutput$dIFit , zData = ModelOutput$zFit , covsData = ModelOutput$covsFit , 
                       modelX = ModelOutput$modelX , modelx = 'matern' , nud = paramaters$otherparamaters$nud , 
@@ -299,8 +282,6 @@ RunEdgeroi <- function(){
     print(end_time - start_time)
 
     lmm.fit.selected <- tmp$lmmFit
-    print("the trouble maker is:")
-    print(lmm.fit.selected)
     save(lmm.fit.selected , file = lmmFitFile)
 
   }else{
@@ -387,9 +368,6 @@ RunEdgeroi <- function(){
   ### keeping this bit separate. 
   if(val4PlotNow){
 
-  #> sample(60 , 6)
-  # [1]  6 19 49 41  3 24
-
     rand6ForPlot <- c(6 , 19 , 49 , 41 , 3 , 24)
 
     i4PlotU <- which(!duplicated(cVal))[rand6ForPlot]
@@ -447,7 +425,7 @@ RunEdgeroi <- function(){
   }else{}
 
   setUptests(lmm.fit.selected,vkVal,zkVal)
-  sink() #stop printint  too file
+  
 }
 
 
