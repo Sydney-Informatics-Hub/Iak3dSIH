@@ -262,13 +262,71 @@ RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmd
   saveRDS(zkVal, file = here("tests/run_results/zkVal.rds"))
 }
 
+LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred){
+  
+  
+  rand6ForPlot <- c(6 , 19 , 49 , 41 , 3 , 24)
+  
+  i4PlotU <- which(!duplicated(ModelOutput$cVal))[rand6ForPlot]
+  cVal4PlotU <- ModelOutput$cVal[i4PlotU,,drop=FALSE]
+  covsVal4PlotU <- ModelOutput$covsVal[i4PlotU,,drop=FALSE]
+  
+  iVal4Plot <- c()
+  for(i in 1:nrow(cVal4PlotU)){
+    iTmp <- which(ModelOutput$cVal[,1] == cVal4PlotU[i,1] & ModelOutput$cVal[,2] == cVal4PlotU[i,2])
+    iVal4Plot <- c(iVal4Plot , iTmp)
+  }
+  
+  cVal4Plot <- ModelOutput$cVal[iVal4Plot,,drop=FALSE]
+  dIVal4Plot <- ModelOutput$dIVal[iVal4Plot,,drop=FALSE]
+  covsVal4Plot <- ModelOutput$covsVal[iVal4Plot,,drop=FALSE]
+  zVal4Plot <- ModelOutput$zVal[iVal4Plot]
+  
+  zkVal4Plot <- vkVal4Plot <- NA * numeric(length(zVal4Plot))
+  for(i in 1:nrow(cVal4PlotU)){
+    iTmp <- which(cVal4Plot[,1] == cVal4PlotU[i,1] & cVal4Plot[,2] == cVal4PlotU[i,2])
+    tmp <- profilePredictIAK3D(xMap = cVal4PlotU[i,,drop=FALSE] , covsMap = covsVal4Plot[iTmp,,drop=FALSE] , dIMap = dIVal4Plot[iTmp,,drop=FALSE] , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
+    zkVal4Plot[iTmp] <- tmp$zMap 
+    vkVal4Plot[iTmp] <- tmp$vMap 
+  }
+  
+  dIPred <- cbind(seq(0 , 1.98 , 0.02) , seq(0.02 , 2 , 0.02))
+  tmp <- predictIAK3D(xMap = cVal4PlotU , dIMap = dIPred , covsMap = covsVal4PlotU , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
+  
+  zkProfPred <- tmp$zMap
+  vkProfPred <- tmp$vMap
+  pi90LkProfPred <- tmp$pi90LMap
+  pi90UkProfPred <- tmp$pi90UMap
+  
+  zVal4Plot_PLOT <- zVal4Plot
+  
+  zkVal4Plot_PLOT <- zkVal4Plot
+  pi90LkVal4Plot_PLOT <- zkVal4Plot - 1.64 * sqrt(vkVal4Plot)
+  pi90UkVal4Plot_PLOT <- zkVal4Plot + 1.64 * sqrt(vkVal4Plot)
+  
+  zkProfPred_PLOT <- zkProfPred
+  pi90LkProfPred_PLOT <- pi90LkProfPred
+  pi90UkProfPred_PLOT <- pi90UkProfPred
+  
+  xlab <- "Clay percent"
+  vecTmp <- c(zVal4Plot_PLOT , zkVal4Plot_PLOT , as.numeric(zkProfPred_PLOT))
+  xlim <- c(min(vecTmp) , max(vecTmp))
+  
+  namePlot = paste0(dataDir , '/plotVal4Plot.pdf')
+  
+  tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = cVal4Plot , dIData = dIVal4Plot , zData = zVal4Plot_PLOT , 
+                           xPred = cVal4PlotU , dIPred = dIPred , zPred = zkProfPred_PLOT , pi90LPred = pi90LkProfPred_PLOT , pi90UPred = pi90UkProfPred_PLOT , 
+                           zhatxv = zkVal4Plot_PLOT , pi90Lxv = pi90LkVal4Plot_PLOT , pi90Uxv = pi90UkVal4Plot_PLOT , 
+                           profNames = paste0('Profile ' , rand6ForPlot) , xlim = xlim , xlab = xlab) 
+  
+}
 
 RunEdgeroi <- function(){
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
   ##############################################################
-  fitCubistModelNow <- TRUE # fit cubist model, spline if no LoadModel given
+  fitCubistModelNow <- FALSE # fit cubist model, spline if no LoadModel given
   LoadModel <- FALSE # expect a cmFit.RData file to load 
   useCubistForTrend <- TRUE # an algorithm to select number of rules for cubist model
   fitModelNow <- TRUE #  runs fitIAK3D assume is generally true. 
@@ -389,67 +447,11 @@ RunEdgeroi <- function(){
   
   ### keeping this bit separate. 
   if(val4PlotNow){
-    
-    rand6ForPlot <- c(6 , 19 , 49 , 41 , 3 , 24)
-    
-    i4PlotU <- which(!duplicated(cVal))[rand6ForPlot]
-    cVal4PlotU <- cVal[i4PlotU,,drop=FALSE]
-    covsVal4PlotU <- covsVal[i4PlotU,,drop=FALSE]
-    
-    iVal4Plot <- c()
-    for(i in 1:nrow(cVal4PlotU)){
-      iTmp <- which(cVal[,1] == cVal4PlotU[i,1] & cVal[,2] == cVal4PlotU[i,2])
-      iVal4Plot <- c(iVal4Plot , iTmp)
-    }
-    
-    cVal4Plot <- cVal[iVal4Plot,,drop=FALSE]
-    dIVal4Plot <- dIVal[iVal4Plot,,drop=FALSE]
-    covsVal4Plot <- covsVal[iVal4Plot,,drop=FALSE]
-    zVal4Plot <- zVal[iVal4Plot]
-    
-    zkVal4Plot <- vkVal4Plot <- NA * numeric(length(zVal4Plot))
-    for(i in 1:nrow(cVal4PlotU)){
-      iTmp <- which(cVal4Plot[,1] == cVal4PlotU[i,1] & cVal4Plot[,2] == cVal4PlotU[i,2])
-      tmp <- profilePredictIAK3D(xMap = cVal4PlotU[i,,drop=FALSE] , covsMap = covsVal4Plot[iTmp,,drop=FALSE] , dIMap = dIVal4Plot[iTmp,,drop=FALSE] , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
-      zkVal4Plot[iTmp] <- tmp$zMap 
-      vkVal4Plot[iTmp] <- tmp$vMap 
-    }
-    
-    dIPred <- cbind(seq(0 , 1.98 , 0.02) , seq(0.02 , 2 , 0.02))
-    tmp <- predictIAK3D(xMap = cVal4PlotU , dIMap = dIPred , covsMap = covsVal4PlotU , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
-    
-    zkProfPred <- tmp$zMap
-    vkProfPred <- tmp$vMap
-    pi90LkProfPred <- tmp$pi90LMap
-    pi90UkProfPred <- tmp$pi90UMap
-    
-    zVal4Plot_PLOT <- zVal4Plot
-    
-    zkVal4Plot_PLOT <- zkVal4Plot
-    pi90LkVal4Plot_PLOT <- zkVal4Plot - 1.64 * sqrt(vkVal4Plot)
-    pi90UkVal4Plot_PLOT <- zkVal4Plot + 1.64 * sqrt(vkVal4Plot)
-    
-    zkProfPred_PLOT <- zkProfPred
-    pi90LkProfPred_PLOT <- pi90LkProfPred
-    pi90UkProfPred_PLOT <- pi90UkProfPred
-    
-    xlab <- "Clay percent"
-    vecTmp <- c(zVal4Plot_PLOT , zkVal4Plot_PLOT , as.numeric(zkProfPred_PLOT))
-    xlim <- c(min(vecTmp) , max(vecTmp))
-    
-    namePlot = paste0(dataDir , '/plotVal4Plot.pdf')
-    
-    tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = cVal4Plot , dIData = dIVal4Plot , zData = zVal4Plot_PLOT , 
-                             xPred = cVal4PlotU , dIPred = dIPred , zPred = zkProfPred_PLOT , pi90LPred = pi90LkProfPred_PLOT , pi90UPred = pi90UkProfPred_PLOT , 
-                             zhatxv = zkVal4Plot_PLOT , pi90Lxv = pi90LkVal4Plot_PLOT , pi90Uxv = pi90UkVal4Plot_PLOT , 
-                             profNames = paste0('Profile ' , rand6ForPlot) , xlim = xlim , xlab = xlab) 
-    
+    LastSeperation(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred)
   }else{}
   
-  fnamezkVal <- paste0(dataDir , '/zkVal.RData')
-  fnamevkVal <- paste0(dataDir , '/vkVal.RData')
-  
-  setUptests(lmm.fit.selected) # saving begining to occur in other modules
+
+  saveRDS(lmm.fit.selected, file = here("tests/run_results/lmm.fit.selected.rds"))
   
 }
 
