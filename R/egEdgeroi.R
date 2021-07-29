@@ -254,12 +254,12 @@ RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmd
                            xPred = cValU , dIPred = dIPred , zPred = zkProfPred , pi90LPred = pi90LkProfPred , pi90UPred = pi90UkProfPred ,
                            zhatxv = zkVal , pi90Lxv = zkVal - 1.64 * sqrt(vkVal) , pi90Uxv = zkVal + 1.64 * sqrt(vkVal))
   
-  saveRDS(zkVal, file = here("tests/run_results/check_zkVal_2.rds")) #yes
-  saveRDS(vkVal, file = here("tests/run_results/check_vkVal_2.rds")) #yes #RDS all good but RDATA ??
+  
   save(zkVal , file = fnamezkVal) # saves to RDATA
   save(vkVal , file = fnamevkVal)
   saveRDS(vkVal, file = here("tests/run_results/vkVal.rds")) #saves to RDS
   saveRDS(zkVal, file = here("tests/run_results/zkVal.rds"))
+  return(list(zkVal=zkVal,vkVal=vkVal))
 }
 
 LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred){
@@ -321,13 +321,28 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
   
 }
 
-RunEdgeroi <- function(){
+
+SplineIAK <- function() {
+  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE))
+}
+
+
+CubistIAK <- function() {
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE))
+}
+
+
+ModelFromFile <- function(){
+  #expect a cmFit.RData file to load 
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE))
+}
+RunEdgeroi <- function(fitCubistModelNow,LoadModel){
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
   ##############################################################
-  fitCubistModelNow <- FALSE # fit cubist model, spline if no LoadModel given
-  LoadModel <- FALSE # expect a cmFit.RData file to load 
+  #fitCubistModelNow <- FALSE # fit cubist model if TRUE, spline if no LoadModel given
+  #LoadModel <- FALSE # expect a cmFit.RData file to load 
   useCubistForTrend <- TRUE # an algorithm to select number of rules for cubist model
   fitModelNow <- TRUE #  runs fitIAK3D assume is generally true. 
   #creates object lmm.fit.selected.RData, otherwise lmmFitFile (lmm.fit.selected.RData) is expected and loaded
@@ -439,7 +454,7 @@ RunEdgeroi <- function(){
   fnamevkVal <- paste0(dataDir , '/vkVal.RData')
   namePlot = paste0(dataDir , '/plotVal.pdf')
   if(valNow) {
-    RunValidation(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal)
+    xkvkVal <- RunValidation(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal)
   } else {
     load(file = fnamezkVal)
     load(file = fnamevkVal)
@@ -450,9 +465,9 @@ RunEdgeroi <- function(){
     LastSeperation(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred)
   }else{}
   
-
-  saveRDS(lmm.fit.selected, file = here("tests/run_results/lmm.fit.selected.rds"))
   
+  saveRDS(lmm.fit.selected, file = here("tests/run_results/lmm.fit.selected.rds"))
+  return(list(lmm.fit.selected=lmm.fit.selected,xkvkVal=xkvkVal))
 }
 
 
