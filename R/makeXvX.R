@@ -88,14 +88,14 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
 ### assume cubist model was fitted with covariates covData
 ### and that 'dIMidPts' is included in covData
 ### note inconsistency with approach for linear models, 
-### where covData was just spatial covariates
+### where::here covData was just spatial covariates
 ### done it this way, so that covData is what was presented to cubist
 ### check depth is in covData...
 ### and check the name of the depth interval mid points is dIMidPts
 ########################################
       modelType <- 'cubist'
 
-      idInCovData <- which(names(covData) == 'dIMidPts')
+      idInCovData <- Matrix::which(names(covData) == 'dIMidPts')
       if(length(idInCovData) == 0){
         stop('Refit the cubist model, but make the name of the depth variable dIMidPts')
       }else{}
@@ -114,7 +114,7 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
 ########################################
       modelType <- 'gam'
 
-      idInCovData <- which(names(covData) == 'dIMidPts')
+      idInCovData <- Matrix::which(names(covData) == 'dIMidPts')
       if(length(idInCovData) == 0){
         stop('Refit the gam model, but make the name of the depth variable dIMidPts')
       }else{}
@@ -142,7 +142,7 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
         bdryKnots <- c(allKnotsd[1] , allKnotsd[length(allKnotsd)])
 
         if (modelType == 'mlr'){
-          iRemove <- which((namesX == 'd') | (namesX == 'd2') | (namesX == 'd3'))    
+          iRemove <- Matrix::which((namesX == 'd') | (namesX == 'd2') | (namesX == 'd3'))    
           if(length(iRemove) > 0){
             namesX <- namesX[-iRemove]
             p <- p - length(iRemove)
@@ -163,7 +163,7 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
     }    
 
     if(length(allKnotsd) > 0){
-      ipSpline <- which(substr(namesX , 1 , 8) == 'dSpline.')
+      ipSpline <- Matrix::which(substr(namesX , 1 , 8) == 'dSpline.')
     }else{}
     
     if(is.null(XLims)){
@@ -197,14 +197,14 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
 ###############################################
     if (modelType == 'mlr'){
 ### first put in with d = 1
-        iconst <- which(namesX  == 'const')    
-        id <- which(namesX == 'd')    
-        id2 <- which(namesX == 'd2')    
-        id3 <- which(namesX == 'd3')    
-        idInt <- which(substr(namesX , 1 , 2) == 'd.')    
-        id2Int <- which(substr(namesX , 1 , 3) == 'd2.')    
-        id3Int <- which(substr(namesX , 1 , 3) == 'd3.')    
-        idSpline <- which(substr(namesX , 1 , 8) == 'dSpline.')    
+        iconst <- Matrix::which(namesX  == 'const')    
+        id <- Matrix::which(namesX == 'd')    
+        id2 <- Matrix::which(namesX == 'd2')    
+        id3 <- Matrix::which(namesX == 'd3')    
+        idInt <- Matrix::which(substr(namesX , 1 , 2) == 'd.')    
+        id2Int <- Matrix::which(substr(namesX , 1 , 3) == 'd2.')    
+        id3Int <- Matrix::which(substr(namesX , 1 , 3) == 'd3.')    
+        idSpline <- Matrix::which(substr(namesX , 1 , 8) == 'dSpline.')    
 
 ### get which columns have any kind of dependence on depth...
         idAny <- c(id , id2 , id3 , idInt , id2Int , id3Int , idSpline)
@@ -231,7 +231,7 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
                 pX[j] <- length(levels(covDataThis)) - 1
               }else{}
               X_d[,j] <- 0
-              X_d[which(covDataThis == levels(covDataThis)[l]),j] <- 1
+              X_d[Matrix::which(covDataThis == levels(covDataThis)[l]),j] <- 1
               l <- l + 1
             }else{
               X_d[,j] <- covData[[namesX_d[j]]]
@@ -264,8 +264,8 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
             }else{
               if(!infBnds){
 ### apply the given constraints to the point-support design matrix...
-                XTmp <- matrix(mapply(replaceLT , x = t(XTmp) , llim = XLims[1,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(XTmp) , ncol = ncol(XTmp) , byrow = TRUE)
-                XTmp <- matrix(mapply(replaceGT , x = t(XTmp) , ulim = XLims[2,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(XTmp) , ncol = ncol(XTmp) , byrow = TRUE)
+                XTmp <- matrix(mapply(replaceLT , x = Matrix::t(XTmp) , llim = XLims[1,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(XTmp) , ncol = ncol(XTmp) , byrow = TRUE)
+                XTmp <- matrix(mapply(replaceGT , x = Matrix::t(XTmp) , ulim = XLims[2,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(XTmp) , ncol = ncol(XTmp) , byrow = TRUE)
               }else{}
             }
 
@@ -303,8 +303,8 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
             }else{
               if(!infBnds){
 ### slight difference, apply the given constraints to the interval-support design matrix...
-                X[,id123Tmp] <- matrix(mapply(replaceLT , x = t(X[,id123Tmp]) , llim = XLims[1,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(X[,id123Tmp]) , ncol = ncol(X[,id123Tmp]) , byrow = TRUE)
-                X[,id123Tmp] <- matrix(mapply(replaceGT , x = t(X[,id123Tmp]) , ulim = XLims[2,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(X[,id123Tmp]) , ncol = ncol(X[,id123Tmp]) , byrow = TRUE)
+                X[,id123Tmp] <- matrix(mapply(replaceLT , x = Matrix::t(X[,id123Tmp]) , llim = XLims[1,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(X[,id123Tmp]) , ncol = ncol(X[,id123Tmp]) , byrow = TRUE)
+                X[,id123Tmp] <- matrix(mapply(replaceGT , x = Matrix::t(X[,id123Tmp]) , ulim = XLims[2,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(X[,id123Tmp]) , ncol = ncol(X[,id123Tmp]) , byrow = TRUE)
               }else{}
             }
           }else{}
@@ -323,8 +323,8 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
               }else{
                 if(!infBnds){
 ### apply the given constraints to the point-support design matrix...
-                  XTmp <- matrix(mapply(replaceLT , x = t(XTmp) , llim = XLims[1,idSpline] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(XTmp) , ncol = ncol(XTmp) , byrow = TRUE)
-                  XTmp <- matrix(mapply(replaceGT , x = t(XTmp) , ulim = XLims[2,idSpline] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(XTmp) , ncol = ncol(XTmp) , byrow = TRUE)
+                  XTmp <- matrix(mapply(replaceLT , x = Matrix::t(XTmp) , llim = XLims[1,idSpline] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(XTmp) , ncol = ncol(XTmp) , byrow = TRUE)
+                  XTmp <- matrix(mapply(replaceGT , x = Matrix::t(XTmp) , ulim = XLims[2,idSpline] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(XTmp) , ncol = ncol(XTmp) , byrow = TRUE)
                 }else{}
               }
               X[i,idSpline] <- colMeans(XTmp)
@@ -347,7 +347,7 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
         # jRulesdInRules <- getRulesWithdInCondits(cubistModel)
         # 
         # ruleNumbersByCol <- getRuleNumbersFromColNames(cubistModel)
-        # jColsdInRules <- which(is.element(ruleNumbersByCol , jRulesdInRules))
+        # jColsdInRules <- Matrix::which(is.element(ruleNumbersByCol , jRulesdInRules))
         # jColsdNotInRules <- setdiff(seq(length(ruleNumbersByCol)) , jColsdInRules)
 
         # for each row of des mtx, make mVec, vVec and wVec with mean var and weight for each piecewise linear bit of the depth interval...
@@ -357,7 +357,7 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
         lbCurrent <- dIData[,1]
         if(length(alldBreaks) > 0){
           for(jb in 1:length(alldBreaks)){
-            iThis <- which((dIData[,1] < alldBreaks[jb]) & (dIData[,2] > alldBreaks[jb]))
+            iThis <- Matrix::which((dIData[,1] < alldBreaks[jb]) & (dIData[,2] > alldBreaks[jb]))
             if(length(iThis) > 0){
               wThis <- (alldBreaks[jb] - lbCurrent[iThis]) / (dIData[iThis,2] - dIData[iThis,1])
               ### just to the left of breaks...
@@ -395,15 +395,15 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
           if(!infBnds){
             colnamesXTmp <- colnames(X)
             ### apply the given constraints to the point-support design matrix...
-            X <- matrix(mapply(replaceLT , x = t(X) , llim = XLims[1,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(X) , ncol = ncol(X) , byrow = TRUE)
-            X <- matrix(mapply(replaceGT , x = t(X) , ulim = XLims[2,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(X) , ncol = ncol(X) , byrow = TRUE)
+            X <- matrix(mapply(replaceLT , x = Matrix::t(X) , llim = XLims[1,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(X) , ncol = ncol(X) , byrow = TRUE)
+            X <- matrix(mapply(replaceGT , x = Matrix::t(X) , ulim = XLims[2,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(X) , ncol = ncol(X) , byrow = TRUE)
             colnames(X) <- colnamesXTmp
           }else{}
         }
 
 ### added 12-8-20 to average spline properly...
         if(length(allKnotsd) > 0){
-          colsSpline <- which(substr(colnames(X) , 1 , 8) == 'dSpline.')
+          colsSpline <- Matrix::which(substr(colnames(X) , 1 , 8) == 'dSpline.')
           XTmp <- matrix(0 , n , length(colsSpline))
           for(idisc in 1:nDiscPts){
             XTmp <- XTmp + allKnotsd2X(dIMidPts = dIData[,1] + ((idisc-1) / (nDiscPts - 1)) * (dIData[,2] - dIData[,1]) , allKnotsd = allKnotsd)
@@ -437,7 +437,7 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
           colsd <- seq(p)          
         }else if(modelType == 'gam'){
 ### look which columns have dIMidPts in names...
-          colsd <- which(grepl('dIMidPts' , modelX$namesX))
+          colsd <- Matrix::which(grepl('dIMidPts' , modelX$namesX))
         }else{
           stop('Unknown model type in makeXvX!')
         }
@@ -497,12 +497,12 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
             }else{
               if(!infBnds){
 ### apply the given constraints to the point-support design matrix...
-                XTmp <- matrix(mapply(replaceLT , x = t(XTmp) , llim = XLims[1,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(XTmp) , ncol = ncol(XTmp) , byrow = TRUE)
-                XTmp <- matrix(mapply(replaceGT , x = t(XTmp) , ulim = XLims[2,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(XTmp) , ncol = ncol(XTmp) , byrow = TRUE)
+                XTmp <- matrix(mapply(replaceLT , x = Matrix::t(XTmp) , llim = XLims[1,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(XTmp) , ncol = ncol(XTmp) , byrow = TRUE)
+                XTmp <- matrix(mapply(replaceGT , x = Matrix::t(XTmp) , ulim = XLims[2,] , replaceZeros = FALSE , SIMPLIFY = TRUE) , nrow = nrow(XTmp) , ncol = ncol(XTmp) , byrow = TRUE)
               }else{}
             }
 
-            mXTmp <- t(apply(i4Apply , 2 , fnMeanApply , X4Apply = XTmp))
+            mXTmp <- Matrix::t(apply(i4Apply , 2 , fnMeanApply , X4Apply = XTmp))
           }else{
 ### no columns with depth in, so no averaging required...             
             covDataThis <- covData[i,,drop=FALSE]
@@ -547,7 +547,7 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
       if(is.na(iU[1])){
 ### use names to determine which will vary within sample support
         if(modelType == 'mlr'){
-          iU <- which(namesX == 'd' | namesX == 'd2' | substr(namesX , 1 , 2) == 'd.' | substr(namesX , 1 , 3) == 'd2.' | substr(namesX , 1 , 3) == 'd3.' | substr(namesX , 1 , 8) == 'dSpline.') 
+          iU <- Matrix::which(namesX == 'd' | namesX == 'd2' | substr(namesX , 1 , 2) == 'd.' | substr(namesX , 1 , 3) == 'd2.' | substr(namesX , 1 , 3) == 'd3.' | substr(namesX , 1 , 8) == 'dSpline.') 
           iK <- setdiff(seq(p) , iU)
           
         }else if(modelType == 'cubist' | modelType == 'gam'){
@@ -607,7 +607,7 @@ scaleCovs <- function(covsData , scalePars = matrix(NA)){
           scalePars[1,jThis] <- mean(covsData[[j]])
           scalePars[2,jThis] <- sqrt(var((covsData[[j]])))
         }else{
-          jThis <- which(names(scalePars) == names(covsData)[j])
+          jThis <- Matrix::which(names(scalePars) == names(covsData)[j])
           if(length(jThis) != 1){         
             print(paste0('Error with scaling for ' , names(covsMap)[j]))
             stop('Check the covariate names in fitting, scaling and mapping data frames!')
@@ -647,17 +647,17 @@ getIndexUpper <- function(n , incDiag = FALSE){
 
 replaceLT <- function(x , llim , replaceZeros = TRUE){ 
   if(replaceZeros){
-    x[which(x < llim)] <- llim 
+    x[Matrix::which(x < llim)] <- llim 
   }else{
-    x[which(x < llim & x != 0)] <- llim 
+    x[Matrix::which(x < llim & x != 0)] <- llim 
   }
   return(x)
 }
 replaceGT <- function(x , ulim , replaceZeros = TRUE){ 
   if(replaceZeros){
-    x[which(x > ulim)] <- ulim 
+    x[Matrix::which(x > ulim)] <- ulim 
   }else{
-    x[which(x > ulim & x != 0)] <- ulim 
+    x[Matrix::which(x > ulim & x != 0)] <- ulim 
   }
   return(x)
 }

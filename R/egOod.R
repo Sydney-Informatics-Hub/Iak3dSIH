@@ -1,6 +1,6 @@
 ##############################################################
 ### Original egOod.R ran and wrote results but ended with a 
-### subscript out of bounds where the "keep this bit seperate" 
+### subscript out of bounds where::here the "keep this bit seperate" 
 ### is... Only difference between egEdgeroi and egOod is paraments - data source
 ##############################################################
 
@@ -39,37 +39,37 @@
   library(parallel)
   library(here)
   
-  wDir <- here()
+  wDir <- here::here()
   
-  lmm2Dir <- here('fLMM2')
-  dataDir <- here('output_Ood_190121')
+  lmm2Dir <- here::here('fLMM2')
+  dataDir <- here::here('output_Ood_190121')
   
   setwd(wDir)
-  source(here('R/fitIAK3D.R'))
-  source(here('R/setInitsIAK3D.R'))
-  source(here('R/iaCovMatern.R'))
-  source(here('R/nrUpdatesIAK3D.R'))
-  source(here('R/nrUpdatesIAK3DlnN.R'))
-  source(here('R/makeXvX.R'))
-  source(here('R/optifix.R'))
-  source(here('R/cubist2XIAK3D.R')) 
-  source(here('R/gam2XIAK3D.R')) 
-  source(here('R/predictIAK3D.R')) 
-  source(here('R/modelSelectIAK3D.R')) 
-  source(here('R/compositeLikIAK3D.R')) 
-  source(here('R/mpspline.source.R')) 
-  source(here('R/getEdgeroiData.R')) 
-  source(here('R/getOodnadattaData.R')) 
-  source(here('R/fLMM2.R')) 
+  source(here::here('R/fitIAK3D.R'))
+  source(here::here('R/setInitsIAK3D.R'))
+  source(here::here('R/iaCovMatern.R'))
+  source(here::here('R/nrUpdatesIAK3D.R'))
+  source(here::here('R/nrUpdatesIAK3DlnN.R'))
+  source(here::here('R/makeXvX.R'))
+  source(here::here('R/optifix.R'))
+  source(here::here('R/cubist2XIAK3D.R')) 
+  source(here::here('R/gam2XIAK3D.R')) 
+  source(here::here('R/predictIAK3D.R')) 
+  source(here::here('R/modelSelectIAK3D.R')) 
+  source(here::here('R/compositeLikIAK3D.R')) 
+  source(here::here('R/mpspline.source.R')) 
+  source(here::here('R/getEdgeroiData.R')) 
+  source(here::here('R/getOodnadattaData.R')) 
+  source(here::here('R/fLMM2.R')) 
   
-  source(here('R/splineBasisFns.R'))
-  source(here('R/makeXvX_gam2.R'))
+  source(here::here('R/splineBasisFns.R'))
+  source(here::here('R/makeXvX_gam2.R'))
   
   printnllTime <<- FALSE
   
-  crsAusAlbers <- CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-  crsAusAlbersNEW <- CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-  crsLongLat <- CRS('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+  CRSAusAlbers <- sp::CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+  CRSAusAlbersNEW <- sp::CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+  CRSLongLat <- sp::CRS('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
   
   ##########################################################
   ### set some options for iak...
@@ -87,7 +87,7 @@
   # nud <- NULL # use this if running the modelSelectIAK3D function.
   nud <- 0.5
   
-  # if data have been log-transformed, can put TRUE here 
+  # if data have been log-transformed, can put TRUE here::here 
   # to consider that each untransformed data value was an arithmetic average 
   # of untransformed pt-support variable over the depth interval
   # putting FALSE assumes averaging occurs on the log-transformed scale. 
@@ -124,7 +124,7 @@
   ##############################################
   ### load the edgeroi dataset (from GSIF package) and put into format for iak3d...
   ##############################################
-  tmp <- getOodnadattaData(here("data/Oodnadatta_soil_covariates.csv"))
+  tmp <- getOodnadattaData(here::here("data/Oodnadatta_soil_covariates.csv"))
   cFit <- tmp$cFit
   dIFit <- tmp$dIFit
   covsFit <- tmp$covsFit
@@ -183,7 +183,7 @@
   #################################################################
     if(fitCubistModelNow){
       ### fit cubist model...
-      cmFit <- cubist(x = covsFit , y = zFit , committees = 1 , cubistControl(rules = nRules))
+      cmFit <- Cubist::cubist(x = covsFit , y = zFit , committees = 1 , Cubist::cubistControl(rules = nRules))
       
       print(summary(cmFit))
       
@@ -206,7 +206,7 @@
   }else{
     ###################################################################################
     ### alternatively, set up for fitting a spline model.
-    ### include interactions between depth and spatial covariates (but here not between different spatial covariates)
+    ### include interactions between depth and spatial covariates (but here::here not between different spatial covariates)
     ###################################################################################
     modelX <- list('type' = 'gam2')
   
@@ -214,14 +214,14 @@
     nIntKnotsd <- 4 # number of internal knots for the spline function (nat spline, clamped to have grad=0 at upper bdry) of depth; if this is complex enough, probably no need for the depth component in prod-sum covariance model
     nIntKnotss <- 4 # number of internal knots for the spline functions (nat spline, clamped to have grad=0 at upper and lower bdries) of covariates
   
-    ### don't include depth here.   
+    ### don't include depth here::here.   
     spatialCovs <- c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
     if(scaleCovs){
       ### to work with scaled covariates
       spatialCovs <- paste0(spatialCovs , '_SCALED')
     }else{
       ### to work with unscaled (raw) covariates
-      spatialCovs <- spatialCovs # no change here
+      spatialCovs <- spatialCovs # no change here::here
     } 
   
     ### add any scaled variables (_SCALED) to covs dfs...
@@ -357,12 +357,12 @@
   if(valNow){
   
     nVal <- nrow(cVal)
-    iU <- which(!duplicated(cVal))
+    iU <- Matrix::which(!duplicated(cVal))
     cValU <- cVal[iU,,drop=FALSE]
     covsValU <- covsVal[iU,,drop=FALSE]
     zkVal <- vkVal <- NA * numeric(nVal)
     for(i in 1:nrow(cValU)){
-        iTmp <- which(cVal[,1] == cValU[i,1] & cVal[,2] == cValU[i,2])
+        iTmp <- Matrix::which(cVal[,1] == cValU[i,1] & cVal[,2] == cValU[i,2])
         tmp <- profilePredictIAK3D(xMap = cValU[i,,drop=FALSE] , covsMap = covsVal[iTmp,,drop=FALSE] , dIMap = dIVal[iTmp,,drop=FALSE] , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
         zkVal[iTmp] <- tmp$zMap 
         vkVal[iTmp] <- tmp$vMap 
@@ -403,13 +403,13 @@
   
     rand6ForPlot <- c(6 , 8, 15 , 5 , 3 , 4)
   
-    i4PlotU <- which(!duplicated(cVal))[rand6ForPlot]
+    i4PlotU <- Matrix::which(!duplicated(cVal))[rand6ForPlot]
     cVal4PlotU <- cVal[i4PlotU,,drop=FALSE]
     covsVal4PlotU <- covsVal[i4PlotU,,drop=FALSE]
   
     iVal4Plot <- c()
     for(i in 1:nrow(cVal4PlotU)){
-        iTmp <- which(cVal[,1] == cVal4PlotU[i,1] & cVal[,2] == cVal4PlotU[i,2])
+        iTmp <- Matrix::which(cVal[,1] == cVal4PlotU[i,1] & cVal[,2] == cVal4PlotU[i,2])
         iVal4Plot <- c(iVal4Plot , iTmp)
     }
   
@@ -420,7 +420,7 @@
   
     zkVal4Plot <- vkVal4Plot <- NA * numeric(length(zVal4Plot))
     for(i in 1:nrow(cVal4PlotU)){
-        iTmp <- which(cVal4Plot[,1] == cVal4PlotU[i,1] & cVal4Plot[,2] == cVal4PlotU[i,2])
+        iTmp <- Matrix::which(cVal4Plot[,1] == cVal4PlotU[i,1] & cVal4Plot[,2] == cVal4PlotU[i,2])
         tmp <- profilePredictIAK3D(xMap = cVal4PlotU[i,,drop=FALSE] , covsMap = covsVal4Plot[iTmp,,drop=FALSE] , dIMap = dIVal4Plot[iTmp,,drop=FALSE] , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
         zkVal4Plot[iTmp] <- tmp$zMap 
         vkVal4Plot[iTmp] <- tmp$vMap 
@@ -483,16 +483,16 @@
   #     xVecMap <- seq(xFromCol(rList[[1]] , 1) , xFromCol(rList[[1]] , ncol(rList[[1]])) , res(rList[[1]])[1])
   #     yVecMap <- yFromRow(rList[[1]] , irow)
   #     
-  # ### get coordinates and covariates for this row...
+  # ### get sp::coordinates and covariates for this row...
   #     cMap <- data.frame('Eastings' = xVecMap , 'Northings' = yVecMap)
   #     
-  # ### define cMap and extract covsMap for this row...
+  # ### define cMap and raster::extract covsMap for this row...
   #     covsMap <- data.frame(matrix(NA , ncol(rList[[1]]) , length(rList)))
   #     for (icov in 1:length(rList)){ 
-  #       covsMap[,icov] <- extract(rList[[icov]] , cMap) 
+  #       covsMap[,icov] <- raster::extract(rList[[icov]] , cMap) 
   #     }
   #     names(covsMap) <- names(rList)
-  #     iIn <- which(!is.na(rowSums((covsMap))))
+  #     iIn <- Matrix::which(!is.na(rowSums((covsMap))))
   # 
   #     covsMap[['dIMidPts']] <- NA
   #     

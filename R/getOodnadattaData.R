@@ -2,13 +2,13 @@ getOodnadattaData <- function(path = "./data/Oodnadatta_soil_covariates.csv"){
 
  # want: 
   # tmp <- getOodnadattaData() # list of data, function organises, gets rid of duplicates, appends covariates
-  # cFit <- tmp$cFit    # Coordinates (in Km) of calib set
+  # cFit <- tmp$cFit    # sp::coordinates (in Km) of calib set
   # dIFit <- tmp$dIFit      # Depth intervals of fit set (metres)
   # covsFit <- tmp$covsFit    # covariates of fit set
   # zFit <- tmp$zFit          # response variable of fit set
   # profIDFit <- tmp$profIDFit # profile ID of fit set
   # 
-  # cVal <- tmp$cVal       # Coordinates (in Km) of valid set
+  # cVal <- tmp$cVal       # sp::coordinates (in Km) of valid set
   # dIVal <- tmp$dIVal      # depth intervals of valid set (in metres)
   # covsVal <- tmp$covsVal  # Covariates for valid set
   # zVal <- tmp$zVal         # response variable for valid set
@@ -27,7 +27,7 @@ getOodnadattaData <- function(path = "./data/Oodnadatta_soil_covariates.csv"){
   soil$Site_ID = paste(soil$Field, soil$Sample.ID, sep="_")
   
   ##############################################################  
-  ### Convert coordinates to km...
+  ### Convert sp::coordinates to km...
   ##############################################################  
   
   # So far only need to transform into km
@@ -57,7 +57,7 @@ getOodnadattaData <- function(path = "./data/Oodnadatta_soil_covariates.csv"){
   nProfVal <- round(nrow(soil[unique(soil$Site_ID),])*0.25, 0)    #25/75 split for now 
   ids <- unique(soil$Site_ID)
   uidVal <- sample(ids, nProfVal)
-  pos = which(soil$Site_ID%in%uidVal)
+  pos = Matrix::which(soil$Site_ID%in%uidVal)
   calib = soil[-pos,]
   valid = soil[pos,]
   
@@ -91,7 +91,7 @@ getOodnadattaData <- function(path = "./data/Oodnadatta_soil_covariates.csv"){
 ##############################################################  
 ### get the Covariates...
 ##############################################################  
-#   data(edgeroiCovariates)
+#   data(ithir::edgeroiCovariates)
 #   rList <- list(elevation , twi , radK , landsat_b3 , landsat_b4)
 #   names(rList) <- c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
 #   covsTmp <- data.frame('elevation' = NA * numeric(nrow(edgeroi$horizons)) , 'twi' = NA , 'radK' = NA , 'landsat_b3' = NA , 'landsat_b4' = NA)
@@ -103,7 +103,7 @@ getOodnadattaData <- function(path = "./data/Oodnadatta_soil_covariates.csv"){
 #   # landsat_b4 : numeric; band 4 reflectance of the Landsat 7 satelite
 #   
 #   for (j in 1:ncol(covsTmp)){
-#     covsTmp[,j] <- extract(rList[[j]] , cTmp)
+#     covsTmp[,j] <- raster::extract(rList[[j]] , cTmp)
 #   }
 # 
 # ### sort by id then dU...
@@ -114,24 +114,24 @@ getOodnadattaData <- function(path = "./data/Oodnadatta_soil_covariates.csv"){
 #   zTmp <- zTmp[iOrder]
 #   covsTmp <- covsTmp[iOrder,]
 # 
-# ### put coordinates into km --> moved this to top as did not need to extract variables
+# ### put sp::coordinates into km --> moved this to top as did not need to raster::extract variables
 #   cTmp <- cTmp / 1000
 # 
 
  ##################################################################  
  ### give Fit data and Val data profIDs, each starting from 1 ...
  ##################################################################  
-   # cFitU <- cFit[which(!duplicated(cFit)),,drop=FALSE]
+   # cFitU <- cFit[Matrix::which(!duplicated(cFit)),,drop=FALSE]
    # profIDFit <- NA * numeric(nrow(cFit))
    # for (i in 1:nrow(cFitU)){
-   #   iThis <- which(cFit[,1] == cFitU[i,1] & cFit[,2] == cFitU[i,2])
+   #   iThis <- Matrix::which(cFit[,1] == cFitU[i,1] & cFit[,2] == cFitU[i,2])
    #   profIDFit[iThis] <- i
    # }
    # 
-   # cValU <- cVal[which(!duplicated(cVal)),,drop=FALSE]
+   # cValU <- cVal[Matrix::which(!duplicated(cVal)),,drop=FALSE]
    # profIDVal <- NA * numeric(nrow(cVal))
    # for (i in 1:nrow(cValU)){
-   #   iThis <- which(cVal[,1] == cValU[i,1] & cVal[,2] == cValU[i,2])
+   #   iThis <- Matrix::which(cVal[,1] == cValU[i,1] & cVal[,2] == cValU[i,2])
    #   profIDVal[iThis] <- i
    # }
   

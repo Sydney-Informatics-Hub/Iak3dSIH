@@ -21,7 +21,7 @@ FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit,
   ### set knots for sdfd spline fn (if used)
   #################################################################################################
   ### alternatively, set up for fitting a spline model.
-  ### include interactions between depth and spatial covariates (but here not between different spatial covariates)
+  ### include interactions between depth and spatial covariates (but here::here not between different spatial covariates)
   ###################################################################################
   print("FitSplineModel is engaged")
   modelX <- list('type' = 'gam2')
@@ -29,7 +29,7 @@ FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit,
   nIntKnotsd <- 4 # number of internal knots for the spline function (nat spline, clamped to have grad=0 at upper bdry) of depth; if this is complex enough, probably no need for the depth component in prod-sum covariance model
   nIntKnotss <- 4 # number of internal knots for the spline functions (nat spline, clamped to have grad=0 at upper and lower bdries) of covariates
   
-  ### don't include depth here.   
+  ### don't include depth here::here.   
   spatialCovs <- c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
   if(scaleCovs){
     print("Scaled covariates created")
@@ -37,7 +37,7 @@ FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit,
     spatialCovs <- paste0(spatialCovs , '_SCALED')
   }else{
     ### to work with unscaled (raw) covariates
-    spatialCovs <- spatialCovs # no change here
+    spatialCovs <- spatialCovs # no change here::here
   } 
   
   ### add any scaled variables (_SCALED) to covs dfs...
@@ -84,33 +84,21 @@ FitCubistModel <- function(paramaters, tmp,cFit, dIFit, covsFit, zFit, profIDFit
     ### fit cubist model...
     print("fitCubistModelNow is run. ......................")
     
-    saveRDS(covsFit, file = here("tests/run_results/check_x_cubits.rds"))
-    saveRDS(zFit, file = here("tests/run_results/check_y_cubits.rds"))
-    saveRDS(paramaters$otherparamaters$nRules, file = here("tests/run_results/check_nRules.rds"))
-    
-    cmFit <- cubist(x = covsFit , y = zFit , committees = 1 , cubistControl(rules = paramaters$otherparamaters$nRules))
-    
-    
-    saveRDS(cmFit, file = here("tests/run_results/check_cubistModel.rds")) # just make sure
-    saveRDS(covsFit, file = here("tests/run_results/check_dataFit.rds")) # just make sure
-    saveRDS(zFit, file = here("tests/run_results/check_zFit.rds")) # just make sure
-    saveRDS(profIDFit, file = here("tests/run_results/check_profIDFit.rds"))
-    saveRDS(paramaters$otherparamaters$allKnotsd, file = here("tests/run_results/check_allKnotsd.rds"))
-    saveRDS(paramaters$otherparamaters$refineCubistModel, file = here("tests/run_results/check_refineCubistModel.rds"))
-    
+    cmFit <- Cubist::cubist(x = covsFit , y = zFit , committees = 1 , Cubist::cubistControl(rules = paramaters$otherparamaters$nRules))
     
     ### convert to des mtx
+  
     tmp <- cubist2X(cubistModel = cmFit, dataFit = covsFit , zFit = zFit , profIDFit = profIDFit , allKnotsd = paramaters$otherparamaters$allKnotsd , refineCubistModel = paramaters$otherparamaters$refineCubistModel)
+   
     cmFit <- tmp$cubistModel
     XFit <- tmp$X
     matRulesFit <- tmp$matRuleData
-    save(cmFit , file = paste0(dataDir , '/cmFit.RData'))
-    
-    saveRDS(cmFit, file = here("tests/run_results/check_cmFit.rds")) #problem
+   # save(cmFit , file = paste0(dataDir , '/cmFit.RData'))
     
   }
   
   modelX <- cmFit
+  modelX$type = "NOTgam2"
   # cfit something different now.......
   return(list(modelX=modelX,cFit=cFit, dIFit=dIFit, covsFit=covsFit, zFit=zFit, profIDFit=profIDFit, cVal=cVal, dIVal=dIVal, covsVal=covsVal, zVal=zVal, profIDVal=profIDVal, rList=rList))
 }
@@ -215,26 +203,16 @@ RunPlots <- function(ModelOutput,dataDir,lmm.fit.selected) {
 RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal) {
   
   nVal <- nrow(ModelOutput$cVal) #YES
-  iU <- which(!duplicated(ModelOutput$cVal)) #YES
+  iU <- Matrix::which(!duplicated(ModelOutput$cVal)) #YES
   cValU <- ModelOutput$cVal[iU,,drop=FALSE] #NO
   covsValU <- ModelOutput$covsVal[iU,,drop=FALSE]
   zkVal <- vkVal <- NA * numeric(nVal) 
   for(i in 1:nrow(cValU)){
-    iTmp <- which(ModelOutput$cVal[,1] == cValU[i,1] & ModelOutput$cVal[,2] == cValU[i,2])
+    iTmp <- Matrix::which(ModelOutput$cVal[,1] == cValU[i,1] & ModelOutput$cVal[,2] == cValU[i,2])
     tmp <- profilePredictIAK3D(xMap = cValU[i,,drop=FALSE] , covsMap = ModelOutput$covsVal[iTmp,,drop=FALSE] , dIMap = ModelOutput$dIVal[iTmp,,drop=FALSE] , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
     zkVal[iTmp] <- tmp$zMap
     vkVal[iTmp] <- tmp$vMap
   }
-  
-  saveRDS(nVal, file = here("tests/run_results/check_nVal.rds")) #yes
-  saveRDS(iU, file = here("tests/run_results/check_iU.rds")) #YES
-  saveRDS(ModelOutput$cVal, file = here("tests/run_results/check_cVal.rds")) #YES
-  saveRDS(ModelOutput$covsVal, file = here("tests/run_results/check_covsVal.rds")) #YES
-  saveRDS(cValU, file = here("tests/run_results/check_cValU.rds"))  #yes
-  saveRDS(covsValU, file = here("tests/run_results/check_covsValU.rds")) #yes
-  saveRDS(zkVal, file = here("tests/run_results/check_zkVal.rds")) #yes
-  saveRDS(vkVal, file = here("tests/run_results/check_vkVal.rds")) #yes 
-  
   
   
   dIPred <- cbind(seq(0 , 1.98 , 0.02) , seq(0.02 , 2 , 0.02))
@@ -255,10 +233,8 @@ RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmd
                            zhatxv = zkVal , pi90Lxv = zkVal - 1.64 * sqrt(vkVal) , pi90Uxv = zkVal + 1.64 * sqrt(vkVal))
   
   
-  save(zkVal , file = fnamezkVal) # saves to RDATA
-  save(vkVal , file = fnamevkVal)
-  saveRDS(vkVal, file = here("tests/run_results/vkVal.rds")) #saves to RDS
-  saveRDS(zkVal, file = here("tests/run_results/zkVal.rds"))
+
+  
   return(list(zkVal=zkVal,vkVal=vkVal))
 }
 
@@ -267,13 +243,13 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
   
   rand6ForPlot <- c(6 , 19 , 49 , 41 , 3 , 24)
   
-  i4PlotU <- which(!duplicated(ModelOutput$cVal))[rand6ForPlot]
+  i4PlotU <- Matrix::which(!duplicated(ModelOutput$cVal))[rand6ForPlot]
   cVal4PlotU <- ModelOutput$cVal[i4PlotU,,drop=FALSE]
   covsVal4PlotU <- ModelOutput$covsVal[i4PlotU,,drop=FALSE]
   
   iVal4Plot <- c()
   for(i in 1:nrow(cVal4PlotU)){
-    iTmp <- which(ModelOutput$cVal[,1] == cVal4PlotU[i,1] & ModelOutput$cVal[,2] == cVal4PlotU[i,2])
+    iTmp <- Matrix::which(ModelOutput$cVal[,1] == cVal4PlotU[i,1] & ModelOutput$cVal[,2] == cVal4PlotU[i,2])
     iVal4Plot <- c(iVal4Plot , iTmp)
   }
   
@@ -284,7 +260,7 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
   
   zkVal4Plot <- vkVal4Plot <- NA * numeric(length(zVal4Plot))
   for(i in 1:nrow(cVal4PlotU)){
-    iTmp <- which(cVal4Plot[,1] == cVal4PlotU[i,1] & cVal4Plot[,2] == cVal4PlotU[i,2])
+    iTmp <- Matrix::which(cVal4Plot[,1] == cVal4PlotU[i,1] & cVal4Plot[,2] == cVal4PlotU[i,2])
     tmp <- profilePredictIAK3D(xMap = cVal4PlotU[i,,drop=FALSE] , covsMap = covsVal4Plot[iTmp,,drop=FALSE] , dIMap = dIVal4Plot[iTmp,,drop=FALSE] , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
     zkVal4Plot[iTmp] <- tmp$zMap 
     vkVal4Plot[iTmp] <- tmp$vMap 
@@ -321,12 +297,26 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
   
 }
 
-
+#' Run Iak3d project with building spline model
+#'
+#' This function allows you to express your love of cats.
+#' @param None
+#' @return an object with lmm.fit.selected,xkVal and vkVal
+#' @export
+#' @examples
+#' Splinedata <- SplineIAK()
 SplineIAK <- function() {
   return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE))
 }
 
-
+#' Run Iak3d project with building Cubist model
+#'
+#' This function allows you to express your love of cats.
+#' @param None
+#' @return an object with lmm.fit.selected,xkVal and vkVal
+#' @export
+#' @examples
+#' Cubistdata <- CubistIAK()
 CubistIAK <- function() {
   return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE))
 }
@@ -343,19 +333,19 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel){
   ##############################################################
   #fitCubistModelNow <- FALSE # fit cubist model if TRUE, spline if no LoadModel given
   #LoadModel <- FALSE # expect a cmFit.RData file to load 
-  useCubistForTrend <- TRUE # an algorithm to select number of rules for cubist model
+  useCubistForTrend <- fitCubistModelNow # an algorithm to select number of rules for cubist model
   fitModelNow <- TRUE #  runs fitIAK3D assume is generally true. 
   #creates object lmm.fit.selected.RData, otherwise lmmFitFile (lmm.fit.selected.RData) is expected and loaded
-  
+  #browser()
   #other paramaters
   plotVargiogramFit <- TRUE
   valNow <- TRUE
   val4PlotNow <- TRUE
   mapNow <- FALSE 
   printnllTime <<- FALSE
-  crsAusAlbers <- CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-  crsAusAlbersNEW <- CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-  crsLongLat <- CRS('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+  CRSAusAlbers <- sp::CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+  CRSAusAlbersNEW <- sp::CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+  CRSLongLat <- sp::CRS('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
   #options for iak
   nRules <- 5 # number of rules for Cubist model. If NA, then a x val routine to select nRules will be used. 
   refineCubistModel <- TRUE # use a stepwise algorithm (refineXIAK3D in cubist2XIAK3D.R) to remove predictors from the fitted Cubist model? # If NA, a x val routine will be used to select T/F
@@ -371,17 +361,17 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel){
   # load all in R package development used instead of sourcing various files
   
   otherparamaters <- list(plotVargiogramFit=plotVargiogramFit,valNow=valNow,val4PlotNow=val4PlotNow,mapNow=mapNow,printnllTime=printnllTime,
-                          crsAusAlbers=crsAusAlbers,crsAusAlbersNEW=crsAusAlbersNEW,crsLongLat=crsLongLat, nRules= nRules,refineCubistModel=refineCubistModel,
+                          CRSAusAlbers=CRSAusAlbers,CRSAusAlbersNEW=CRSAusAlbersNEW,CRSLongLat=CRSLongLat, nRules= nRules,refineCubistModel=refineCubistModel,
                           constrainX4Pred=constrainX4Pred,prodSum=prodSum,nud=nud,lnTfmdData=lnTfmdData,rqrBTfmdPreds=rqrBTfmdPreds,useReml=useReml,
                           testCL=testCL,allKnotsd=allKnotsd)
   
   #Create main parameter list
-  paramaters <<- list(fitCubistModelNow=fitCubistModelNow,useCubistForTrend=useCubistForTrend,fitModelNow=fitModelNow, otherparamaters=otherparamaters)
+  paramaters <- list(fitCubistModelNow=fitCubistModelNow,useCubistForTrend=useCubistForTrend,fitModelNow=fitModelNow, otherparamaters=otherparamaters)
   ModelOutput <- LoadData(paramaters)
-  #iftestCL logic was here
-  wDir <- here()
-  lmm2Dir <- here('R/fLMM2')
-  dataDir <- here('tests/run_results') # change this to /src or /data #https://r-pkgs.org/package-structure-state.html
+  #iftestCL logic was here::here
+  wDir <- here::here()
+  lmm2Dir <- here::here('R/fLMM2')
+  dataDir <- here::here('tests/run_results') # change this to /src or /data #https://r-pkgs.org/package-structure-state.html
   # when incorporating R package structure
   setwd(wDir)
   
@@ -400,29 +390,12 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel){
       #sdfdTypeANDcmeInit <- c(-9 , -1 , -1 , 1)
       sdfdTypeANDcmeInit <- c(0 , -1 , -1 , 1)
       
-      sdfdKnots <- setKnots4sdfd(dIFit , sdfdType_cd1 = sdfdTypeANDcmeInit[1] , sdfdType_cxd0 = sdfdTypeANDcmeInit[2] , sdfdType_cxd1 = sdfdTypeANDcmeInit[3])
+      sdfdKnots <- setKnots4sdfd(ModelOutput$dIFit , sdfdType_cd1 = sdfdTypeANDcmeInit[1] , sdfdType_cxd0 = sdfdTypeANDcmeInit[2] , sdfdType_cxd1 = sdfdTypeANDcmeInit[3])
     } else { #spline model
       sdfdTypeANDcmeInit <- c(-9 , -1 , -1 , 1)  # Not sure on logic when this is supposed to be used.
-      sdfdKnots <- setKnots4sdfd(dIFit , sdfdType_cd1 = sdfdTypeANDcmeInit[1] , sdfdType_cxd0 = sdfdTypeANDcmeInit[2] , sdfdType_cxd1 = sdfdTypeANDcmeInit[3])
+      sdfdKnots <- setKnots4sdfd(ModelOutput$dIFit , sdfdType_cd1 = sdfdTypeANDcmeInit[1] , sdfdType_cxd0 = sdfdTypeANDcmeInit[2] , sdfdType_cxd1 = sdfdTypeANDcmeInit[3])
     }
-    print("check final params before fitIAK3D........")
-    
-    print("For Testing only - all parameters of fitIAK in order are ..........")
-    saveRDS(ModelOutput$cFit, file = here("tests/run_results/check_cFit.rds"))
-    saveRDS(ModelOutput$dIFit, file = here("tests/run_results/check_dIFit.rds"))
-    saveRDS(ModelOutput$zFit, file = here("tests/run_results/check_zFit.rds"))
-    saveRDS(ModelOutput$covsFit, file = here("tests/run_results/check_covsFit.rds"))
-    saveRDS(ModelOutput$modelX, file = here("tests/run_results/check_modelX.rds"))
-    saveRDS(paramaters$otherparamaters$nud, file = here("tests/run_results/check_nud.rds"))
-    saveRDS(paramaters$otherparamaters$allKnotsd, file = here("tests/run_results/check_allKnotsd.rds"))
-    saveRDS(sdfdTypeANDcmeInit, file = here("tests/run_results/check_sdfdTypeANDcmeInit.rds"))
-    saveRDS(sdfdKnots, file = here("tests/run_results/check_sdfdKnots.rds"))
-    saveRDS(paramaters$otherparamaters$prodSum, file = here("tests/run_results/check_prodSum.rds"))
-    saveRDS(lnTfmdData, file = here("tests/run_results/check_lnTfmdData.rds"))
-    saveRDS(useReml, file = here("tests/run_results/check_useReml.rds"))
-    saveRDS(compLikMats, file = here("tests/run_results/check_compLikMats.rds"))
-    saveRDS(rqrBTfmdPreds, file = here("tests/run_results/check_rqrBTfmdPreds.rds"))
-    saveRDS(nmplt, file = here("tests/run_results/check_nmplt.rds"))
+    # True XData same here
     #Feed model output to main function...
     tmp <- fitIAK3D(xData = ModelOutput$cFit , dIData = ModelOutput$dIFit , zData = ModelOutput$zFit , covsData = ModelOutput$covsFit , 
                     modelX = ModelOutput$modelX , modelx = 'matern' , nud = paramaters$otherparamaters$nud , 
@@ -436,7 +409,7 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel){
     print(end_time - start_time)
     
     lmm.fit.selected <- tmp$lmmFit
-    save(lmm.fit.selected , file = lmmFitFile)
+    #save(lmm.fit.selected , file = lmmFitFile)
     
   }else{
     load(file = lmmFitFile)
@@ -464,9 +437,6 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel){
   if(val4PlotNow){
     LastSeperation(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred)
   }else{}
-  
-  
-  saveRDS(lmm.fit.selected, file = here("tests/run_results/lmm.fit.selected.rds"))
   return(list(lmm.fit.selected=lmm.fit.selected,xkvkVal=xkvkVal))
 }
 
@@ -493,16 +463,16 @@ PostFitValidate <- function() {
       xVecMap <- seq(xFromCol(rList[[1]] , 1) , xFromCol(rList[[1]] , ncol(rList[[1]])) , res(rList[[1]])[1])
       yVecMap <- yFromRow(rList[[1]] , irow)
       
-      ### get coordinates and covariates for this row...
+      ### get sp::coordinates and covariates for this row...
       cMap <- data.frame('Eastings' = xVecMap , 'Northings' = yVecMap)
       
-      ### define cMap and extract covsMap for this row...
+      ### define cMap and raster::extract covsMap for this row...
       covsMap <- data.frame(matrix(NA , ncol(rList[[1]]) , length(rList)))
       for (icov in 1:length(rList)){
-        covsMap[,icov] <- extract(rList[[icov]] , cMap)
+        covsMap[,icov] <- raster::extract(rList[[icov]] , cMap)
       }
       names(covsMap) <- names(rList)
-      iIn <- which(!is.na(rowSums((covsMap))))
+      iIn <- Matrix::which(!is.na(raster::rowSums((covsMap))))
       
       covsMap[['dIMidPts']] <- NA
       
@@ -516,7 +486,7 @@ PostFitValidate <- function() {
         lmm.map[[names(lmm.map.tmp)[j]]][,iIn] <- lmm.map.tmp[[names(lmm.map.tmp)[j]]]
       }
       
-      save(lmm.map , file = paste0(dataDir , '/map.row' , irow , '.RData'))
+      #save(lmm.map , file = paste0(dataDir , '/map.row' , irow , '.RData'))
       
     }
     

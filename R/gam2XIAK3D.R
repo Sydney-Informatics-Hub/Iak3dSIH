@@ -59,7 +59,7 @@ gam2X <- function(gamModel , dataFit = NULL , colsRmv = NULL , allKnotsd = NULL)
 
 #########################################################################
 ### will have to define colsRmv yourself and attach it to the fitted gam: 
-### if there is a te(x,y,dIMidPts) term in the gam, remove this 
+### if there::here is a te(x,y,dIMidPts) term in the gam, remove this 
 ### as the IAK method models this as spatially/vertically correlated with prod-sum covariance model
 ### if the iak code is going to be called with allKnotsd given, then also remove any smooths of dIMidPts
 #########################################################################

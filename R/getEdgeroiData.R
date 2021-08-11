@@ -5,14 +5,14 @@ getEdgeroiData <- function(){
   edgeroi$horizons[edgeroi$horizons$SOURCEID=="399_EDGEROI_ed095_1",]
 ## spPoints:
   sites <- edgeroi$sites
-  coordinates(sites) <- ~ LONGDA94 + LATGDA94
-  proj4string(sites) <- CRS("+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs")
-  sites <- spTransform(sites, CRS("+init=epsg:28355"))
+  sp::coordinates(sites) <- ~ LONGDA94 + LATGDA94
+  sp::proj4string(sites) <- sp::CRS("+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs")
+  sites <- sp::spTransform(sites, sp::CRS("+init=epsg:28355"))
 
 ## plot points and grids:
   pnts <- list("sp.points", sites, pch="+", col="black")
 
-  edgeroi$horizons <- edgeroi$horizons[which(!is.na(edgeroi$horizons$CLYPPT)),]
+  edgeroi$horizons <- edgeroi$horizons[Matrix::which(!is.na(edgeroi$horizons$CLYPPT)),]
   
   idTmp <- NA * numeric(nrow(edgeroi$horizons))
   dITmp <- cbind(edgeroi$horizons$UHDICM , edgeroi$horizons$LHDICM) / 100
@@ -20,11 +20,11 @@ getEdgeroiData <- function(){
   zTmp <- edgeroi$horizons$CLYPPT
 
   for(i in 1:nrow(edgeroi$horizons)){
-    iThis <- which(sites$SOURCEID == edgeroi$horizons$SOURCEID[i])  
+    iThis <- Matrix::which(sites$SOURCEID == edgeroi$horizons$SOURCEID[i])  
     if(length(iThis) == 1){
       idTmp[i] <- iThis
 
-      cTmp[i,] <- coordinates(sites)[iThis,]
+      cTmp[i,] <- sp::coordinates(sites)[iThis,]
 
       # 899_Forrest_48_1 and 899_Forrest_49_1 have exatly the same coords - shift 899_Forrest_49_1 east by 1m...
       if(as.character(edgeroi$horizons$SOURCEID[i]) == '899_Forrest_49_1'){
@@ -41,18 +41,18 @@ getEdgeroiData <- function(){
   }
 
 # ### find any duplicates...
-#   iDup <- which(duplicated(cbind(cTmp , dITmp[,1])))
+#   iDup <- Matrix::which(duplicated(cbind(cTmp , dITmp[,1])))
 # 
 #   {
 #     for(i in iDup){
 #       print('Duplicated data locations found:')
-#       iop = which(cTmp[,1] == cTmp[i,1] & cTmp[,2] == cTmp[i,2])
+#       iop = Matrix::which(cTmp[,1] == cTmp[i,1] & cTmp[,2] == cTmp[i,2])
 #       print(cbind(cTmp , dITmp , zTmp)[iop,])
 #     }
 #   }
 
 ##############################################################  
-### get the edgeroiCovariates...
+### get the ithir::edgeroiCovariates...
 ##############################################################  
   data(edgeroiCovariates)
   rList <- list(elevation , twi , radK , landsat_b3 , landsat_b4)
@@ -66,7 +66,7 @@ getEdgeroiData <- function(){
   # landsat_b4 : numeric; band 4 reflectance of the Landsat 7 satelite
   
   for (j in 1:ncol(covsTmp)){
-    covsTmp[,j] <- extract(rList[[j]] , cTmp)
+    covsTmp[,j] <- raster::extract(rList[[j]] , cTmp)
   }
 
 ### sort by id then dU...
@@ -77,7 +77,7 @@ getEdgeroiData <- function(){
   zTmp <- zTmp[iOrder]
   covsTmp <- covsTmp[iOrder,]
 
-### put coordinates into km
+### put sp::coordinates into km
   cTmp <- cTmp / 1000
 
 ########################################################
@@ -89,7 +89,7 @@ getEdgeroiData <- function(){
   uidVal <- sample(uidTmp , nProfVal)
   uidFit <- setdiff(uidTmp , uidVal)
   
-  iVal <- which(is.element(idTmp , uidVal))
+  iVal <- Matrix::which(is.element(idTmp , uidVal))
   iVal <- iVal[order(iVal)]
   iFit <- setdiff(seq(nrow(covsTmp)) , iVal)
   iFit <- iFit[order(iFit)]
@@ -108,17 +108,17 @@ getEdgeroiData <- function(){
 ##################################################################  
 ### give Fit data and Val data profIDs, each starting from 1 ...
 ##################################################################  
-  cFitU <- cFit[which(!duplicated(cFit)),,drop=FALSE]
+  cFitU <- cFit[Matrix::which(!duplicated(cFit)),,drop=FALSE]
   profIDFit <- NA * numeric(nrow(cFit))
   for (i in 1:nrow(cFitU)){
-    iThis <- which(cFit[,1] == cFitU[i,1] & cFit[,2] == cFitU[i,2])
+    iThis <- Matrix::which(cFit[,1] == cFitU[i,1] & cFit[,2] == cFitU[i,2])
     profIDFit[iThis] <- i
   }
   
-  cValU <- cVal[which(!duplicated(cVal)),,drop=FALSE]
+  cValU <- cVal[Matrix::which(!duplicated(cVal)),,drop=FALSE]
   profIDVal <- NA * numeric(nrow(cVal))
   for (i in 1:nrow(cValU)){
-    iThis <- which(cVal[,1] == cValU[i,1] & cVal[,2] == cValU[i,2])
+    iThis <- Matrix::which(cVal[,1] == cValU[i,1] & cVal[,2] == cValU[i,2])
     profIDVal[iThis] <- i
   }
   

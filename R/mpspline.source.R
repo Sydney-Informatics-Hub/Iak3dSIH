@@ -7,7 +7,7 @@ mpspline.source <- function (dfHzns, ...)
 {
 ### dfHzns has ID, dU, dL, z...
 ### final column is target variable z
-    .local <- function (obj, var.name, lam = 0.1, d = t(c(0, 
+    .local <- function (obj, var.name, lam = 0.1, d = Matrix::t(c(0, 
         5, 15, 30, 60, 100, 200)), vlow = 0, vhigh = 1000, show.progress = TRUE) 
     {
         dfHzns <- dfHzns[(!(dfHzns$dU < 0) & !(dfHzns$dL < 0)),,drop=FALSE]
@@ -21,7 +21,7 @@ mpspline.source <- function (dfHzns, ...)
         if(!is.element('ID' , names(dfHzns))){ stop('Error - for mpspline.source, dfHzns must have a column called ID.') }else{}
 
         # dfHznsTmp <- rmOverlapAll(dfHzns)
-        # iTmp <- which(!duplicated(rbind(dfHznsTmp , dfHzns))[-seq(nrow(dfHznsTmp))])
+        # iTmp <- Matrix::which(!duplicated(rbind(dfHznsTmp , dfHzns))[-seq(nrow(dfHznsTmp))])
         # dfHznsRmvd <- dfHzns[iTmp,c(idcol , depthcols , var.name)]
         # dfHzns <- dfHznsTmp[,c(idcol , depthcols , var.name)]
 
@@ -32,7 +32,7 @@ mpspline.source <- function (dfHzns, ...)
         sel <- logical(length(IDU))
         mHzns <- NA * numeric(length(IDU))
         for(i in 1:length(IDU)){ 
-          iThis <- which(dfHzns$ID == IDU[i])
+          iThis <- Matrix::which(dfHzns$ID == IDU[i])
           if(length(iThis) > 1){ sel[i] <- TRUE }else{ sel[i] <- FALSE }
           mHzns[i] <- length(iThis)
         }
@@ -53,23 +53,23 @@ mpspline.source <- function (dfHzns, ...)
         }
 
 ################################################
-        for (st in as.vector(which(sel))) {
-            iThis <- which(dfHzns$ID == IDU[st])
+        for (st in as.vector(Matrix::which(sel))) {
+            iThis <- Matrix::which(dfHzns$ID == IDU[st])
             subs <- dfHzns[iThis,,drop=FALSE]
           
             ir <- c(1:length(subs[, 1]))
-            ir <- as.matrix(t(ir))
+            ir <- as.matrix(Matrix::t(ir))
             u <- subs[ir, 2]
-            u <- as.matrix(t(u))
+            u <- as.matrix(Matrix::t(u))
             v <- subs[ir, 3]
-            v <- as.matrix(t(v))
+            v <- as.matrix(Matrix::t(v))
             y <- subs[ir, 4]
-            y <- as.matrix(t(y))
+            y <- as.matrix(Matrix::t(y))
             n <- length(y)
             if (n == 1) {
                 message(paste("Spline not fitted to profile:", 
                               objd_m[st, 1], sep = " "))
-                xfit <- as.matrix(t(c(1:mxd)))
+                xfit <- as.matrix(Matrix::t(c(1:mxd)))
                 nj <- max(v)
                 if (nj > mxd) {
                     nj <- mxd
@@ -108,13 +108,13 @@ mpspline.source <- function (dfHzns, ...)
                     r[udig, udig + 1] <- 1
                 }
                 d2 <- matrix(0, ncol = nm1, nrow = nm1)
-                diag(d2) <- delta[2:n]
+                Matrix::diag(d2) <- delta[2:n]
                 r <- d2 %*% r
-                r <- r + t(r)
+                r <- r + Matrix::t(r)
                 d1 <- matrix(0, ncol = nm1, nrow = nm1)
-                diag(d1) <- delta[1:nm1]
+                Matrix::diag(d1) <- delta[1:nm1]
                 d3 <- matrix(0, ncol = nm1, nrow = nm1)
-                diag(d3) <- del[1:nm1]
+                Matrix::diag(d3) <- del[1:nm1]
                 r <- r + 2 * d1 + 6 * d3
                 q <- matrix(0, ncol = n, nrow = n)
                 for (dig in 1:n) {
@@ -125,20 +125,20 @@ mpspline.source <- function (dfHzns, ...)
                 }
                 q <- q[1:nm1, 1:n]
                 dim.mat <- matrix(q[], ncol = length(1:n), nrow = length(1:nm1))
-                rinv <- try(solve(r), TRUE)
+                rinv <- try(Matrix::solve(r), TRUE)
                 if (is.matrix(rinv)) {
-                    ind <- diag(n)
+                    ind <- Matrix::diag(n)
                     pr.mat <- matrix(0, ncol = length(1:nm1), nrow = length(1:n))
                     pr.mat[] <- 6 * n * lam
-                    fdub <- pr.mat * t(dim.mat) %*% rinv
+                    fdub <- pr.mat * Matrix::t(dim.mat) %*% rinv
                     z <- fdub %*% dim.mat + ind
-                    sbar <- solve(z, t(y))
+                    sbar <- Matrix::solve(z, Matrix::t(y))
                     b <- 6 * rinv %*% dim.mat %*% sbar
                     b0 <- rbind(0, b)
                     b1 <- rbind(b, 0)
-                    gamma <- (b1 - b0)/t(2 * delta)
-                    alfa <- sbar - b0 * t(delta)/2 - gamma * t(delta)^2/3
-                    xfit <- as.matrix(t(c(1:mxd)))
+                    gamma <- (b1 - b0)/Matrix::t(2 * delta)
+                    alfa <- sbar - b0 * Matrix::t(delta)/2 - gamma * Matrix::t(delta)^2/3
+                    xfit <- as.matrix(Matrix::t(c(1:mxd)))
                     nj <- max(v)
                     if (nj > mxd) {
                         nj <- mxd
@@ -174,8 +174,8 @@ mpspline.source <- function (dfHzns, ...)
                     if (nj < mxd) {
                         yfit[, (nj + 1):mxd] = NA
                     }
-                    yfit[which(yfit > vhigh)] <- vhigh
-                    yfit[which(yfit < vlow)] <- vlow
+                    yfit[Matrix::which(yfit > vhigh)] <- vhigh
+                    yfit[Matrix::which(yfit < vlow)] <- vlow
                     m_fyfit[st, ] <- yfit
                     nd <- length(d) - 1
                     dl <- d + 1
@@ -192,8 +192,8 @@ mpspline.source <- function (dfHzns, ...)
                         yave[st, cj + 1] <- max(v)
                     }
                     dave[st, 1:n] <- sbar
-                    ssq <- sum((t(y) - sbar)^2)
-                    g <- solve(z)
+                    ssq <- sum((Matrix::t(y) - sbar)^2)
+                    g <- Matrix::solve(z)
                     ei <- eigen(g)
                     ei <- ei$values
                     df <- n - sum(ei)
@@ -211,7 +211,7 @@ mpspline.source <- function (dfHzns, ...)
         # if(nrow(dfHznsRmvd) > 0){
         #     dfHznsRmvd$predicted <- NA
         #     for(i in 1:nrow(dfHznsRmvd)){
-        #         iThis <- which(IDU == dfHznsRmvd$ID[i])
+        #         iThis <- Matrix::which(IDU == dfHznsRmvd$ID[i])
         #         if(round(dfHznsRmvd$dL[i]) > ncol(m_fyfit)){
         #             dfHznsRmvd$predicted[i] <- NA
         #         }else{
@@ -232,7 +232,7 @@ mpspline.source <- function (dfHzns, ...)
             names(yave)[jj] <- jmat[jj]
         }
         retval <- list(idcol = IDU, var.fitted = dave, 
-            var.std = yave, var.1cm = t(m_fyfit)) #  , dfHznsRmvd = dfHznsRmvd
+            var.std = yave, var.1cm = Matrix::t(m_fyfit)) #  , dfHznsRmvd = dfHznsRmvd
 
         return(retval)
     }
@@ -245,7 +245,7 @@ mpspline.source <- function (dfHzns, ...)
 ### with predictor variables = known depths in the target profile
 ### in paper, horizons were removed from profiles with overlap so that ea spline would work
 ### to redo this, put overlapsByRegression = FALSE; hzns get removed in mpspline fn.
-### NOTE - dIData and dIStd are in m as inputs here,
+### NOTE - dIData and dIStd are in m as inputs here::here,
 ###        but mpspline function uses cm.
 ###        Also, default for this fn is vlow = -1000, while default for mpspline.source fn is vlow = 0
 ##################################################
@@ -253,8 +253,8 @@ harmonizeMPS <- function(profIDData , dIData , zData , dIStd , vlow = -1000 , vh
 
     profIDData <- as.character(profIDData)
 
-### only include where we have some data...
-    iok <- which(!is.na(zData))
+### only include where::here we have some data...
+    iok <- Matrix::which(!is.na(zData))
     if(length(iok) > 0){
       profIDData <- profIDData[iok]
       dIData <- dIData[iok,,drop=FALSE]
@@ -269,15 +269,15 @@ harmonizeMPS <- function(profIDData , dIData , zData , dIStd , vlow = -1000 , vh
     
     
     if(singlesByRegression){
-      IDMT1 <- unique(profEAS$ID[which(duplicated(profEAS$ID))])
-      iEAS <- which(is.element(profEAS$ID , IDMT1))
+      IDMT1 <- unique(profEAS$ID[Matrix::which(duplicated(profEAS$ID))])
+      iEAS <- Matrix::which(is.element(profEAS$ID , IDMT1))
     }else{
       iEAS <- seq(nrow(profEAS))
     }
 
     maxdcm <- round(max(max(round(100*dIStd[,2])) , max(profEAS$dL)))
     
-    z.sEAS <- mpspline.source(dfHzns = profEAS[iEAS,,drop=FALSE] , lam = 0 , vlow = vlow , vhigh = vhigh , d = t(c(0,maxdcm)))
+    z.sEAS <- mpspline.source(dfHzns = profEAS[iEAS,,drop=FALSE] , lam = 0 , vlow = vlow , vhigh = vhigh , d = Matrix::t(c(0,maxdcm)))
 
     profIDDataH <- unique(profEAS$ID)
     nProfs <- length(profIDDataH)
@@ -285,7 +285,7 @@ harmonizeMPS <- function(profIDData , dIData , zData , dIStd , vlow = -1000 , vh
     ### re order var.1cm according to profIDDataH...    
     var.1cm <- matrix(NA , maxdcm , nProfs)
     for(i in 1:length(z.sEAS$idcol)){
-        var.1cm[,which(profIDDataH == z.sEAS$idcol[i])] <- z.sEAS$var.1cm[,i]
+        var.1cm[,Matrix::which(profIDDataH == z.sEAS$idcol[i])] <- z.sEAS$var.1cm[,i]
     }
     remove(z.sEAS)
     
@@ -302,24 +302,24 @@ harmonizeMPS <- function(profIDData , dIData , zData , dIStd , vlow = -1000 , vh
       getLastElement <- function(xVec){ if(all(is.na(xVec))){ return(NA) }else{ xVec <- xVec[!is.na(xVec)] ; return(xVec[length(xVec)]) } }
       zTmpFillVals = apply(zTmp , 2 , getLastElement)
 
-      fillNAs <- function(xVec , fillVal){ iTmp <- which(is.na(xVec)) ; if(length(iTmp) == 0){ return(xVec) }else{ xVec[iTmp] <- fillVal ; return(xVec) }  }
+      fillNAs <- function(xVec , fillVal){ iTmp <- Matrix::which(is.na(xVec)) ; if(length(iTmp) == 0){ return(xVec) }else{ xVec[iTmp] <- fillVal ; return(xVec) }  }
       zTmp <- mapply(fillNAs , xVec = lapply(seq_len(ncol(zTmp)), function(i) zTmp[,i]) , fillVal = zTmpFillVals , SIMPLIFY = FALSE)
       zTmp <- matrix(unlist(zTmp) , ncmThis , nProfs)
       
       hrmnzdData[,i] <- colSums(zTmp) / ncmThis
     }
-    hrmnzdDataEAS <- !is.na(hrmnzdData) # TRUE where EAS fitted, FALSE will be a regression or missing
+    hrmnzdDataEAS <- !is.na(hrmnzdData) # TRUE where::here EAS fitted, FALSE will be a regression or missing
 
     if(singlesByRegression){
       for(i in 1:nrow(hrmnzdData)){
-        iThis <- which(profEAS$ID == profIDDataH[i])
+        iThis <- Matrix::which(profEAS$ID == profIDDataH[i])
         for(j in 1:ncol(hrmnzdData)){
             if(is.na(hrmnzdData[i,j])){
 ### what is missing?
                 dITarget <- dIStd[j,,drop=FALSE] * 100 # this is now in cm
 ### what data do we have in this profile? 
                 dIDataThis <- as.matrix(profEAS[iThis,c('dU','dL'),drop=FALSE]) # this is already in cm
-### use fitted splines where the target and data depths are fully covered to fit regression...
+### use fitted splines where::here the target and data depths are fully covered to fit regression...
                 XDataThis <- matrix(1 , nProfs , length(iThis) + 1)
                 XPredThis <- matrix(c(1 , profEAS$z[iThis]) , 1 , length(iThis) + 1)
                 for(k in 1:length(iThis)){
@@ -327,10 +327,10 @@ harmonizeMPS <- function(profIDData , dIData , zData , dIStd , vlow = -1000 , vh
                 }
                 zDataThis <- colSums(var.1cm[seq(round(dITarget[1,1]) + 1 , round(dITarget[1,2])),,drop=FALSE]) / (dITarget[1,2]-dITarget[1,1])
 
-### look for best regression here (fewer predictors could be more available data)
+### look for best regression here::here (fewer predictors could be more available data)
                 nVec <- vPredVec <- zPredVec <- NA * numeric(length(iThis))
                 for(k in 1:length(iThis)){
-                    iOK <- which((!is.na(rowSums(XDataThis[,1:(k+1)]))) & !is.na(zDataThis))
+                    iOK <- Matrix::which((!is.na(raster::rowSums(XDataThis[,1:(k+1)]))) & !is.na(zDataThis))
                     if(length(iOK) >= (k+1)){
                       tmp <- nllLm(zData = zDataThis[iOK] , XData = XDataThis[iOK,1:(k+1),drop=FALSE] , REML = TRUE)
                       nll <- tmp$nll 
@@ -340,7 +340,7 @@ harmonizeMPS <- function(profIDData , dIData , zData , dIStd , vlow = -1000 , vh
                       
                       nVec[k] <- length(iOK)
                       zPredVec[k] <- XPredThis[,1:(k+1),drop=FALSE] %*% betahat
-                      vPredVec[k] <- sigma2hat + XPredThis[,1:(k+1),drop=FALSE] %*% vbetahat %*% t(XPredThis[,1:(k+1),drop=FALSE])
+                      vPredVec[k] <- sigma2hat + XPredThis[,1:(k+1),drop=FALSE] %*% vbetahat %*% Matrix::t(XPredThis[,1:(k+1),drop=FALSE])
                     }else{}
                 }
                 if(all(is.na(zPredVec))){
@@ -394,15 +394,15 @@ whichProfilesOverlap <- function(dfAll , idVar = 'ID'){
   idsProfs <- unique(dfAll[[idVar]])
   lProfs <- list()
   for(i in 1:length(idsProfs)){
-    iThis <- which(dfAll[[idVar]] == idsProfs[i])
+    iThis <- Matrix::which(dfAll[[idVar]] == idsProfs[i])
     lProfs[[i]] <- dfAll[iThis,,drop=FALSE]
   }
-  ### something funny going on with large datasets here - seems to complete loop but hang. not sure why. works ok when entire fn is run.
+  ### something funny going on with large datasets here::here - seems to complete loop but hang. not sure why. works ok when entire fn is run.
 
-  iOVLP <- which(unlist(lapply(lProfs , isOverlap)))
+  iOVLP <- Matrix::which(unlist(lapply(lProfs , isOverlap)))
   if(length(iOVLP) > 0){
     idsOVLP <- idsProfs[iOVLP]
-    dfOVLP <- dfAll[which(is.element(as.character(dfAll[[idVar]]) , idsOVLP)),,drop=FALSE]
+    dfOVLP <- dfAll[Matrix::which(is.element(as.character(dfAll[[idVar]]) , idsOVLP)),,drop=FALSE]
   }else{
     dfOVLP <- dfAll[c(),,drop=FALSE]
   }
@@ -416,7 +416,7 @@ rmOverlapAll <- function(dfIn , idVar = 'ID'){
   idsProfs <- unique(dfIn[[idVar]])
   profList <- list()
   for(i in 1:length(idsProfs)){
-    profList[[i]] <- dfIn[which(dfIn[[idVar]] == idsProfs[i]),,drop=FALSE]
+    profList[[i]] <- dfIn[Matrix::which(dfIn[[idVar]] == idsProfs[i]),,drop=FALSE]
   }
   
   profListOut <- lapply(profList , rmOverlap)
@@ -427,7 +427,7 @@ rmOverlapAll <- function(dfIn , idVar = 'ID'){
 
 rmOverlap <- function(profIn){
   profIn <- profIn[order(profIn$dU),,drop=FALSE]
-  iOK <- which(((profIn$dL - profIn$dU) > 0) & (profIn$dU >= 0) & (profIn$dL > 0))
+  iOK <- Matrix::which(((profIn$dL - profIn$dU) > 0) & (profIn$dU >= 0) & (profIn$dL > 0))
   profIn <- profIn[iOK,,drop=FALSE]
   
   if(nrow(profIn) > 1){
@@ -436,7 +436,7 @@ rmOverlap <- function(profIn){
       dUTmp <- profIn$dU[-1]
       dLTmp <- profIn$dL[-length(profIn$dL)]
       
-      iBad <- which((dLTmp - dUTmp) > 0)
+      iBad <- Matrix::which((dLTmp - dUTmp) > 0)
       if(length(iBad) == 0){
         overlap <- FALSE
       }else{
@@ -474,7 +474,7 @@ averageOverlap <- function(profIn){
   profIn$dL <- round(profIn$dL , digits = 2)
   
   profIn <- profIn[order(profIn$dU),,drop=FALSE]
-  iOK <- which(((profIn$dL - profIn$dU) > 0) & (profIn$dU >= 0) & (profIn$dL > 0))
+  iOK <- Matrix::which(((profIn$dL - profIn$dU) > 0) & (profIn$dU >= 0) & (profIn$dL > 0))
   profIn <- profIn[iOK,,drop=FALSE]
 
   if (nrow(profIn)> 1){
@@ -492,7 +492,7 @@ averageOverlap <- function(profIn){
       profIn$Observation_ID_LIST <- paste(oidThis , collapse = '_AND_')
     }else{}
     
-### samples combined - just join all profile sample ids here, as difficult to properly keep track anymore
+### samples combined - just join all profile sample ids here::here, as difficult to properly keep track anymore
     if(is.element('SampleID_LIST' , names(profIn))){
       sidThis <- unique(unlist(strsplit(as.character(profIn$SampleID_LIST) , '_AND_')))    
       profIn$SampleID_LIST <- paste(sidThis , collapse = '_AND_')
@@ -515,7 +515,7 @@ averageOverlap <- function(profIn){
         profOut$z[i] <- mean(mThis , na.rm = T)
       }else{}
     }
-    profOut <- profOut[which(!is.na(profOut$z)),,drop=FALSE]
+    profOut <- profOut[Matrix::which(!is.na(profOut$z)),,drop=FALSE]
   }else{
     profOut <- profIn
   }
@@ -538,14 +538,14 @@ averageOverlapAll <- function(dfIn , idVar = 'ID'){
       dfOut <- dfIn[c(),,drop=FALSE] 
     }else{
       idTmpOVLP <- unique(dfOVLP[[idVar]])
-      iNoOvlp <- which(!is.element(dfIn[[idVar]] , idTmpOVLP))
+      iNoOvlp <- Matrix::which(!is.element(dfIn[[idVar]] , idTmpOVLP))
       dfOut <- dfIn[iNoOvlp,,drop=FALSE]
     }
     
     idsU <- unique(dfOVLP[[idVar]])
     profList <- list()
     for(i in 1:length(idsU)){
-      profList[[i]] <- dfOVLP[which(dfOVLP[[idVar]] == idsU[i]),,drop=FALSE]
+      profList[[i]] <- dfOVLP[Matrix::which(dfOVLP[[idVar]] == idsU[i]),,drop=FALSE]
     }
 
     for(i in 1:length(profList)){

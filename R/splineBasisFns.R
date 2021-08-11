@@ -202,7 +202,7 @@ makeXnsClampedUG0 <- function(x , bdryKnots , intKnots , paramVs = 0){
       }
     }else{}
     
-  }else if(paramVs == 1){ # a, g1, ... , gK-1, w; where w is value at x = xU
+  }else if(paramVs == 1){ # a, g1, ... , gK-1, w; where::here w is value at x = xU
     nIntKnots <- length(intKnots)
     
     X <- matrix(1 , n , 1 + nIntKnots)
@@ -387,7 +387,7 @@ makeXnsClampedLUG0 <- function(x , bdryKnots , intKnots){
 
 #####################################################
 ### fn to make des mtx...
-### fn nanme not great, as this is for multiple variables, whereas the other makeX fns above were for univariate. 
+### fn nanme not great, as this is for multiple variables, where::hereas the other makeX fns above were for univariate. 
 ### update naming sometime.
 #####################################################
 makeXcns <- function(dfCovs , dIData = NULL , listfefdKnots , incInts = TRUE , colnamesX = NULL , intMthd = 0){
@@ -408,7 +408,7 @@ makeXcns <- function(dfCovs , dIData = NULL , listfefdKnots , incInts = TRUE , c
   #####################
   ### if variable v has basis fns v1 - v5 and w has w1 - w5
   ### intMthd = 0 : interactions between v and w are v1*w0, v2*w0, ..., v5*w0, v0*w1, v0*w2,..., v0*w5 (ie 10 basis fns)    
-  ### where v0 is spline type basis of v with 1 df, same for w0
+  ### where::here v0 is spline type basis of v with 1 df, same for w0
   ### intMthd = 1 : interactions between v and w are all vi * wj (ie 25 basis fns)
   #####################
   covNames <- names(listfefdKnots)
@@ -487,17 +487,17 @@ makeXcns <- function(dfCovs , dIData = NULL , listfefdKnots , incInts = TRUE , c
           if(is.null(colnamesX)){
             ### test whether data allow interactive basis fns to be included...
             XTest <- cbind(matrix(1 , nrow(dfCovs) , 1) , listXMain[[inm]] , listXMain[[jnm]])
-            betaTest <- try(solve(t(XTest) %*% XTest , matrix(1 , ncol(XTest) , 1)), silent = TRUE)
+            betaTest <- try(Matrix::solve(Matrix::t(XTest) %*% XTest , matrix(1 , ncol(XTest) , 1)), silent = TRUE)
             if(is.character(betaTest)){ stop(paste0('Error - system singular with basis fns ' , covNames[inm] , ' and ' , covNames[jnm])) }else{}
 
-            rcondTest <- rcond(t(XTest) %*% XTest)
+            rcondTest <- rcond(Matrix::t(XTest) %*% XTest)
             if(rcondTest < rcondLim){ stop(paste0('Error - system rcond too small with basis fns ' , covNames[inm] , ' and ' , covNames[jnm])) }else{}
 
             incCol <- logical(ncol(XIntTest))
             for(icolAdd in 1:ncol(XIntTest)){
               XTestThis <- cbind(XTest , XIntTest[,icolAdd,drop=FALSE])
-              betaTest <- try(solve(t(XTestThis) %*% XTestThis , matrix(1 , ncol(XTestThis) , 1)), silent = TRUE)
-              rcondTest <- rcond(t(XTestThis) %*% XTestThis)
+              betaTest <- try(Matrix::solve(Matrix::t(XTestThis) %*% XTestThis , matrix(1 , ncol(XTestThis) , 1)), silent = TRUE)
+              rcondTest <- rcond(Matrix::t(XTestThis) %*% XTestThis)
 
               if(is.character(betaTest) | (rcondTest < rcondLim)){ 
                 print(paste0('Attention - system singular when interaction added for ' , colnames(XIntTest)[icolAdd] , '! So not including this column.')) 
@@ -533,8 +533,8 @@ makeXcns <- function(dfCovs , dIData = NULL , listfefdKnots , incInts = TRUE , c
     ### another check for colin with the full mtx...
     colsInc <- rep(TRUE , ncol(Xcns))
     for(i in 1:ncol(Xcns)){
-      XXTest <- t(Xcns[,seq(1,i)[colsInc[1:i]],drop=FALSE]) %*% Xcns[,seq(1,i)[colsInc[1:i]],drop=FALSE]
-      betaTest <- try(solve(XXTest , matrix(1 , sum(colsInc[1:i]) , 1)), silent = TRUE)
+      XXTest <- Matrix::t(Xcns[,seq(1,i)[colsInc[1:i]],drop=FALSE]) %*% Xcns[,seq(1,i)[colsInc[1:i]],drop=FALSE]
+      betaTest <- try(Matrix::solve(XXTest , matrix(1 , sum(colsInc[1:i]) , 1)), silent = TRUE)
       rcondTest <- rcond(XXTest)
       if(is.character(betaTest) | (rcondTest < rcondLim)){
         print(paste0('Colinearity found when adding column ' , colnames(Xcns)[i] , ', so this will not be included.'))
@@ -556,24 +556,24 @@ makeXcns <- function(dfCovs , dIData = NULL , listfefdKnots , incInts = TRUE , c
 #####################################################
 getPossibleReductions <- function(XFull , allowKnotRemoval = TRUE){
   varsWithKnots <- unique(unlist(strsplit(colnames(XFull) , '___')))
-  varsWithKnots <- varsWithKnots[which(grepl('_KNOT' , varsWithKnots))]
+  varsWithKnots <- varsWithKnots[Matrix::which(grepl('_KNOT' , varsWithKnots))]
   varsWithoutKnots <- unique(unlist(lapply(strsplit(varsWithKnots , '_KNOT') , '[[' , 1)))
 
-  catvarsWithKnots <- varsWithKnots[which(grepl('_KNOTC' , varsWithKnots))]
+  catvarsWithKnots <- varsWithKnots[Matrix::which(grepl('_KNOTC' , varsWithKnots))]
   ctsvarsWithKnots <- setdiff(varsWithKnots , catvarsWithKnots)
   catvarsWithoutKnots <- unique(unlist(lapply(strsplit(catvarsWithKnots , '_KNOT') , '[[' , 1)))
   ctsvarsWithoutKnots <- setdiff(varsWithoutKnots , catvarsWithoutKnots)
   
   ### add to list cols with poss knots to rm
   if(allowKnotRemoval){
-    fnTmp <- function(vk){ which(grepl(vk , colnames(XFull))) }
+    fnTmp <- function(vk){ Matrix::which(grepl(vk , colnames(XFull))) }
     listRm <- lapply(ctsvarsWithKnots , fnTmp)
   }else{
     listRm <- list()
   }
 
   ### add to list cols to remove a whole covariate from X...
-  fnTmp <- function(nm){ which(grepl(paste0(nm , '_KNOT') , colnames(XFull))) }
+  fnTmp <- function(nm){ Matrix::which(grepl(paste0(nm , '_KNOT') , colnames(XFull))) }
   lTmp <- lapply(varsWithoutKnots , fnTmp)
   lTmp <- lTmp[unlist(lapply(lTmp , length)) > 0]
   if(length(lTmp) > 0){
@@ -582,9 +582,9 @@ getPossibleReductions <- function(XFull , allowKnotRemoval = TRUE){
   
   ### add to list cols to remove a single basis fn from an interaction between 2 basis fns of cts vars...
   if(length(catvarsWithKnots) > 0){
-    lTmp <- as.list(which((unlist(lapply(strsplit(colnames(XFull) , '___') , length)) == 2) & (!grepl(paste(catvarsWithKnots , collapse = '|') , colnames(XFull)))))
+    lTmp <- as.list(Matrix::which((unlist(lapply(strsplit(colnames(XFull) , '___') , length)) == 2) & (!grepl(paste(catvarsWithKnots , collapse = '|') , colnames(XFull)))))
   }else{
-    lTmp <- as.list(which(unlist(lapply(strsplit(colnames(XFull) , '___') , length)) == 2))
+    lTmp <- as.list(Matrix::which(unlist(lapply(strsplit(colnames(XFull) , '___') , length)) == 2))
   }
   lTmp <- lTmp[unlist(lapply(lTmp , length)) > 0]
   if(length(lTmp) > 0){
@@ -594,7 +594,7 @@ getPossibleReductions <- function(XFull , allowKnotRemoval = TRUE){
   ### add to list cols with any interactions to fully rm...
   if(length(varsWithoutKnots) > 1){
     listVarInts <- combn(varsWithoutKnots , 2 , simplify = FALSE)
-    fnTmp <- function(vVec){ which(grepl(paste0(vVec[1] , '_KNOT') , colnames(XFull)) & grepl(paste0(vVec[2] , '_KNOT') , colnames(XFull))) }
+    fnTmp <- function(vVec){ Matrix::which(grepl(paste0(vVec[1] , '_KNOT') , colnames(XFull)) & grepl(paste0(vVec[2] , '_KNOT') , colnames(XFull))) }
     
     lTmp <- lapply(listVarInts , fnTmp)
     lTmp <- lTmp[unlist(lapply(lTmp , length)) > 0]
@@ -617,7 +617,7 @@ stepBackXcns <- function(Xcns , zData , alpha = 0.15 , iAX = NULL , iAz = NULL){
   # listInfo <- list()
   
   if(!is.null(iAX)){ 
-    ziAz <- t(zData) %*% iAz 
+    ziAz <- Matrix::t(zData) %*% iAz 
   }else{
     zz <- sum(zData ^ 2)
   }
@@ -632,37 +632,37 @@ stepBackXcns <- function(Xcns , zData , alpha = 0.15 , iAX = NULL , iAz = NULL){
       # vbetahat <- tmp$vbetahat
 
 ###      
-      XX <- t(Xcns) %*% Xcns
-      Xz <- t(Xcns) %*% zData
-      betahat <- try(solve(XX , Xz) , silent = TRUE)
+      XX <- Matrix::t(Xcns) %*% Xcns
+      Xz <- Matrix::t(Xcns) %*% zData
+      betahat <- try(Matrix::solve(XX , Xz) , silent = TRUE)
 
 ### add small increment to diag of XX (all cols of X should be stdzd), until system solvable...            
       ridgeParAdd <- 1E-12
-      diagXX0 <- diag(XX)
+      diagXX0 <- Matrix::diag(XX)
       while(is.character(betahat)){
-        diag(XX) <- diagXX0 + ridgeParAdd
-        betahat <- try(solve(XX , Xz) , silent = TRUE)
+        Matrix::diag(XX) <- diagXX0 + ridgeParAdd
+        betahat <- try(Matrix::solve(XX , Xz) , silent = TRUE)
         if(is.character(betahat)){ ridgeParAdd <- ridgeParAdd * 10 }else{}
       }
 
-      sigma2hat <- as.numeric(zz - 2 * t(betahat) %*% Xz + t(betahat) %*% XX %*% betahat) / (nrow(Xcns) - ncol(Xcns))
-      vbetahat <- sigma2hat * solve(XX)
+      sigma2hat <- as.numeric(zz - 2 * Matrix::t(betahat) %*% Xz + Matrix::t(betahat) %*% XX %*% betahat) / (nrow(Xcns) - ncol(Xcns))
+      vbetahat <- sigma2hat * Matrix::solve(XX)
       
     }else{
       ### these things could be done more efficiently, but for now...      
-      XiAX <- t(Xcns) %*% iAX
-      XiAz <- t(Xcns) %*% iAz
-      betahat <- try(solve(XiAX , XiAz) , silent = TRUE)
+      XiAX <- Matrix::t(Xcns) %*% iAX
+      XiAz <- Matrix::t(Xcns) %*% iAz
+      betahat <- try(Matrix::solve(XiAX , XiAz) , silent = TRUE)
       
       ### keep adding small increments to diag of XX (all cols of X should be stdzd), until system solvable...            
       ridgeParAdd <- 1E-12
       while(is.character(betahat)){
-        diag(XiAX) <- diag(XiAX) + ridgeParAdd
-        betahat <- try(solve(XiAX , XiAz) , silent = TRUE)
+        Matrix::diag(XiAX) <- Matrix::diag(XiAX) + ridgeParAdd
+        betahat <- try(Matrix::solve(XiAX , XiAz) , silent = TRUE)
       }
       
-      sigma2hat <- as.numeric(ziAz - 2 * t(betahat) %*% XiAz + t(betahat) %*% XiAX %*% betahat) / (nrow(Xcns) - ncol(Xcns))
-      vbetahat <- sigma2hat * solve(XiAX)
+      sigma2hat <- as.numeric(ziAz - 2 * Matrix::t(betahat) %*% XiAz + Matrix::t(betahat) %*% XiAX %*% betahat) / (nrow(Xcns) - ncol(Xcns))
+      vbetahat <- sigma2hat * Matrix::solve(XiAX)
     }
     
     listPossRedns <- getPossibleReductions(Xcns , allowKnotRemoval = allowKnotRemoval)

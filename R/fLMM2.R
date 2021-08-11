@@ -1,6 +1,6 @@
 fitLMM2 <- function(c , z , X , covModel = 'exponential' , nSpatStructs = 1 , incNugget = T , optionML = F , verbose = FALSE , mina = NULL , maxa = NULL , parsInit = NULL , attachBigMats = TRUE){
 
-  ina <- which(is.na(z))
+  ina <- Matrix::which(is.na(z))
   if(length(ina) > 0){
     c <- c[-ina,,drop=FALSE]
     z <- z[-ina]
@@ -75,7 +75,7 @@ fLMM2 <- function(pars , c , z , X , D , covModel , nSpatStructs , incNugget = T
     if(missing(verbose)){ verbose <- T }else{} # default is to print the current nll
 
 ### a1 must be at least the minimum sep dist...
-    if(is.null(mina)){ mina <- min(D + 9E9 * diag(N)) }else{}
+    if(is.null(mina)){ mina <- min(D + 9E9 * Matrix::diag(N)) }else{}
 ### a2 (or a1 if 1 spat struct) must be less than the following value...
     if(is.null(maxa)){ maxa <- max(D) / 2 }else{}
     
@@ -140,7 +140,7 @@ fLMM2 <- function(pars , c , z , X , D , covModel , nSpatStructs , incNugget = T
         }else{}
         iConeszX <- tmp$invCb
 
-        oneszXinvConeszX <- t(oneszX) %*% iConeszX
+        oneszXinvConeszX <- Matrix::t(oneszX) %*% iConeszX
         
         onesinvCones <- oneszXinvConeszX[1,1 , drop = FALSE]
         onesinvCz <- oneszXinvConeszX[1,2 , drop = FALSE]
@@ -163,7 +163,7 @@ fLMM2 <- function(pars , c , z , X , D , covModel , nSpatStructs , incNugget = T
             }
         }else{}
         
-        tmp <- lndetANDinvCb(XinvCX , t(zinvCX))
+        tmp <- lndetANDinvCb(XinvCX , Matrix::t(zinvCX))
         lndetXinvCX <- tmp$lndetC
         if(is.na(lndetXinvCX)){     
           printNll(nll = NA , parsOut = parsOut , verbose = verbose)
@@ -171,7 +171,7 @@ fLMM2 <- function(pars , c , z , X , D , covModel , nSpatStructs , incNugget = T
         }else{}
         betahat <- tmp$invCb
         
-        resiCres <- as.numeric(zinvCz - 2 * zinvCX %*% betahat + t(betahat) %*% XinvCX %*% betahat)
+        resiCres <- as.numeric(zinvCz - 2 * zinvCX %*% betahat + Matrix::t(betahat) %*% XinvCX %*% betahat)
         
         if (optionML){
             sigma2hat <- resiCres / N
@@ -184,7 +184,7 @@ fLMM2 <- function(pars , c , z , X , D , covModel , nSpatStructs , incNugget = T
 
         if(returnAll){ 
           XiAX <- XinvCX
-          XiAz <- t(zinvCX)
+          XiAz <- Matrix::t(zinvCX)
           ziAz <- zinvCz
           vbetahat <- sigma2hat * chol2inv(chol(XinvCX)) 
         }else{}
@@ -262,7 +262,7 @@ compLikLMM2 <- function(pars , c , z , X , DBlocks , blocks , nBlocks1 = length(
     }else{}
     
     if(is.null(mina)){
-        fnTmp <- function(D){ min(D + 9E99 * diag(dim(D)[[1]])) }
+        fnTmp <- function(D){ min(D + 9E99 * Matrix::diag(dim(D)[[1]])) }
         mina <- unlist(lapply(DBlocks , fnTmp))
         mina <- min(mina[mina > 0])
     }else{}
@@ -325,7 +325,7 @@ compLikLMM2 <- function(pars , c , z , X , DBlocks , blocks , nBlocks1 = length(
       }else{}
     }
             
-### dividing by nLevels here so that lieklihood of data (not nLevels reps of it) will be approximated...      
+### dividing by nLevels here::here so that lieklihood of data (not nLevels reps of it) will be approximated...      
     sumlndetA <- sumlndetA / nLevels
     sumziAz <- sumziAz / nLevels
     sumziAX <- sumziAX / nLevels
@@ -346,7 +346,7 @@ compLikLMM2 <- function(pars , c , z , X , DBlocks , blocks , nBlocks1 = length(
      
       
     if(paramsOK){
-        tmp <- lndetANDinvCb(sumXiAX , t(sumziAX))
+        tmp <- lndetANDinvCb(sumXiAX , Matrix::t(sumziAX))
         betahat <- as.matrix(tmp$invCb)
         lndetXiAX <- tmp$lndetC
 
@@ -361,7 +361,7 @@ compLikLMM2 <- function(pars , c , z , X , DBlocks , blocks , nBlocks1 = length(
           return(listOut)
         }else{}        
 
-        resiAres <- as.numeric(sumziAz - 2 * sumziAX %*% betahat + t(betahat) %*% sumXiAX %*% betahat)
+        resiAres <- as.numeric(sumziAz - 2 * sumziAX %*% betahat + Matrix::t(betahat) %*% sumXiAX %*% betahat)
         
         if(optionML){
             sigma2hat <- resiAres / n
@@ -370,7 +370,7 @@ compLikLMM2 <- function(pars , c , z , X , DBlocks , blocks , nBlocks1 = length(
         }
             
         if(returnAll){
-            vbetahat <- sigma2hat * solve(sumXiAX) 
+            vbetahat <- sigma2hat * Matrix::solve(sumXiAX) 
             iCz <- iCz / sigma2hat
 
             iCres <- NA * iCz
@@ -469,11 +469,11 @@ krigingLMM2 <- function(ck , Xk , c , z , X , D , covModel , nSpatStructs , covP
     invCX <- tmp$invCb[,2:(1+np) , drop = FALSE]
       
     # invC <- chol2inv(tmp$cholC)
-    invC <- solve(C)
+    invC <- Matrix::solve(C)
     invCRes <- invCz - invCX %*% betahat    
         
-    XinvCX <- t(X) %*% invCX
-    invXinvCX <- solve(XinvCX)
+    XinvCX <- Matrix::t(X) %*% invCX
+    invXinvCX <- Matrix::solve(XinvCX)
         
     if(blockLength == 0){
       nPerChunk <- 5000
@@ -542,17 +542,17 @@ krigingLMM2 <- function(ck , Xk , c , z , X , D , covModel , nSpatStructs , covP
         Dk <- rdist(ckThis,ckThis)
         Ck <- defineCLMM2(c0 = c0 , c1 = c1 , a1 = a1 , c2 = c2 , a2 = a2 , D = Dk , covModel = covModel , nSpatStructs = nSpatStructs)
         Xk_CkhiChXh <- Xk[ikThis,] - Ckh %*% invCX
-        varTrend <- (Xk_CkhiChXh %*% invXinvCX) %*% t(Xk_CkhiChXh)
+        varTrend <- (Xk_CkhiChXh %*% invXinvCX) %*% Matrix::t(Xk_CkhiChXh)
         if(blockLength == 0){
-          predVars[ikThis,ikThis] <- Ck - (Ckh %*% invC) %*% t(Ckh) + varTrend
+          predVars[ikThis,ikThis] <- Ck - (Ckh %*% invC) %*% Matrix::t(Ckh) + varTrend
         }else{
-          predVars[ikThis] <- mean(Ck - (Ckh %*% invC) %*% t(Ckh) + varTrend)
+          predVars[ikThis] <- mean(Ck - (Ckh %*% invC) %*% Matrix::t(Ckh) + varTrend)
         }
       }else{
         Ck <- c0 + c1 + c2
         Xk_CkhiChXh <- Xk[ikThis,] - Ckh %*% invCX
-        varTrend <- rowSums((Xk_CkhiChXh %*% invXinvCX) * Xk_CkhiChXh)
-        predVars[ikThis] <- Ck - rowSums((Ckh %*% invC) * Ckh) + varTrend
+        varTrend <- raster::rowSums((Xk_CkhiChXh %*% invXinvCX) * Xk_CkhiChXh)
+        predVars[ikThis] <- Ck - raster::rowSums((Ckh %*% invC) * Ckh) + varTrend
       }
     }
   } 
@@ -602,20 +602,20 @@ compLikKrigingLMM2 <- function(ck , Xk , blocksk , c , z , X , blocks , DBlocks 
         ChThis <- defineCLMM2(c0 = covParams[1] , c1 = covParams[2] , a1 = covParams[3] , c2 = covParams[4] , a2 = covParams[5] , 
               D = DBlocks[[i]] , covModel = covModel , nSpatStructs = nSpatStructs)
 
-        tmp <- lndetANDinvCb(ChThis , t(CkhThis))
+        tmp <- lndetANDinvCb(ChThis , Matrix::t(CkhThis))
         iChChkThis <- tmp$invCb
 
         pred[blocksk[[i]] , iLevelThis] <- muk[blocksk[[i]]] + CkhThis %*% iCres[blocks[[i]],iLevelThis]
-        vkSK <- Ck - rowSums(CkhThis * t(iChChkThis))
+        vkSK <- Ck - raster::rowSums(CkhThis * Matrix::t(iChChkThis))
 
         Xk_CkhiCXThis <- Xk[blocksk[[i]],] - CkhThis %*% iCX[[iLevelThis]][blocks[[i]],]
-        tmp <- vbetahat %*% t(Xk_CkhiCXThis)
-        predVars[blocksk[[i]] , iLevelThis] <- vkSK + rowSums(Xk_CkhiCXThis * t(tmp)) 
+        tmp <- vbetahat %*% Matrix::t(Xk_CkhiCXThis)
+        predVars[blocksk[[i]] , iLevelThis] <- vkSK + raster::rowSums(Xk_CkhiCXThis * Matrix::t(tmp)) 
 
         predVarsSK[blocksk[[i]] , iLevelThis] <- vkSK
 
-        tmp <- vbetahat %*% t(Xk[blocksk[[i]],])
-        predVarsTrend[blocksk[[i]] , iLevelThis] <- rowSums(Xk[blocksk[[i]],] * t(tmp)) 
+        tmp <- vbetahat %*% Matrix::t(Xk[blocksk[[i]],])
+        predVarsTrend[blocksk[[i]] , iLevelThis] <- raster::rowSums(Xk[blocksk[[i]],] * Matrix::t(tmp)) 
     }
 
 ##################################################################
@@ -626,15 +626,15 @@ compLikKrigingLMM2 <- function(ck , Xk , blocksk , c , z , X , blocks , DBlocks 
 ### see matrix cookbook.
 ##################################################################
     if(nLevels == 2){
-        tmp1 <- rowSums(pred / predVars)
+        tmp1 <- raster::rowSums(pred / predVars)
         
-        predVars <- 1 / rowSums(1 / predVars)
+        predVars <- 1 / raster::rowSums(1 / predVars)
         pred <- predVars * tmp1
 
         predVars <- 2 * predVars
 ### not sure about these 2 for 2 levels, but...        
-        predVarsSK <- 2 / rowSums(1 / predVarsSK)
-        predVarsTrend <- 2 / rowSums(1 / predVarsTrend)
+        predVarsSK <- 2 / raster::rowSums(1 / predVarsSK)
+        predVarsTrend <- 2 / raster::rowSums(1 / predVarsTrend)
     }else{}
 
 ### for plotting, make polygons that can be shaded to show prediction intervals...
@@ -709,17 +709,17 @@ XVLMM2 <- function(c , z , X , iC , betahat , vbetahat , nsdsPlot , iSubsets = N
         }
 
         if(length(iThis) > 0){
-          CkhiChh <- -solve(matrix(iC[iThis,iThis] , nThis , nThis) , matrix(iC[iThis,-iThis] , nThis , n - nThis)) 
+          CkhiChh <- -Matrix::solve(matrix(iC[iThis,iThis] , nThis , nThis) , matrix(iC[iThis,-iThis] , nThis , n - nThis)) 
 
           tmp <- CkhiChh %*% cbind(res[-iThis] , X[-iThis,])
           CkhiChhzh <- tmp[,1]
           CkhiChhXh <- tmp[,-1]
         
           Xk_CkhiChhXh <- matrix(X[iThis,] - CkhiChhXh , nrow = nThis)
-          vSK <- solve(iC[iThis,iThis])
+          vSK <- Matrix::solve(iC[iThis,iThis])
 
           zkFull <- mu[iThis] + CkhiChhzh
-          vkFull <- vSK + Xk_CkhiChhXh %*% vbetahat %*% t(Xk_CkhiChhXh)
+          vkFull <- vSK + Xk_CkhiChhXh %*% vbetahat %*% Matrix::t(Xk_CkhiChhXh)
         
           zk[i] <- mean(zkFull)
           vk[i] <- mean(vkFull)
@@ -788,9 +788,9 @@ compLikXVLMM2 <- function(c , z , X , blocks , iCBlocks , nBlocks1 = length(bloc
         vk.Min <- vk[iMin]
         zk.Min <- zk[iMin]
         
-        tmp1 <- rowSums(zk / vk)
+        tmp1 <- raster::rowSums(zk / vk)
         
-        vk <- 1 / rowSums(1 / vk)
+        vk <- 1 / raster::rowSums(1 / vk)
         zk <- vk * tmp1
         
         vk <- nLevels * vk # because based on likelihood for two copies of data.
@@ -846,7 +846,7 @@ compLikXVLMM2.Subsets <- function(c , z , X , blocks , iCBlocks , nBlocks1 = len
 
 ### which blocks overlap with this subset?...
         iBlocksThis <- lapply(blocks , intersect , iSubset)
-        iBlocksThis <- which(unlist(lapply(iBlocksThis , length)) > 0)
+        iBlocksThis <- Matrix::which(unlist(lapply(iBlocksThis , length)) > 0)
 
         for (i in iBlocksThis){
    
@@ -858,7 +858,7 @@ compLikXVLMM2.Subsets <- function(c , z , X , blocks , iCBlocks , nBlocks1 = len
           }           
 
 ### to which points will this block contribute?...
-          iPtsThisInFull <- which(is.element(iSubset , blocks[[i]]))
+          iPtsThisInFull <- Matrix::which(is.element(iSubset , blocks[[i]]))
         
           if(length(iPtsThisInFull) > 0){
             iPtsThis <- iSubset[iPtsThisInFull]
@@ -902,8 +902,8 @@ compLikXVLMM2.Subsets <- function(c , z , X , blocks , iCBlocks , nBlocks1 = len
           vkFull <- nLevels * chol2inv(chol(m3Tmp)) # because based on likelihood for two copies of data
         
 ### alt - which level gave block with the best coverage of prediction block?
-          n0.L1 <- length(which(vkFullFinal.AllLevels[[1]] == 0))
-          n0.L2 <- length(which(vkFullFinal.AllLevels[[2]] == 0))
+          n0.L1 <- length(Matrix::which(vkFullFinal.AllLevels[[1]] == 0))
+          n0.L2 <- length(Matrix::which(vkFullFinal.AllLevels[[2]] == 0))
           if((n0.L1 == 0) & (n0.L2 == 0)){
 ### both complete, so choose the one with the minimum average variance(ie best prediction)...        
             vTmp <- unlist(lapply(vkFullFinal.AllLevels , mean))
@@ -973,7 +973,7 @@ compLikXVLMM2.Subsets.1Level <- function(c , z , X , blocks , iCBlocks , betahat
         
 ### to which subsets will this block contribute?...
         iSubsetsThis <- lapply(iSubsets , intersect , blocks[[i]])
-        iWhichSubsetsThis <- which(unlist(lapply(iSubsetsThis , length)) > 0)
+        iWhichSubsetsThis <- Matrix::which(unlist(lapply(iSubsetsThis , length)) > 0)
         
 ### renumber non-empty iSubsetsThis to go from 1 - nDataThisBlock
         iminThisBlock <- min(blocks[[i]])
@@ -993,7 +993,7 @@ compLikXVLMM2.Subsets.1Level <- function(c , z , X , blocks , iCBlocks , betahat
 ### vk[i] is now sum[covariances in subset i]
 ### so to get predictions and variance of subset average...
 ##################################################
-    iGT0 <- which(nPerSubset > 0)
+    iGT0 <- Matrix::which(nPerSubset > 0)
     zk[iGT0] <- zk[iGT0] / nPerSubset[iGT0]
     vk[iGT0] <- vk[iGT0] / (nPerSubset[iGT0] ^ 2)
     
@@ -1014,7 +1014,7 @@ compLikXVLMM2.Subsets.1Level <- function(c , z , X , blocks , iCBlocks , betahat
 ##########################################################################
 defineCLMM2 <- function(c0 , c1 , a1 , c2 , a2 , D , covModel , nSpatStructs){
 
-    iDPossErrs <- which((D > 0) & (D <=1E-10))
+    iDPossErrs <- Matrix::which((D > 0) & (D <=1E-10))
     if(length(iDPossErrs) > 0){ print('WARNING - SOME SMALL VALUES IN D COULD BE COLOCATED - CHECK DEFINITION OF D!') }else{}
 
     if(covModel == 'exponential'){ 
@@ -1024,12 +1024,12 @@ defineCLMM2 <- function(c0 , c1 , a1 , c2 , a2 , D , covModel , nSpatStructs){
         DOVERa1 <- D / a1
         DOVERa2 <- D / a2
         C1 <- 1 - (1.5 * DOVERa1 - 0.5 * (DOVERa1 ^ 3) )
-        C1[which(DOVERa1 > 1)] <- 0
+        C1[Matrix::which(DOVERa1 > 1)] <- 0
         C <- c0 * (D == 0) + c1 * C1
 
         if(nSpatStructs == 2){ 
             C2 <- 1 - (1.5 * DOVERa2 - 0.5 * (DOVERa2 ^ 3) )
-            C2[which(DOVERa2 > 1)] <- 0
+            C2[Matrix::which(DOVERa2 > 1)] <- 0
             C <- C + c2 * C2
         }else{}
 
@@ -1070,7 +1070,7 @@ printNll <- function(nll , parsOut , verbose = T){
 ######################################################################
 getnBlocks1 <- function(blocks , n){
     nPerBlock <- unlist(lapply(blocks , length))
-    nBlocks1 <- which(cumsum(nPerBlock) == n)
+    nBlocks1 <- Matrix::which(cumsum(nPerBlock) == n)
     return(nBlocks1)
 }
 
@@ -1112,8 +1112,8 @@ maternCov4fLMM2 <- function(D , pars){
 
 	if((c1 > 0) & (a > 0) & (nu >= 0.05)  & (nu <= 20)){
 
-		iD0 <- which(D == 0)
-		iDGT0 <- which(D > 0)
+		iD0 <- Matrix::which(D == 0)
+		iDGT0 <- Matrix::which(D > 0)
 
 ### range is approx a * 3...this is from wiki, 
 ### and is i think what stein's parameterization was supposed to be.
@@ -1127,12 +1127,12 @@ maternCov4fLMM2 <- function(D , pars){
 	    lnconstmatern[iDGT0] <- nu * log(Dsqrt2nuOVERa[iDGT0]) - (nu - 1) * log(2) - lgamma(nu)
       
 		realmin <- 3.448490e-304 
-		ibesGT0 <- which(bes > realmin)
+		ibesGT0 <- Matrix::which(bes > realmin)
 
         C <- 0 * D # initiate.
         C[ibesGT0] <- c1 * exp(lnconstmatern[ibesGT0]+log(bes[ibesGT0]))
         C[iD0] <- c1
-        C[which(is.infinite(bes))] <- c1
+        C[Matrix::which(is.infinite(bes))] <- c1
 
 	}else{
 		C <- NA

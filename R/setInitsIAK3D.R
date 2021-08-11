@@ -76,10 +76,10 @@ setInitsIAK3D <- function(xData , dIData , zData , XData , vXU , iU , modelx , n
     
     ### for inits for a newton-raphson routine to fit the variance parameters...
     if(is.null(initC)){
-      betaInit <- solve(t(XData) %*% XData , t(XData) %*% zData)
+      betaInit <- Matrix::solve(Matrix::t(XData) %*% XData , Matrix::t(XData) %*% zData)
     }else{
       tmp <- lndetANDinvCb(initC , cbind(zData,XData))
-      betaInit <- solve(t(XData) %*% tmp$invCb[,-1,drop=FALSE] , t(XData) %*% tmp$invCb[,1,drop=FALSE])
+      betaInit <- Matrix::solve(Matrix::t(XData) %*% tmp$invCb[,-1,drop=FALSE] , Matrix::t(Xdata) %*% tmp$invCb[,1,drop=FALSE])
     }
     resInit <- zData - XData %*% betaInit
     
@@ -89,15 +89,21 @@ setInitsIAK3D <- function(xData , dIData , zData , XData , vXU , iU , modelx , n
     ### first, fit model to profile-average data, crudely averaged at 5cm-rounded midpoints... (I think by this I meant averages for each depth in profile)
     ### this should give inits for depth-wise sum component, cd1
     ###############################################
-    zTmp <- lndetANDinvCb(t(allKd) %*% allKd , t(allKd) %*% resInit)$invCb
+    what <- lndetANDinvCb(Matrix::t(allKd) %*% allKd , Matrix::t(allKd) %*% resInit)
+    what1 <- Matrix::t(allKd) %*% allKd
+    what2 <- Matrix::t(allKd) %*% resInit
+    
+    #browser()
+    zTmp <- lndetANDinvCb(Matrix::t(allKd) %*% allKd , Matrix::t(allKd) %*% resInit)$invCb
     dIUTmp <- rowMeans(alldIU)
     dIUTmp <- round(dIUTmp * 20) / 20
     dIUTmpU <- unique(dIUTmp)
     zTmpU <- NA * numeric(length(dIUTmpU))
+    
     for(i in 1:length(dIUTmpU)){ 
-      iThis <- which(dIUTmp == dIUTmpU[i])
+      iThis <- Matrix::which(dIUTmp == dIUTmpU[i])
       zTmpU[i] <- mean(zTmp[iThis])
-    }
+    } # KM ZTmpU different
     ### initially, make bounds a bit more estrictive than usual to make sure not starting at extremes. 
     minaTmp <- parBnds$adBnds[1] + 0.2 * (parBnds$adBnds[2] - parBnds$adBnds[1])
     maxaTmp <- parBnds$adBnds[2] - 0.4 * (parBnds$adBnds[2] - parBnds$adBnds[1])
@@ -126,7 +132,7 @@ setInitsIAK3D <- function(xData , dIData , zData , XData , vXU , iU , modelx , n
     iA <- iB <- iC <- c()
     #      for(i in 1:dim(setupMats$xU)[[1]]){
     for(i in 1:ncol(allKx)){
-      iAThis <- which((allKx[,i] == 1) & (dMidpnts <= dAB))
+      iAThis <- Matrix::which((allKx[,i] == 1) & (dMidpnts <= dAB))
       if(length(iAThis) == 0){
       }else if(length(iAThis) == 1){
         iA <- c(iA , iAThis)
@@ -135,7 +141,7 @@ setInitsIAK3D <- function(xData , dIData , zData , XData , vXU , iU , modelx , n
         iA <- c(iA , iAThis)
       }
       
-      iBThis <- which((allKx[,i] == 1) & (dMidpnts > dAB) & (dMidpnts <= dBC))
+      iBThis <- Matrix::which((allKx[,i] == 1) & (dMidpnts > dAB) & (dMidpnts <= dBC))
       if(length(iBThis) == 0){
       }else if(length(iBThis) == 1){
         iB <- c(iB , iBThis)
@@ -144,7 +150,7 @@ setInitsIAK3D <- function(xData , dIData , zData , XData , vXU , iU , modelx , n
         iB <- c(iB , iBThis)
       }
       
-      iCThis <- which((allKx[,i] == 1) & (dMidpnts > dBC))
+      iCThis <- Matrix::which((allKx[,i] == 1) & (dMidpnts > dBC))
       if(length(iCThis) == 0){
       }else if(length(iCThis) == 1){
         iC <- c(iC , iCThis)
@@ -380,7 +386,7 @@ setInitsIAK3D <- function(xData , dIData , zData , XData , vXU , iU , modelx , n
         XTmp <- XTmp[,-jDlt]
       }else{}
       
-      parTmp <- solve(t(XTmp) %*% XTmp , t(XTmp) %*% zTmp)
+      parTmp <- Matrix::solve(Matrix::t(XTmp) %*% XTmp , Matrix::t(XTmp) %*% zTmp)
       tau1d1 <- parTmp[iTmpd1]
       tau1xd0 <- parTmp[iTmpxd0]
       tau1xd1 <- parTmp[iTmpxd1]

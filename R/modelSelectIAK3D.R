@@ -3,13 +3,13 @@ selectCovIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx ,
 #########################################################
 ### error check for duplicated xData,dIData data, if no measurement error being included...
 #########################################################
-    iDuplicated <- which(duplicated(cbind(xData , dIData)))
+    iDuplicated <- Matrix::which(duplicated(cbind(xData , dIData)))
     if(length(iDuplicated) > 0){ stop(paste0('Error - the data at positions ' , iDuplicated , ' are duplicated! Crashing for now - but could generalise model selection to force measurement error to be included.')) }else{} 
 
 #########################################################
 ### error check for any NAs; removing them if found...
 #########################################################
-    iNA <- which(is.na(zData) | rowSums(is.na(covsData)) > 0)
+    iNA <- Matrix::which(is.na(zData) | raster::rowSums(is.na(covsData)) > 0)
     if(length(iNA) > 0){ 
       print('Attention! Some NAs found in data ; removing them.')
       xData <- xData[-iNA,drop = FALSE]
@@ -179,7 +179,7 @@ selectCovIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx ,
 }
 
 ################################################################################
-### here the models with sdfdTypeANDcmeOpt[1] == -9 are also included 
+### here::here the models with sdfdTypeANDcmeOpt[1] == -9 are also included 
 ### (-9 = no depth rand eff trend ; useful if spline included for approx with big datasets), 
 ### which weren't searched for in the above model selection algorithm.
 ### function useful for parallelizing model selection.
@@ -316,7 +316,7 @@ stepBackAic <- function(namesX , pX , allKnotsd , zData , dIData , covsData , nl
     XList <- list()
     for (i in 1:length(namesX)){
         if((crAll[i]) & (!is.na(pX[i]))){
-            iRmvTmp <- which(namesX == namesX[i])
+            iRmvTmp <- Matrix::which(namesX == namesX[i])
             namesXThis <- namesX[-iRmvTmp]
             pXThis <- pX[-iRmvTmp]
 
@@ -338,7 +338,7 @@ stepBackAic <- function(namesX , pX , allKnotsd , zData , dIData , covsData , nl
           iRemove <- which.min(aicAll)
 ### get all of this name, in case its a categorical variable being removed...
           nameXRmv <- namesX[iRemove]
-          iRemove <- which(namesX == nameXRmv)
+          iRemove <- Matrix::which(namesX == nameXRmv)
 
           namesX <- namesX[-iRemove]
           pX <- pX[-iRemove]
@@ -437,7 +437,7 @@ stepBackWald <- function(namesX , pX , allKnotsd , zData , dIData , covsData , l
     pValAll <- NA * numeric(length(namesX))
     for (i in 1:length(namesX)){
         if((crAll[i]) & (!is.na(pX[i]))){
-          iRmvTmp <- which(namesX == namesX[i])
+          iRmvTmp <- Matrix::which(namesX == namesX[i])
 
           pValAll[i] <- waldTest(betahat = betahat , vbetahat = vbetahat , ip0 = iRmvTmp)
         }else{}
@@ -451,7 +451,7 @@ stepBackWald <- function(namesX , pX , allKnotsd , zData , dIData , covsData , l
 
 ### get all of this name, in case its a categorical variable being removed...
           nameXRmv <- namesX[iRemove]
-          iRemove <- which(namesX == nameXRmv)
+          iRemove <- Matrix::which(namesX == nameXRmv)
 
           namesX <- namesX[-iRemove]
           pX <- pX[-iRemove]
@@ -484,9 +484,9 @@ waldTest <- function(betahat , vbetahat , ip0 = NULL , L = NULL){
     diffp <- dim(L)[[1]]
   }
 
-  v <- L %*% vbetahat %*% t(L)
+  v <- L %*% vbetahat %*% Matrix::t(L)
   Lbetahat <- L %*% betahat
-  WaldStat <- as.numeric(t(Lbetahat) %*% solve(v , Lbetahat))
+  WaldStat <- as.numeric(Matrix::t(Lbetahat) %*% Matrix::solve(v , Lbetahat))
   
   pValWT <- 1 - pchisq(WaldStat , diffp)
   
@@ -499,15 +499,16 @@ waldTest <- function(betahat , vbetahat , ip0 = NULL , L = NULL){
 nllLm <- function(zData , XData , REML = FALSE){
     n <- length(zData)
     p <- dim(XData)[[2]]
-    XX <- t(XData) %*% XData 
+    XX <- Matrix::t(XData) %*% XData 
     cholXX <- try(chol(XX) , silent = TRUE)
     if(is.character(cholXX) | min(eigen(XX)$value) <= 0){
       return(list('nll' = NA , 'betahat' = matrix(NA , p , 1) , 'vbetahat' = matrix(NA , p , p) , 'sigma2hat' = NA))
     }else{}
     vbetahat <- chol2inv(cholXX)
-    betahat <- matrix(vbetahat %*% (t(XData) %*% zData) , ncol = 1)
+    
+    betahat <- matrix(vbetahat %*% (Matrix::t(XData) %*% zData) , ncol = 1)
 
-    lndetXX <- determinant(XX , logarithm = TRUE)
+    lndetXX <- Matrix::determinant(XX , logarithm = TRUE)
     if(lndetXX$sign < 0){
       return(list('nll' = NA , 'betahat' = matrix(NA , p , 1) , 'vbetahat' = matrix(NA , p , p) , 'sigma2hat' = NA))
     }else{}
@@ -515,10 +516,10 @@ nllLm <- function(zData , XData , REML = FALSE){
     
     res <- zData - XData %*% betahat
     if(REML){
-        sigma2hat <- as.numeric(t(res) %*% res) / (n - p)
+        sigma2hat <- as.numeric(Matrix::t(res) %*% res) / (n - p)
         nll <- 0.5 * ((n - p) * log(2 * pi) + (n - p) * log(sigma2hat) + lndetXX + n - p)
     }else{
-        sigma2hat <- as.numeric(t(res) %*% res) / n
+        sigma2hat <- as.numeric(Matrix::t(res) %*% res) / n
         nll <- 0.5 * n * (log(2 * pi) + log(sigma2hat) + 1)
     }
     if(sigma2hat < 0){
@@ -539,7 +540,7 @@ canRemove <- function(namesX){
   for(j in 2:length(namesX)){
     if(namesX[j] == 'd2'){
 ### search for any terms that start with d2.; if found, can't remove d2
-        if(length(which(substr(namesX , 1 , 3) == 'd2.')) == 0){
+        if(length(Matrix::which(substr(namesX , 1 , 3) == 'd2.')) == 0){
             canRemove[j] <- T
         }else{}
     }else if(substr(namesX[j] , 1 , 3) == 'd2.'){
@@ -547,20 +548,20 @@ canRemove <- function(namesX){
         canRemove[j] <- T
     }else if(namesX[j] == 'd'){
 ### search for any terms that start with d.; if found, can't remove d
-        if(length(which(substr(namesX , 1 , 2) == 'd.')) == 0){
+        if(length(Matrix::which(substr(namesX , 1 , 2) == 'd.')) == 0){
             canRemove[j] <- T
         }else{}
     }else if(substr(namesX[j] , 1 , 2) == 'd.'){
         sptlNameThis <- substr(namesX[j] , 3 , nchar(namesX[j]))
 ### search for d2.name  
-        if(length(which(namesX == paste0('d2.', sptlNameThis))) == 0){
+        if(length(Matrix::which(namesX == paste0('d2.', sptlNameThis))) == 0){
             canRemove[j] <- T
         }else{}
     }else if(namesX[j] == 'dSpline'){
 ### cannot remove spline terms...    
     }else{
 ### just the name of a variable, so search for 'd.variable' or 'd2.variable' (shouldn't need the latter search)         
-        if(length(which((namesX == paste0('d.', namesX[j])) | (namesX == paste0('d2.', namesX[j])))) == 0){
+        if(length(Matrix::which((namesX == paste0('d.', namesX[j])) | (namesX == paste0('d2.', namesX[j])))) == 0){
             canRemove[j] <- T
         }else{}
     }
@@ -594,7 +595,7 @@ selectKnots <- function(dIData , zData , covsData , modelX , plotSplines = FALSE
     
     zResdIMdPtU <- NA * numeric(length(dIMdPtU))
     for(i in 1:length(dIMdPtU)){
-        iThis <- which(dIMdPt == dIMdPtU[i])
+        iThis <- Matrix::which(dIMdPt == dIMdPtU[i])
         zResdIMdPtU[i] <- mean(zRes[iThis])
     }
     
@@ -682,18 +683,18 @@ lmGivenX <- function(zData , XData , method = 'ML' , XFULL = NULL){
     zData <- matrix(zData , ncol = 1)
     n <- length(zData)
     p <- ncol(XData)
-    XX <- t(XData) %*% XData
-    Xz <- matrix(t(XData) %*% zData , ncol = 1)
+    XX <- Matrix::t(XData) %*% XData
+    Xz <- matrix(Matrix::t(XData) %*% zData , ncol = 1)
     
-# #    tmp0 <- try(solve(XX , Xz) , silent = TRUE)
+# #    tmp0 <- try(Matrix::solve(XX , Xz) , silent = TRUE)
 # #    tmp <- lndetANDinvCb(XX , Xz)
 # #    if(is.character(tmp$cholC) | is.character(tmp0)){
-#     betahat <- try(solve(XX , Xz) , silent = TRUE)
+#     betahat <- try(Matrix::solve(XX , Xz) , silent = TRUE)
 #     if(is.character(betahat)){
 #       return(list('nll' = NA , 'AIC' = NA , 'betahat' = matrix(NA , p , 1)))
 #     }else{}
 # #    lndetXX <- tmp$lndetC
-    # lndetXX <- as.numeric(determinant(XX , logarithm = TRUE)$modulus)
+    # lndetXX <- as.numeric(Matrix::determinant(XX , logarithm = TRUE)$modulus)
     
     betahat <- lndetANDinvCb(XX , Xz)
     lndetXX <- betahat$lndetC
@@ -707,25 +708,25 @@ lmGivenX <- function(zData , XData , method = 'ML' , XFULL = NULL){
     zRes <- zData - XData %*% betahat
     if(method == 'ML'){
         if(!is.null(XFULL)){ stop('Error - XFULL should only be included for comparison based on REML fits!') }else{}
-        sigma2hat <- as.numeric(t(zRes) %*% zRes / n)
+        sigma2hat <- as.numeric(Matrix::t(zRes) %*% zRes / n)
         nll <- 0.5 * n * (log(2 * pi) + log(sigma2hat) + 1)
         
-        vbetahat <- sigma2hat * solve(XX)
+        vbetahat <- sigma2hat * Matrix::solve(XX)
         
     }else if(method == 'REML'){
-        sigma2hat <- as.numeric(t(zRes) %*% zRes / (n - p))
-        vbetahat <- sigma2hat * solve(XX)
+        sigma2hat <- as.numeric(Matrix::t(zRes) %*% zRes / (n - p))
+        vbetahat <- sigma2hat * Matrix::solve(XX)
         
         if(is.null(XFULL)){
             nll <- 0.5 * (n - p) * (log(2 * pi) + log(sigma2hat) + 1) + 0.5 * lndetXX
         }else{
-### could add check here that XData is nested in XFULL. But for now assuming this is so. 
+### could add check here::here that XData is nested in XFULL. But for now assuming this is so. 
             pFULL <- ncol(XFULL)
-            XXFULL <- t(XFULL) %*% XFULL
-            XzFULL <- t(XFULL) %*% zData
+            XXFULL <- Matrix::t(XFULL) %*% XFULL
+            XzFULL <- Matrix::t(XFULL) %*% zData
 #            tmp <- lndetANDinvCb(XXFULL , XzFULL)
 #            lndetXXFULL <- tmp$lndetC
-             lndetXXFULL <- as.numeric(determinant(XXFULL , logarithm = TRUE)$modulus)
+             lndetXXFULL <- as.numeric(Matrix::determinant(XXFULL , logarithm = TRUE)$modulus)
 
             nll <- 0.5 * ((n - pFULL) * log(2 * pi) + (n - pFULL) * log(sigma2hat) + (n - p)) + 0.5 * lndetXXFULL
         }

@@ -135,7 +135,7 @@ nllIAK3D_CL <- function(pars , zData , XData , modelx , nud ,
       lndetXiAX <- c()
     }
       
-    resiAres <- as.numeric(XziAXz[p+1,p+1] - 2 * t(betahat) %*% XziAXz[1:p,p+1,drop=FALSE] + t(betahat) %*% XziAXz[1:p,1:p,drop=FALSE] %*% betahat)
+    resiAres <- as.numeric(XziAXz[p+1,p+1] - 2 * Matrix::t(betahat) %*% XziAXz[1:p,p+1,drop=FALSE] + Matrix::t(betahat) %*% XziAXz[1:p,1:p,drop=FALSE] %*% betahat)
 
     if(compLikMats$compLikOptn == 2 || compLikMats$compLikOptn == 3){
       if(useReml){ stop('Error - Eidsvik was only defined for ML, not REML estimation! Work on this!') }else{}
@@ -164,7 +164,7 @@ nllIAK3D_CL <- function(pars , zData , XData , modelx , nud ,
     resiCres <- resiAres / cxdhat
 
     if(rtnAll){ 
-        vbetahat <- cxdhat * solve(XziAXz[1:p,1:p,drop = FALSE]) 
+        vbetahat <- cxdhat * Matrix::solve(XziAXz[1:p,1:p,drop = FALSE]) 
         sigma2Vec <- cxdhat * sigma2Vec 
         if(attachBigMats){
           listiCReskl_kl <- list()
@@ -256,7 +256,7 @@ predMatsIAK3D_CL <- function(z_muhat , XData , xMap , dIMap , iData = seq(length
                 sdfdType_cd1 = lmmFit$sdfdType_cd1 , sdfdType_cxd0 = lmmFit$sdfdType_cxd0 , sdfdType_cxd1 = lmmFit$sdfdType_cxd1 ,
                 cmeOpt = lmmFit$cmeOpt , setupMats = setupMatsMap)
 
-        if(i == 1){ diagCkk <- diag(tmp$C[(length(iThis)+1):(length(iThis)+nxMap),(length(iThis)+1):(length(iThis)+nxMap),drop = FALSE]) }else{}
+        if(i == 1){ diagCkk <- Matrix::diag(tmp$C[(length(iThis)+1):(length(iThis)+nxMap),(length(iThis)+1):(length(iThis)+nxMap),drop = FALSE]) }else{}
 
         ChkThis <- tmp$C[1:length(iThis),(length(iThis)+1):(length(iThis)+nxMap),drop = FALSE]
         ChThis <- tmp$C[1:length(iThis),1:length(iThis),drop = FALSE]
@@ -270,7 +270,7 @@ predMatsIAK3D_CL <- function(z_muhat , XData , xMap , dIMap , iData = seq(length
                            sdfdType_cd1 = lmmFit$sdfdType_cd1 , sdfdType_cxd0 = lmmFit$sdfdType_cxd0 , sdfdType_cxd1 = lmmFit$sdfdType_cxd1 , 
                            cmeOpt = lmmFit$cmeOpt , setupMats = setupMatsMap)
           
-          diagCkk <- diag(tmp$C)
+          diagCkk <- Matrix::diag(tmp$C)
           rm(setupMatsMap , tmp)
         }else{}
         
@@ -304,12 +304,12 @@ predMatsIAK3D_CL <- function(z_muhat , XData , xMap , dIMap , iData = seq(length
       
 #      tmp <- lndetANDinvCb(ChThis , ChkThis)
 #      iCChkThis <- tmp$invCb
-      iCChkThis <- solve(ChThis , ChkThis)
+      iCChkThis <- Matrix::solve(ChThis , ChkThis)
       
       diagCkhiCChk_SUM <- diagCkhiCChk_SUM + matrix(colSums(ChkThis * iCChkThis) , ncol = 1)
 
-      CkhiCX_SUM <- CkhiCX_SUM + t(iCChkThis) %*% XData[iThis,,drop=FALSE]
-      CkhiCz_muhat_SUM <- CkhiCz_muhat_SUM + t(iCChkThis) %*% z_muhat[iThis]
+      CkhiCX_SUM <- CkhiCX_SUM + Matrix::t(iCChkThis) %*% XData[iThis,,drop=FALSE]
+      CkhiCz_muhat_SUM <- CkhiCz_muhat_SUM + Matrix::t(iCChkThis) %*% z_muhat[iThis]
     }
 
     nadjSubsets <- nrow(lmmFit$compLikMats$subsetPairsAdj)
@@ -361,12 +361,12 @@ predMatsIAK3D_CL <- function(z_muhat , XData , xMap , dIMap , iData = seq(length
       
 #      tmp <- lndetANDinvCb(ChThis , ChkThis)
 #      iCChkThis <- tmp$invCb
-      iCChkThis <- solve(ChThis , ChkThis)
+      iCChkThis <- Matrix::solve(ChThis , ChkThis)
       
       diagCkhiCChk_BLOCKS[,i] <- matrix(colSums(ChkThis * iCChkThis), ncol = 1)
 
-      CkhiCX_BLOCKS[[i]] <- t(iCChkThis) %*% XData[iThis,,drop=FALSE]
-      CkhiCz_muhat_BLOCKS[,i] <- matrix(t(iCChkThis) %*% z_muhat[iThis] , ncol = 1)
+      CkhiCX_BLOCKS[[i]] <- Matrix::t(iCChkThis) %*% XData[iThis,,drop=FALSE]
+      CkhiCz_muhat_BLOCKS[,i] <- matrix(Matrix::t(iCChkThis) %*% z_muhat[iThis] , ncol = 1)
     }
 
     for(i in 1:nrow(lmmFit$compLikMats$subsetPairsNonadj)){
@@ -414,7 +414,7 @@ predMatsIAK3D_CL_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = se
 
   for (iBlock in 1:nBlocksMap){
 
-    iMapThis <- which(blockMap == iBlock)
+    iMapThis <- Matrix::which(blockMap == iBlock)
     xMapThis <- xMap[iMapThis,,drop=FALSE]
     dIMapThis <- dIMap[iMapThis,,drop=FALSE]
 
@@ -424,9 +424,9 @@ predMatsIAK3D_CL_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = se
 
 ### what are the neighbouring blocks?
       iBlocksAdj <- c()
-      iTmp <- which(lmmFit$compLikMats$subsetPairsAdj[,1] == iBlock)
+      iTmp <- Matrix::which(lmmFit$compLikMats$subsetPairsAdj[,1] == iBlock)
       if(length(iTmp) > 0){ iBlocksAdj <- c(iBlocksAdj , lmmFit$compLikMats$subsetPairsAdj[iTmp,2]) }else{}
-      iTmp <- which(lmmFit$compLikMats$subsetPairsAdj[,2] == iBlock)
+      iTmp <- Matrix::which(lmmFit$compLikMats$subsetPairsAdj[,2] == iBlock)
       if(length(iTmp) > 0){ iBlocksAdj <- c(iBlocksAdj , lmmFit$compLikMats$subsetPairsAdj[iTmp,1]) }else{}
       
       if(length(iBlocksAdj) == 0){ stop('Error - every block must have a neighbour - check this!') }else{}
@@ -451,7 +451,7 @@ predMatsIAK3D_CL_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = se
 
         iThis <- c(iDatak , iDatal)
 
-### note different order to other stuff (preds first here) for consistency with Eidsvik...
+### note different order to other stuff (preds first here::here) for consistency with Eidsvik...
         oldSetC <- TRUE # new way to be checked.
         if(oldSetC){
           # setupMatsMap <- setupIAK3D(xData = rbind(xMapThis , lmmFit$xData[iThis,,drop=FALSE]) , dIData = rbind(dIMapThis , as.matrix(lmmFit$dIData[iThis,,drop=FALSE])) , nDscPts = 0)
@@ -463,7 +463,7 @@ predMatsIAK3D_CL_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = se
                   cmeOpt = lmmFit$cmeOpt , setupMats = setupMatsMap)
 
           if(i == 1){
-            diagCkk[iMapThis,1] <- diag(tmp$C[1:nxMapThis,1:nxMapThis,drop = FALSE])
+            diagCkk[iMapThis,1] <- Matrix::diag(tmp$C[1:nxMapThis,1:nxMapThis,drop = FALSE])
           }else{}
           ChkThis <- tmp$C[(nxMapThis+1):(nxMapThis+length(iThis)),1:nxMapThis,drop = FALSE]
           ChThis <- tmp$C[(nxMapThis+1):(nxMapThis+length(iThis)),(nxMapThis+1):(nxMapThis+length(iThis)),drop = FALSE]
@@ -477,7 +477,7 @@ predMatsIAK3D_CL_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = se
                              sdfdType_cd1 = lmmFit$sdfdType_cd1 , sdfdType_cxd0 = lmmFit$sdfdType_cxd0 , sdfdType_cxd1 = lmmFit$sdfdType_cxd1 , 
                              cmeOpt = lmmFit$cmeOpt , setupMats = setupMatsMap)
             
-            diagCkk[iMapThis,1] <- diag(tmp$C) 
+            diagCkk[iMapThis,1] <- Matrix::diag(tmp$C) 
           }else{}
           # setupMatsMap <- setupIAK3D2(xData = lmmFit$xData[iThis,,drop=FALSE] , dIData = as.matrix(lmmFit$dIData[iThis,,drop=FALSE]) , 
           #                             xData2 = xMapThis , dIData2 = dIMapThis)
@@ -505,13 +505,13 @@ predMatsIAK3D_CL_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = se
         
 #        tmp <- lndetANDinvCb(ChThis , ChkThis)
 #        iCChkThis <- tmp$invCb
-        iCChkThis <- solve(ChThis , ChkThis)
+        iCChkThis <- Matrix::solve(ChThis , ChkThis)
         
         diagCkhiCChkThis <- matrix(colSums(ChkThis * iCChkThis) , ncol = 1)
         
         diagCkhiCChk_SUM <- diagCkhiCChk_SUM + diagCkhiCChkThis
-        CkhiCX_SUM <- CkhiCX_SUM + t(iCChkThis) %*% XData[iThis,,drop=FALSE]
-        CkhiCz_muhat_SUM <- CkhiCz_muhat_SUM + t(iCChkThis) %*% z_muhat[iThis]
+        CkhiCX_SUM <- CkhiCX_SUM + Matrix::t(iCChkThis) %*% XData[iThis,,drop=FALSE]
+        CkhiCz_muhat_SUM <- CkhiCz_muhat_SUM + Matrix::t(iCChkThis) %*% z_muhat[iThis]
       }
 
 ### effectively likelihood for nadj copies of the data, so:
@@ -547,7 +547,7 @@ predMatsIAK3D_CLEV_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = 
 
   for (iBlock in 1:nBlocksMap){
 
-    iMapThis <- which(blockMap == iBlock)
+    iMapThis <- Matrix::which(blockMap == iBlock)
     xMapThis <- xMap[iMapThis,,drop=FALSE]
     dIMapThis <- dIMap[iMapThis,,drop=FALSE]
 
@@ -557,9 +557,9 @@ predMatsIAK3D_CLEV_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = 
 
 ### what are the neighbouring blocks?
       iBlocksAdj <- c()
-      iTmp <- which(lmmFit$compLikMats$subsetPairsAdj[,1] == iBlock)
+      iTmp <- Matrix::which(lmmFit$compLikMats$subsetPairsAdj[,1] == iBlock)
       if(length(iTmp) > 0){ iBlocksAdj <- c(iBlocksAdj , lmmFit$compLikMats$subsetPairsAdj[iTmp,2]) }else{}
-      iTmp <- which(lmmFit$compLikMats$subsetPairsAdj[,2] == iBlock)
+      iTmp <- Matrix::which(lmmFit$compLikMats$subsetPairsAdj[,2] == iBlock)
       if(length(iTmp) > 0){ iBlocksAdj <- c(iBlocksAdj , lmmFit$compLikMats$subsetPairsAdj[iTmp,1]) }else{}
       
       if(length(iBlocksAdj) == 0){ stop('Error - every block must have a neighbour - check this!') }else{}
@@ -590,7 +590,7 @@ predMatsIAK3D_CLEV_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = 
       }
 
       iThis <- c(iDatak , iDatalAll)
-### note different order to other stuff (preds first here) for consistency with Eidsvik...
+### note different order to other stuff (preds first here::here) for consistency with Eidsvik...
       # setupMatsMap <- setupIAK3D(xData = rbind(xMapThis , lmmFit$xData[iThis,,drop=FALSE]) , dIData = rbind(dIMapThis , as.matrix(lmmFit$dIData[iThis,,drop=FALSE])) , nDscPts = 0)
       setupMatsMap <- setupIAK3D(xData = rbind(xMapThis , lmmFit$xData[iThis,,drop=FALSE]) , dIData = rbind(dIMapThis , as.matrix(lmmFit$dIData[iThis,,drop=FALSE])) , nDscPts = 0 , 
                                  sdfdType_cd1 = lmmFit$sdfdType_cd1 , sdfdType_cxd0 = lmmFit$sdfdType_cxd0 , sdfdType_cxd1 = lmmFit$sdfdType_cxd1 , sdfdKnots = lmmFit$sdfdKnots)
@@ -618,7 +618,7 @@ predMatsIAK3D_CLEV_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = 
 
           if(loadFromFit){
             ijTmp <- c(iBlock , iBlocksAdj[i])
-            iPair <- which(lmmFit$compLikMats$subsetPairsAdj[,1] == min(ijTmp) & lmmFit$compLikMats$subsetPairsAdj[,2] == max(ijTmp))
+            iPair <- Matrix::which(lmmFit$compLikMats$subsetPairsAdj[,1] == min(ijTmp) & lmmFit$compLikMats$subsetPairsAdj[,2] == max(ijTmp))
             if(length(iPair) != 1){ stop('Error - not found a unique subset pair!') }else{}
             if(iBlock > iBlocksAdj[i]){
               iOrderPair <- c(seq(length(iDatal) + 1 , length(iDatal) + length(iDatak)) , seq(1 , length(iDatal)))  
@@ -638,16 +638,16 @@ predMatsIAK3D_CLEV_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = 
             iCkl_kl_Ckl_0This <- iCkl_klThis %*% Ckl_0This
           }else{
 #            iCkl_kl_Ckl_0This <- lndetANDinvCb(Ckl_klThis , Ckl_0This)$invCb 
-            iCkl_kl_Ckl_0This <- solve(Ckl_klThis , Ckl_0This)
+            iCkl_kl_Ckl_0This <- Matrix::solve(Ckl_klThis , Ckl_0This)
           }
 
           C0IFklThis <- C0k_0k[i0,i0,drop=FALSE] - C0klAll[i0 , c(i1,i2) , drop = FALSE] %*% iCkl_kl_Ckl_0This
 ### ensure it is symmetric...          
-          C0IFklThis <- 0.5 * (C0IFklThis + t(C0IFklThis))
+          C0IFklThis <- 0.5 * (C0IFklThis + Matrix::t(C0IFklThis))
 
 #          iC0IFklThis <- lndetANDinvCb(C0IFklThis)$invCb
           iC0IFklThis <- chol2inv(chol(C0IFklThis))
-          Q0klThis_i0_i12 <- -iC0IFklThis %*% t(iCkl_kl_Ckl_0This)
+          Q0klThis_i0_i12 <- -iC0IFklThis %*% Matrix::t(iCkl_kl_Ckl_0This)
 
           Q0klThis_i0_i0 <- iC0IFklThis
 
@@ -677,7 +677,7 @@ predMatsIAK3D_CLEV_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = 
 
         C0_0_IF_k <- C0k_0k[i0,i0,drop=FALSE] - C0_kiCk_k %*% C0k_0k[i1,i0,drop=FALSE]
 ### to ensure C0_0_IF_k is symmetric (possibly not due to numerical errors)...
-        C0_0_IF_k <- 0.5 * (C0_0_IF_k + t(C0_0_IF_k))
+        C0_0_IF_k <- 0.5 * (C0_0_IF_k + Matrix::t(C0_0_IF_k))
 
 #        iC0_0_IF_k <- lndetANDinvCb(C0_0_IF_k)$invCb
         iC0_0_IF_k <- chol2inv(chol(C0_0_IF_k))
@@ -690,20 +690,20 @@ predMatsIAK3D_CLEV_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = 
         Bk0_SUM[,(nxMapThis+1):(nxMapThis+length(iDatak))] <- Bk0_SUM[,(nxMapThis+1):(nxMapThis+length(iDatak)),drop=FALSE] - nnonadjBlocks * iC0_0_IF_k_C0_kiCk_k
       }else{}
 
-      J0_SUM <- Bk0_SUM %*% C0k_0k %*% t(Bk0_SUM)
+      J0_SUM <- Bk0_SUM %*% C0k_0k %*% Matrix::t(Bk0_SUM)
       for(i in 1:length(iBlocksAdj)){
         i2i <- i2List[[i]]
-        J0_SUM <- J0_SUM + 2 * Bk0_SUM %*% C0k_lList[[i]] %*% t(Q0kl_i0_i2_List[[i]])
+        J0_SUM <- J0_SUM + 2 * Bk0_SUM %*% C0k_lList[[i]] %*% Matrix::t(Q0kl_i0_i2_List[[i]])
 
         for(j in 1:length(iBlocksAdj)){
           i2j <- i2List[[j]]
-          J0_SUM <- J0_SUM + Q0kl_i0_i2_List[[i]] %*% C0klAll[i2i , i2j , drop = FALSE] %*% t(Q0kl_i0_i2_List[[j]])
+          J0_SUM <- J0_SUM + Q0kl_i0_i2_List[[i]] %*% C0klAll[i2i , i2j , drop = FALSE] %*% Matrix::t(Q0kl_i0_i2_List[[j]])
         }
       }
 
 ### to ensure A0_SUM and J0_SUM are symmetric (possibly not due to numerical errors)...
-      A0_SUM <- 0.5 * (A0_SUM + t(A0_SUM))
-      J0_SUM <- 0.5 * (J0_SUM + t(J0_SUM))
+      A0_SUM <- 0.5 * (A0_SUM + Matrix::t(A0_SUM))
+      J0_SUM <- 0.5 * (J0_SUM + Matrix::t(J0_SUM))
 
 #      invA0 <- lndetANDinvCb(A0_SUM)$invCb
       invA0 <- chol2inv(chol(A0_SUM))
@@ -712,7 +712,7 @@ predMatsIAK3D_CLEV_ByBlock <- function(z_muhat , XData , xMap , dIMap , iData = 
 
       vkTmp <- invA0 %*% J0_SUM %*% invA0
       
-      vk[iMapThis,1] <- matrix(diag(vkTmp) , nrow = length(iMapThis))
+      vk[iMapThis,1] <- matrix(Matrix::diag(vkTmp) , nrow = length(iMapThis))
     }else{}
   }
 
@@ -787,9 +787,9 @@ setVoronoiBlocks <- function(x , nPerBlock = 50 , plotVor = F , vcentres = NULL)
   iBlock <- apply(D2Centroids , 1 , which.min)
   
   for(i in 1:nBlocks){
-    iBThis <- which(iBlock == i)
+    iBThis <- Matrix::which(iBlock == i)
     listBlocks[[i]]$xU <- xU[iBThis,,drop=FALSE]
-    iThis <- which(is.element(x[,1] , listBlocks[[i]]$xU[,1]) & is.element(x[,2] , listBlocks[[i]]$xU[,2]))
+    iThis <- Matrix::which(is.element(x[,1] , listBlocks[[i]]$xU[,1]) & is.element(x[,2] , listBlocks[[i]]$xU[,2]))
     listBlocks[[i]]$i <- iThis
   }
 
@@ -805,7 +805,7 @@ setVoronoiBlocks <- function(x , nPerBlock = 50 , plotVor = F , vcentres = NULL)
   }else{
     tmp <- deldir(x = vcentres[,1] , y = vcentres[,2])
   }
-  adjMtx <- sparseMatrix(i = c(tmp$dirsgs$ind1 , tmp$dirsgs$ind2) , j = c(tmp$dirsgs$ind2 , tmp$dirsgs$ind1) , x = 1)
+  adjMtx <- Matrix::sparseMatrix(i = c(tmp$dirsgs$ind1 , tmp$dirsgs$ind2) , j = c(tmp$dirsgs$ind2 , tmp$dirsgs$ind1) , x = 1)
 
 #######################################################
 ### split the pairs into adjacent subset pairs and non-adjacent subset pairs...
@@ -878,7 +878,7 @@ balanceNeighbours <- function(x , nPerBlock = 50 , plotVor = F , listBlocks , su
 ### drop the boundary, resplit based on direction of max sep dist
     xUTmp <- rbind(xUi , xUj)
     DTmp <- xyDist(xUTmp , xUTmp)
-    iDistant <- which(DTmp == max(DTmp) , arr.ind = TRUE)[1,1]
+    iDistant <- Matrix::which(DTmp == max(DTmp) , arr.ind = TRUE)[1,1]
 
     iTmp <- order(DTmp[iDistant,])
     iTmp <- iTmp[1:ceiling(length(iTmp) / 2)]
@@ -940,7 +940,7 @@ calcnPerCluster <- function(vcentres , xU){
   
   iclstr <- apply(DTmp , 1 , which.min)
 
-  tallyFn <- function(i , vecData){ length(which(vecData == i)) }
+  tallyFn <- function(i , vecData){ length(Matrix::which(vecData == i)) }
 
   nPerCluster <- sapply(seq(ncentres) , tallyFn , vecData = iclstr)
 

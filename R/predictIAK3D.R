@@ -1,7 +1,7 @@
 predictIAK3D <- function(xMap , dIMap , covsMap , lmmFit , rqrBTfmdPreds = TRUE , constrainX4Pred = FALSE){
 
 ########################################################
-### if xMap or dIMap were dataframes, convert to matrices here.
+### if xMap or dIMap were dataframes, convert to matrices here::here.
 ### and make sure all are numeric...
 ########################################################
     if(!is.matrix(xMap)){
@@ -84,7 +84,7 @@ predictIAK3D <- function(xMap , dIMap , covsMap , lmmFit , rqrBTfmdPreds = TRUE 
     if(!lmmFit$lnTfmdData){
       muhat <- lmmFit$XData %*% betahat 
     }else{
-      muhat <- setmuIAK3D(XData = lmmFit$XData , vXU = lmmFit$vXU , iU = lmmFit$iU , beta = betahat , diagC = diag(C) , sigma2Vec = lmmFit$sigma2Vec) 
+      muhat <- setmuIAK3D(XData = lmmFit$XData , vXU = lmmFit$vXU , iU = lmmFit$iU , beta = betahat , diagC = Matrix::diag(C) , sigma2Vec = lmmFit$sigma2Vec) 
     }
     
     if(lmmFit$compLikMats$compLikOptn == 0){
@@ -125,7 +125,7 @@ predictIAK3D <- function(xMap , dIMap , covsMap , lmmFit , rqrBTfmdPreds = TRUE 
         XMapThis <- as.matrix(tmp$X)
         vXUMapThis <- as.matrix(tmp$vXU)
         
-        iOKInThis <- which(!is.na(rowMeans(XMapThis)))
+        iOKInThis <- Matrix::which(!is.na(rowMeans(XMapThis)))
         nxMapThis <- length(iOKInThis)
         
         zMapThis <- vMapThis <- NA * numeric(length(iThis))
@@ -150,7 +150,7 @@ predictIAK3D <- function(xMap , dIMap , covsMap , lmmFit , rqrBTfmdPreds = TRUE 
             rm(setupMatsMap) 
             
             sigma2Veck <- tmp$sigma2Vec
-            Ckk <- diag(tmp$C)
+            Ckk <- Matrix::diag(tmp$C)
             rm(tmp)
             
             # setupMatsMap <- setupIAK3D2(xData = xMap[iThis[iOKInThis],,drop=FALSE] , dIData = dIMapThis[iOKInThis,,drop=FALSE] , 
@@ -169,8 +169,8 @@ predictIAK3D <- function(xMap , dIMap , covsMap , lmmFit , rqrBTfmdPreds = TRUE 
             CkhiCz_muhat <- Ckhtmp[,p+1 , drop = FALSE]
             CkhiC <- Ckhtmp[,(p+2):(dim(Ckhtmp)[[2]]) , drop = FALSE]
             rm(Ckhtmp) 
-            
-            CkhiCChk <- rowSums(CkhiC * Ckh)
+            #browser()
+            CkhiCChk <- raster::rowSums(CkhiC * Ckh)
           }else{
             ### define stuff via CL method...          
             if(lmmFit$compLikMats$compLikOptn == 2 || lmmFit$compLikMats$compLikOptn == 3){
@@ -206,7 +206,7 @@ predictIAK3D <- function(xMap , dIMap , covsMap , lmmFit , rqrBTfmdPreds = TRUE 
             if(!lmmFit$lnTfmdData){
               tmp <- XMapThis - CkhiCX
               if(lmmFit$useReml){
-                vMapThis[iOKInThis] <- Ckk - CkhiCChk + rowSums(tmp * t(vbetahat %*% t(tmp)))
+                vMapThis[iOKInThis] <- Ckk - CkhiCChk + raster::rowSums(tmp * Matrix::t(vbetahat %*% Matrix::t(tmp)))
               }else{
                 vMapThis[iOKInThis] <- Ckk - CkhiCChk #TEMP WITHOUT beta unc...
               }
@@ -252,7 +252,7 @@ predictIAK3D <- function(xMap , dIMap , covsMap , lmmFit , rqrBTfmdPreds = TRUE 
 
 profilePredictIAK3D <- function(xMap , dIMap , covsMap , iData = seq(length(lmmFit$zData)) , lmmFit , rqrBTfmdPreds = TRUE , constrainX4Pred = FALSE){
 ########################################################
-### if xMap or dIMap were dataframes, convert to matrices here.
+### if xMap or dIMap were dataframes, convert to matrices here::here.
 ### and make sure all are numeric...
 ########################################################
     if(!is.matrix(xMap)){
@@ -298,7 +298,7 @@ profilePredictIAK3D <- function(xMap , dIMap , covsMap , iData = seq(length(lmmF
     if(!lmmFit$lnTfmdData){
       muhat <- lmmFit$XData %*% betahat 
     }else{
-      muhat <- setmuIAK3D(XData = lmmFit$XData , vXU = lmmFit$vXU , iU = lmmFit$iU , beta = betahat , diagC = diag(lmmFit$C) , sigma2Vec = lmmFit$sigma2Vec) 
+      muhat <- setmuIAK3D(XData = lmmFit$XData , vXU = lmmFit$vXU , iU = lmmFit$iU , beta = betahat , diagC = Matrix::diag(lmmFit$C) , sigma2Vec = lmmFit$sigma2Vec) 
     }
  
     if(lmmFit$compLikMats$compLikOptn == 0){
@@ -346,7 +346,7 @@ profilePredictIAK3D <- function(xMap , dIMap , covsMap , iData = seq(length(lmmF
       rm(setupMatsMap) 
       
       sigma2Veck <- tmp$sigma2Vec
-      Ckk <- diag(tmp$C)
+      Ckk <- Matrix::diag(tmp$C)
       
       # setupMatsMap <- setupIAK3D2(xData = xMap , dIData = dIMap , 
       #                             xData2 = lmmFit$xData[iData,,drop=FALSE] , dIData2 = as.matrix(lmmFit$dIData[iData,,drop=FALSE]))
@@ -365,7 +365,7 @@ profilePredictIAK3D <- function(xMap , dIMap , covsMap , iData = seq(length(lmmF
       CkhiCz_muhat <- Ckhtmp[,p+1]
       CkhiC <- Ckhtmp[,(p+2):(dim(Ckhtmp)[[2]])]
       rm(Ckhtmp) ; gc()
-      CkhiCChk <- rowSums(CkhiC * Ckh)
+      CkhiCChk <- raster::rowSums(CkhiC * Ckh)
 
     }else{
 ### define stuff via CL method...          
@@ -400,7 +400,7 @@ profilePredictIAK3D <- function(xMap , dIMap , covsMap , iData = seq(length(lmmF
       if(!lmmFit$lnTfmdData){
         tmp <- XMap - CkhiCX
         if(lmmFit$useReml){
-          vMap <- Ckk - CkhiCChk + rowSums(tmp * t(vbetahat %*% t(tmp)))
+          vMap <- Ckk - CkhiCChk + raster::rowSums(tmp * Matrix::t(vbetahat %*% Matrix::t(tmp)))
         }else{
           vMap <- Ckk - CkhiCChk # TEMP WO BETA UNC.
         }
@@ -436,7 +436,7 @@ xValIAK3D <- function(lmmFit , removeAllWithin = 0 , namePlot = 'xvPlots.pdf' , 
 ###
 ### rqrBTfmdPreds is just for the plots...
 ####################################################
-    iTmp <- which(!duplicated(lmmFit$xData))
+    iTmp <- Matrix::which(!duplicated(lmmFit$xData))
     covsPred <- lmmFit$covsData[iTmp,,drop = FALSE]
     xPred <- lmmFit$xData[iTmp,,drop = FALSE]
 
@@ -457,20 +457,20 @@ xValIAK3D <- function(lmmFit , removeAllWithin = 0 , namePlot = 'xvPlots.pdf' , 
         covsPredThis <- covsPred[i,,drop = FALSE]
 
 ### get all the dIData to be predicted for this location...
-        iPredThis <- which((lmmFit$xData[,1] == xPredThis[1]) & (lmmFit$xData[,2] == xPredThis[2]))
+        iPredThis <- Matrix::which((lmmFit$xData[,1] == xPredThis[1]) & (lmmFit$xData[,2] == xPredThis[2]))
         dIPredThis <- as.matrix(lmmFit$dI[iPredThis,])
 
 ### get the prediction data, removing any locations closer than removeAllWithin 
         DTmp <- xyDist(lmmFit$xData , xPredThis)
         DTmp[iPredThis] <- -999 # just to make sure they will be removed.
-        iDataThis <- which(DTmp >= removeAllWithin)
+        iDataThis <- Matrix::which(DTmp >= removeAllWithin)
 
 ### use the profilePredict function (call without back-transform, to get stdzd sqd errs on transformed scale)...
 ### note that for xval, columns of XData are not constrained. 
         tmp <- profilePredictIAK3D(xMap = xPredThis , dIMap = rbind(matrix(dIPredPlot , ncol = 2) , matrix(dIPredThis , ncol = 2)) ,
                     covsMap = covsPredThis , iData = iDataThis , lmmFit = lmmFit , rqrBTfmdPreds = FALSE)
 
-### extract the results...
+### raster::extract the results...
 ### i won't back-transform xv values for calculating sspe stats.
         zhatxv[iPredThis] <- tmp$zMap[(ndIPredPlot+1):(ndIPredPlot+length(iPredThis))]
         vhatxv[iPredThis] <- tmp$vMap[(ndIPredPlot+1):(ndIPredPlot+length(iPredThis))]
@@ -495,7 +495,7 @@ xValIAK3D <- function(lmmFit , removeAllWithin = 0 , namePlot = 'xvPlots.pdf' , 
 
     zData <- lmmFit$zData
 ##################################################
-### back-transform predictions and 90% pis here, if rqd... 
+### back-transform predictions and 90% pis here::here, if rqd... 
 ##################################################
     if(lmmFit$lnTfmdData & rqrBTfmdPreds){
       zhatxv <- exp(zhatxv + 0.5 * vhatxv)        
@@ -533,8 +533,8 @@ xValIAK3D <- function(lmmFit , removeAllWithin = 0 , namePlot = 'xvPlots.pdf' , 
     xvStats <- matrix(NA , 4 , 9)
     rownames(xvStats) <- c('Overall' , 'dMidpnt < 0.2' , '0.2 <= dMidpnt < 0.5' , 'dMidpnt >= 0.5')
     colnames(xvStats) <- c('Bias' , 'RMSE' , 'Mean SSE' , 'Median SSE' , 'n' , 
-            'Approx theretical L90 MSSE' , 'Approx theretical U90 MSSE' ,
-            'Approx theretical L90 MedSSE' , 'Approx theretical U90 MedSSE')
+            'Approx there::heretical L90 MSSE' , 'Approx there::heretical U90 MSSE' ,
+            'Approx there::heretical L90 MedSSE' , 'Approx there::heretical U90 MedSSE')
 ### overall stats
     xvStats[1,1] <- mean(errs)
     xvStats[1,2] <- sqrt(mean(sqdErrs))
@@ -551,7 +551,7 @@ xValIAK3D <- function(lmmFit , removeAllWithin = 0 , namePlot = 'xvPlots.pdf' , 
 
 ### by depth, using midpoints to classify...
     for (id in 1:3){    
-        iThis <- which((rowMeans(lmmFit$dI) >= dLims[id,1]) & (rowMeans(lmmFit$dI) < dLims[id,2]))
+        iThis <- Matrix::which((rowMeans(lmmFit$dI) >= dLims[id,1]) & (rowMeans(lmmFit$dI) < dLims[id,2]))
 
         xvStats[id+1,1] <- mean(errs[iThis])
         xvStats[id+1,2] <- sqrt(mean(sqdErrs[iThis]))
@@ -585,16 +585,16 @@ plotProfilesIAK3D <- function(namePlot = 'profilePlots.pdf' , xData , dIData , z
                               dIStd = NULL , zStd = NULL , pi90LStd = NULL , pi90UStd = NULL , 
                               zPredDistant = NULL , zhatxv = NULL , pi90Lxv = NULL , pi90Uxv = NULL , profNames = NULL , xlim = NULL , xlab = NULL){
 #################################################    
-### make a pdf with the distant profile prediction (page 1) and all data profiles (6 per page thereafter)...
+### make a pdf with the distant profile prediction (page 1) and all data profiles (6 per page there::hereafter)...
 ### note these are not validation predictions, they are predicted at the data profiles given the data for the same profiles
-### also note, they are a bi-product of the method (ie you can use the method to predict at profiles where we have data), 
-### not to be confused with the spline-then-krige type approach where similar plots may be produced in the first step of analysis
+### also note, they are a bi-product of the method (ie you can use the method to predict at profiles where::here we have data), 
+### not to be confused with the spline-then-krige type approach where::here similar plots may be produced in the first step of analysis
 ###
 ### xData, dIData and zData are the raw data (all horizons)
 ### xPred, etc are unique locations and assciated profile predictions.
 #################################################    
 ########################################################
-### if xData or dIData were dataframes, convert to matrices here.
+### if xData or dIData were dataframes, convert to matrices here::here.
 ### and make sure dI numeric, and x not a factor...
 ########################################################
     if(!is.matrix(xData)){
@@ -604,7 +604,7 @@ plotProfilesIAK3D <- function(namePlot = 'profilePlots.pdf' , xData , dIData , z
         dIData <- as.matrix(dIData)
     }else{}
 
-    for (i in 1:ncol(xData)){ if(is.factor(xData[,i])){ stop('Enter xData as either coordinates or as character vec of ids') }else{} }
+    for (i in 1:ncol(xData)){ if(is.factor(xData[,i])){ stop('Enter xData as either sp::coordinates or as character vec of ids') }else{} }
 
     dICopy <- matrix(NA , nrow(dIData) , ncol(dIData))
     for (i in 1:ncol(dIData)){ dICopy[,i] <- as.numeric(dIData[,i]) }
@@ -612,7 +612,7 @@ plotProfilesIAK3D <- function(namePlot = 'profilePlots.pdf' , xData , dIData , z
     remove(dICopy)
 
 ########################################################
-### if xData or dIData were dataframes, convert to matrices here.
+### if xData or dIData were dataframes, convert to matrices here::here.
 ### and make sure all are numeric...
 ########################################################
     if(!is.null(xPred)){
@@ -623,7 +623,7 @@ plotProfilesIAK3D <- function(namePlot = 'profilePlots.pdf' , xData , dIData , z
         dIPred <- as.matrix(dIPred)
       }else{}
 
-      for (i in 1:ncol(xPred)){ if(is.factor(xPred[,i])){ stop('Enter xPred as either coordinates or as character vec of ids') }else{} }
+      for (i in 1:ncol(xPred)){ if(is.factor(xPred[,i])){ stop('Enter xPred as either sp::coordinates or as character vec of ids') }else{} }
 
       dIPredCopy <- matrix(NA , nrow(dIPred) , ncol(dIPred))
       for (i in 1:ncol(dIPred)){ dIPredCopy[,i] <- as.numeric(dIPred[,i]) }
@@ -711,11 +711,11 @@ plotProfilesIAK3D <- function(namePlot = 'profilePlots.pdf' , xData , dIData , z
           }      
 ### get data for this profile...
           if (ndx == 1){
-            iThis <- which(xData[,1] == xPred[iProfThis,1])
+            iThis <- Matrix::which(xData[,1] == xPred[iProfThis,1])
           }else if(ndx == 2){
-            iThis <- which((xData[,1] == xPred[iProfThis,1]) & (xData[,2] == xPred[iProfThis,2]))       
+            iThis <- Matrix::which((xData[,1] == xPred[iProfThis,1]) & (xData[,2] == xPred[iProfThis,2]))       
           }else if(ndx == 3){
-            iThis <- which((xData[,1] == xPred[iProfThis,1]) & (xData[,2] == xPred[iProfThis,2]) & (xData[,3] == xPred[iProfThis,3]))       
+            iThis <- Matrix::which((xData[,1] == xPred[iProfThis,1]) & (xData[,2] == xPred[iProfThis,2]) & (xData[,3] == xPred[iProfThis,3]))       
           }else{
             stop('x is 4d or more? Check this.')            
           }
@@ -783,7 +783,7 @@ plotProfilesIAK3D <- function(namePlot = 'profilePlots.pdf' , xData , dIData , z
 linsCCC <- function(o , p , na.rm = FALSE){
   
   if(na.rm){
-    iNA <- which(is.na(o) | is.na(p))
+    iNA <- Matrix::which(is.na(o) | is.na(p))
     
     if(length(iNA) > 0){
       o <- o[-iNA]
@@ -812,12 +812,12 @@ calcValStats <- function(zVal , dIVal , zkVal , vkVal , layerMidPts = c(0.025 , 
   ilayer <- apply(dTmp , 2 , which.min)
 
   inPI <- numeric(nrow(dIVal))
-  inPI[which((zVal >= (zkVal - 1.64 * sqrt(vkVal))) & (zVal <= (zkVal + 1.64 * sqrt(vkVal))))] <- 1
+  inPI[Matrix::which((zVal >= (zkVal - 1.64 * sqrt(vkVal))) & (zVal <= (zkVal + 1.64 * sqrt(vkVal))))] <- 1
   
   valStatsAllLayers <- data.frame('layerMidPts' = layerMidPts , 'bias' = NA , 'rmse' = NA ,  'R2' = NA , 'ccc' = NA , 'pInPI90' = NA)
   valStatsTot <- data.frame('bias' = NA , 'rmse' = NA ,  'ccc' = NA , 'pInP90' = NA)
   for(i in 1:length(layerMidPts)){
-    iThis <- which(ilayer == i & rowMeans(dIVal) <= 2) # constrain so that v deep val data not incd
+    iThis <- Matrix::which(ilayer == i & rowMeans(dIVal) <= 2) # constrain so that v deep val data not incd
   
     zkThis <- zkVal[iThis]
     zThis <- zVal[iThis]

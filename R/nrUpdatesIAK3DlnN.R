@@ -11,7 +11,7 @@ nrUpdatesIAK3DlnN <- function(zData , XData , vXU , iU , C , sigma2Vec){
     if(pU > 0){
         W <- cbind(XData , zData)          
     }else{
-        W <- cbind(XData , zData - 0.5 * (sigma2Vec - diag(C)))
+        W <- cbind(XData , zData - 0.5 * (sigma2Vec - Matrix::diag(C)))
     }
 
 #  	tmp <- lndetANDinvCb(C , W)
@@ -25,22 +25,22 @@ nrUpdatesIAK3DlnN <- function(zData , XData , vXU , iU , C , sigma2Vec){
                 'noits' = 0 , 'errFlag' = -123))
     }else{}
 	iCW <- matrix(iC %*% W , ncol = p+1)
-	lndetC <- as.numeric(determinant(C , logarithm = TRUE)$modulus)
+	lndetC <- as.numeric(Matrix::determinant(C , logarithm = TRUE)$modulus)
 
-    WiCW <- t(W) %*% iCW
-	WiCW  <- 0.5 * (WiCW + t(WiCW))
+    WiCW <- Matrix::t(W) %*% iCW
+	WiCW  <- 0.5 * (WiCW + Matrix::t(WiCW))
 
     XiCX <- WiCW[1:p , 1:p,drop = FALSE]
     XiCz <- WiCW[1:p , p+1,drop = FALSE]
 	ziCz <- as.numeric(WiCW[p+1 , p+1,drop = FALSE])
 
     if(pU == 0){
-#     	tmp <- lndetANDinvCb(XiCX , XiCz) # the zData here already is zData - 0.5 * (sigma2 - diagC), and note that betavXUbeta = 0
+#     	tmp <- lndetANDinvCb(XiCX , XiCz) # the zData here::here already is zData - 0.5 * (sigma2 - diagC), and note that betavXUbeta = 0
 #	    betahatNew <- tmp$invCb
-     	betahatNew <- solve(XiCX , XiCz) # the zData here already is zData - 0.5 * (sigma2 - diagC), and note that betavXUbeta = 0
+     	betahatNew <- Matrix::solve(XiCX , XiCz) # the zData here::here already is zData - 0.5 * (sigma2 - diagC), and note that betavXUbeta = 0
    		fimNew <- -XiCX
-        hessNew <- gradNew <- NA # not needed, but hess = fim and grad = t(XData) iC (zData - XData beta - 0.5 *(sigma2 - diagC  + betavXbeta)), with betavXbeta = 0
-        resiCres <- ziCz - 2 * t(betahatNew) %*% XiCz + t(betahatNew) %*% XiCX %*% betahatNew 
+        hessNew <- gradNew <- NA # not needed, but hess = fim and grad = Matrix::t(Xdata) iC (zData - XData beta - 0.5 *(sigma2 - diagC  + betavXbeta)), with betavXbeta = 0
+        resiCres <- ziCz - 2 * Matrix::t(betahatNew) %*% XiCz + Matrix::t(betahatNew) %*% XiCX %*% betahatNew 
         
         nllNew <- 0.5 * (n * log(2 * pi) + lndetC + resiCres) 
         
@@ -55,11 +55,11 @@ nrUpdatesIAK3DlnN <- function(zData , XData , vXU , iU , C , sigma2Vec){
 #  	tmp <- lndetANDinvCb(XiCX , XiCz)
 #	betaUNew <- tmp$invCb[iU]
 
-  	betaUNew <- matrix(solve(XiCX , XiCz)[iU] , ncol = 1)
+  	betaUNew <- matrix(Matrix::solve(XiCX , XiCz)[iU] , ncol = 1)
 
     if(pK > 0){
         XKiCXK <- WiCW[iK,iK,drop = FALSE]
-        iXKiCXKXKiC <- solve(XKiCXK , t(iCW[,iK,drop = FALSE]))    
+        iXKiCXKXKiC <- Matrix::solve(XKiCXK , Matrix::t(iCW[,iK,drop = FALSE]))    
         TK <- iC - iCW[,iK,drop = FALSE] %*% iXKiCXKXKiC
     }else{
         XKiCXK <- c()
@@ -76,9 +76,9 @@ nrUpdatesIAK3DlnN <- function(zData , XData , vXU , iU , C , sigma2Vec){
     nllNew <- tmp$nll
     gradNew <- tmp$grad
     hessNew <- tmp$hess
-    hessNew <- 0.5 * (hessNew + t(hessNew))
+    hessNew <- 0.5 * (hessNew + Matrix::t(hessNew))
     fimNew <- tmp$fim
-    fimNew <- 0.5 * (fimNew + t(fimNew))
+    fimNew <- 0.5 * (fimNew + Matrix::t(fimNew))
     betahatNew <- tmp$betahat
     
     if(printNrProgress){        
@@ -99,16 +99,16 @@ nrUpdatesIAK3DlnN <- function(zData , XData , vXU , iU , C , sigma2Vec){
         if (noits < 2){
 ### at least 2 fisher scoring updates...        
 #            checkHess <- lndetANDinvCb(fimNew , gradNew)
-            checkHess <- try(solve(fimNew , gradNew) , silent = TRUE)
+            checkHess <- try(Matrix::solve(fimNew , gradNew) , silent = TRUE)
             if(printNrProgress){ print('Fisher-scoring update...') }else{}
         }else{
 #            checkHess <- lndetANDinvCb(hessNew , gradNew)
-            checkHess <- try(solve(hessNew , gradNew) , silent = TRUE)
+            checkHess <- try(Matrix::solve(hessNew , gradNew) , silent = TRUE)
             if(is.character(checkHess$cholC)){
 ### try another fisher-scoring update...            
                 if(printNrProgress){ print('Fisher-scoring update...') }else{}
 #                checkHess <- lndetANDinvCb(fimNew , gradNew)
-                checkHess <- try(solve(fimNew , gradNew) , silent = TRUE)
+                checkHess <- try(Matrix::solve(fimNew , gradNew) , silent = TRUE)
             }else{
                 if(printNrProgress){ print('Newton-Raphson update...') }else{}
             }
@@ -125,9 +125,9 @@ nrUpdatesIAK3DlnN <- function(zData , XData , vXU , iU , C , sigma2Vec){
             nllNew <- tmp$nll
             gradNew <- tmp$grad
             hessNew <- tmp$hess
-            hessNew <- 0.5 * (hessNew + t(hessNew))
+            hessNew <- 0.5 * (hessNew + Matrix::t(hessNew))
             fimNew <- tmp$fim
-            fimNew <- 0.5 * (fimNew + t(fimNew))
+            fimNew <- 0.5 * (fimNew + Matrix::t(fimNew))
             betahatNew <- tmp$betahat
     
             if(printNrProgress){        
@@ -190,7 +190,7 @@ gradHessIAK3DlnN <- function(zData , XData , vXU , iU , betaU , C , lndetC , TK 
     }else{
         XbetaU <- XData[,iU] * betaU 
     } 
-    resU <- zData - XbetaU - 0.5 * (sigma2Vec - diag(C) + betavXbeta)
+    resU <- zData - XbetaU - 0.5 * (sigma2Vec - Matrix::diag(C) + betavXbeta)
 
     betahat <- matrix(NA , p , 1)
     if(pU > 0){ betahat[iU] <- as.numeric(betaU) }else{}
@@ -202,7 +202,7 @@ gradHessIAK3DlnN <- function(zData , XData , vXU , iU , betaU , C , lndetC , TK 
         betaKhat <- c()
     }
 
-    vXUbetaU <- rowSums(vXU * kronecker(matrix(1 , n * pU , 1) , matrix(betaU , nrow = 1)))
+    vXUbetaU <- raster::rowSums(vXU * kronecker(matrix(1 , n * pU , 1) , matrix(betaU , nrow = 1)))
     dbetavXbeta = matrix(vXUbetaU , n , pU , byrow = T)
 
     XUPLUSdbetavXbeta <- XData[,iU,drop = FALSE] + dbetavXbeta
@@ -211,13 +211,13 @@ gradHessIAK3DlnN <- function(zData , XData , vXU , iU , betaU , C , lndetC , TK 
     TKresU <- tmp[,1,drop = FALSE]
     TKXUPLUSdbetavXbeta <- tmp[,2:dim(tmp)[[2]],drop = FALSE]
 
-    nll <- as.numeric(0.5 * (n * log(2 * pi) + lndetC + t(resU) %*% TKresU))
+    nll <- as.numeric(0.5 * (n * log(2 * pi) + lndetC + Matrix::t(resU) %*% TKresU))
 
-    grad <- -t(XUPLUSdbetavXbeta) %*% TKresU
+    grad <- -Matrix::t(XUPLUSdbetavXbeta) %*% TKresU
 
-    tmp <- matrix(as.numeric(t(vXU)), pU * pU , n)
+    tmp <- matrix(as.numeric(Matrix::t(vXU)), pU * pU , n)
     vXTKresU <- matrix(tmp %*% TKresU , pU , pU)
-    XUPLUSdbetavXbetaTKXUPLUSdbetavXbeta <- t(XUPLUSdbetavXbeta) %*% TKXUPLUSdbetavXbeta
+    XUPLUSdbetavXbetaTKXUPLUSdbetavXbeta <- Matrix::t(XUPLUSdbetavXbeta) %*% TKXUPLUSdbetavXbeta
     hess <- -vXTKresU + XUPLUSdbetavXbetaTKXUPLUSdbetavXbeta
 
     fim <- XUPLUSdbetavXbetaTKXUPLUSdbetavXbeta

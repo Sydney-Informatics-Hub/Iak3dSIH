@@ -124,7 +124,7 @@ Nelder_Mead2 <- function (par, fn, ... , lower = rep.int(-Inf, n), upper = rep.i
               length(lower <- as.numeric(lower)), length(upper <- as.numeric(upper)) == 
               n, length(xst <- as.numeric(xst)) == n, all(xst != 0), 
             length(xt <- as.numeric(xt)) == n)
-  nM <- NelderMead$new(lower = lower, upper = upper, x0 = par, 
+  nM <- lme4::NelderMead$new(lower = lower, upper = upper, x0 = par, 
                        xst = xst, xt = xt)
   cc <- do.call(function(iprint = 0L, maxfun = 10000L, FtolAbs = 1e-05, 
                          FtolRel = 1e-15, XtolRel = 1e-07, MinfMax = -.Machine$double.xmax, 

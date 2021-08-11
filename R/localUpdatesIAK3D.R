@@ -12,7 +12,7 @@ lmmUpdateLocal <- function(lmmFit , xLocal = NULL , dILocal = NULL , zLocal = NU
   lmmFit <- updateCubistModel(lmmFit)
 
   if(!is.null(xLocal)){
-    iKeep <- which((!is.na(zLocal)) & (rowSums(is.na(covsLocal)) == 0) & (apply(xyDist(lmmFit$xData , xLocal) , 2 , min) > mindFromLegData)) # last one is a check that not already in leg data   
+    iKeep <- Matrix::which((!is.na(zLocal)) & (raster::rowSums(is.na(covsLocal)) == 0) & (apply(xyDist(lmmFit$xData , xLocal) , 2 , min) > mindFromLegData)) # last one is a check that not already in leg data   
     
     if(length(iKeep) == 0){ return(lmmFit) }else{}
 
@@ -23,7 +23,7 @@ lmmUpdateLocal <- function(lmmFit , xLocal = NULL , dILocal = NULL , zLocal = NU
   
     if(removeLocalData){
 ### check if any local data are already in legacy data, and if so, remove from legacy...    
-      iRm <- which(apply(xyDist(lmmFit$xData , xLocal) , 1 , min) < 0.001) 
+      iRm <- Matrix::which(apply(xyDist(lmmFit$xData , xLocal) , 1 , min) < 0.001) 
       if(length(iRm) == 0){ return(lmmFit) }else{}
       lmmFit$xData <- lmmFit$xData[-iRm,,drop=FALSE]
       lmmFit$dIData <- lmmFit$dIData[-iRm,,drop=FALSE]
@@ -163,7 +163,7 @@ lmmUpdateLocal.DEFUNCT <- function(lmmFit , xLocal = NULL , dILocal = NULL , zLo
   lmmFit <- updateCubistModel(lmmFit)
   
   if(!is.null(xLocal)){
-    iKeep <- which((!is.na(zLocal)) & (rowSums(is.na(covsLocal)) == 0) & (apply(xyDist(lmmFit$xData , xLocal) , 2 , min) > mindFromLegData)) # last one is a check that not already in leg data   
+    iKeep <- Matrix::which((!is.na(zLocal)) & (raster::rowSums(is.na(covsLocal)) == 0) & (apply(xyDist(lmmFit$xData , xLocal) , 2 , min) > mindFromLegData)) # last one is a check that not already in leg data   
     
     if(length(iKeep) == 0){ return(lmmFit) }else{}
     
@@ -174,7 +174,7 @@ lmmUpdateLocal.DEFUNCT <- function(lmmFit , xLocal = NULL , dILocal = NULL , zLo
     
     if(removeLocalData){
       ### check if any local data are already in legacy data, and if so, remove from legacy...    
-      iRm <- which(apply(xyDist(lmmFit$xData , xLocal) , 1 , min) < 0.001) 
+      iRm <- Matrix::which(apply(xyDist(lmmFit$xData , xLocal) , 1 , min) < 0.001) 
       if(length(iRm) == 0){ return(lmmFit) }else{}
       lmmFit$xData <- lmmFit$xData[-iRm,,drop=FALSE]
       lmmFit$dIData <- lmmFit$dIData[-iRm,,drop=FALSE]
@@ -298,7 +298,7 @@ lmmUpdateLocal.DEFUNCT <- function(lmmFit , xLocal = NULL , dILocal = NULL , zLo
 ### function to change names for spline columns to new version...
 ################################################################
 updateSplineNames <- function(lmmFit){
-  iSpline <- which(lmmFit$namesX == 'dSpline')
+  iSpline <- Matrix::which(lmmFit$namesX == 'dSpline')
   if(length(iSpline) > 0){
     lmmFit$namesX[iSpline] <- paste0('dSpline.' , seq(length(iSpline)))
   }else{}

@@ -61,21 +61,21 @@ iaCovMatern <- function(dIData , ad , nud , sdfdPars , sdfdType , abcd , iUEleme
     iTmp <- kronecker(seq(n) , matrix(1 , n , 1))
     jTmp <- kronecker(matrix(1 , n , 1) , seq(n))
     ijTmp <- cbind(iTmp , jTmp)
-    iUElements <- which(ijTmp[,1] <= ijTmp[,2])
+    iUElements <- Matrix::which(ijTmp[,1] <= ijTmp[,2])
     ijTmp <- ijTmp[iUElements ,,drop=FALSE]
     abcd <- matrix(cbind(dIData[ijTmp[,1],,drop=FALSE] , dIData[ijTmp[,2],,drop=FALSE]) , ncol = 4)
     
     iTmp <- apply(abcd[,c(1,3),drop=FALSE] , 1 , which.min)
-    iTmp <- which(iTmp == 2)
+    iTmp <- Matrix::which(iTmp == 2)
     if(length(iTmp) > 0){ abcd[iTmp,] <- abcd[iTmp,c(3,4,1,2),drop=FALSE] }else{}
   }else{}
   
   #############################
   ### get the entries that aregiven by the 3 cases of the integration region...	
   #############################
-  iCase1 <- which(abcd[,2] <= abcd[,3])
-  iCase2 <- which((abcd[,3] < abcd[,2]) & (abcd[,2] <= abcd[,4]))
-  iCase3 <- which((abcd[,3] < abcd[,2]) & (abcd[,4] < abcd[,2]))
+  iCase1 <- Matrix::which(abcd[,2] <= abcd[,3])
+  iCase2 <- Matrix::which((abcd[,3] < abcd[,2]) & (abcd[,2] <= abcd[,4]))
+  iCase3 <- Matrix::which((abcd[,3] < abcd[,2]) & (abcd[,4] < abcd[,2]))
   
   avCov <- NA * abcd[,1]
   avCov[iCase1] <- intRy(aa = abcd[iCase1,1] , bb = abcd[iCase1,2] , cc = abcd[iCase1,3] , dd = abcd[iCase1,4] , nsMaternParams = nsMaternParams) 
@@ -96,7 +96,7 @@ iaCovMatern <- function(dIData , ad , nud , sdfdPars , sdfdType , abcd , iUEleme
   # return(list('avCovMtx' = avCovMtx , 'avVarVec' = avVarVec))
   
   avCov <- new("dspMatrix" , Dim = as.integer(c(n,n)), x = avCov , uplo = "L")
-  avCov <- t(avCov) # so that will be stored as upper triangle.
+  avCov <- Matrix::t(avCov) # so that will be stored as upper triangle.
   
   return(list('avCovMtx' = avCov , 'avVarVec' = avVarVec))
 } 
@@ -164,15 +164,15 @@ iaCovMatern2 <- function(dIData , dIData2 , ad , nud , sdfdPars , sdfdType){
   abcd[,4] <- rep(dIData2[,2] , each = n)
   
   iTmp <- apply(abcd[,c(1,3),drop=FALSE] , 1 , which.min)
-  iTmp <- which(iTmp == 2)
+  iTmp <- Matrix::which(iTmp == 2)
   if(length(iTmp) > 0){ abcd[iTmp,] <- abcd[iTmp,c(3,4,1,2),drop=FALSE] }else{}
   
   #############################
   ### get the entries that are given by the 3 cases of the integration region...	
   #############################
-  iCase1 <- which(abcd[,2] <= abcd[,3])
-  iCase2 <- which((abcd[,3] < abcd[,2]) & (abcd[,2] <= abcd[,4]))
-  iCase3 <- which((abcd[,3] < abcd[,2]) & (abcd[,4] < abcd[,2]))
+  iCase1 <- Matrix::which(abcd[,2] <= abcd[,3])
+  iCase2 <- Matrix::which((abcd[,3] < abcd[,2]) & (abcd[,2] <= abcd[,4]))
+  iCase3 <- Matrix::which((abcd[,3] < abcd[,2]) & (abcd[,4] < abcd[,2]))
   
   avCovMtx <- NA * abcd[,1]
   avCovMtx[iCase1] <- intRy(aa = abcd[iCase1,1] , bb = abcd[iCase1,2] , cc = abcd[iCase1,3] , dd = abcd[iCase1,4] , nsMaternParams = nsMaternParams) 
@@ -215,7 +215,7 @@ poly2Exp <- function(w , alpha , psi){
 
 #################################
 ### function for integral of covariance over square region, 
-### from x = aa to bb, y = cc to dd, where y > x
+### from x = aa to bb, y = cc to dd, where::here y > x
 #################################
 intRy <- function(aa , bb , cc , dd , nsMaternParams){
   
@@ -273,7 +273,7 @@ intRy34 <- function(ee, aa , bb , nsMaternParams){
 
 #################################
 ### function for integral of covariance over triangular region bounded by diagonal, 
-### from x = aa to bb, where y > x
+### from x = aa to bb, where::here y > x
 #################################
 intTy <- function(aa , bb , nsMaternParams){
   
@@ -342,7 +342,7 @@ maternCov <- function(D , pars){
     if((c1 > 0) & (a > 0) & (nu >= 0.05)  & (nu <= 20)){
       DOVERa <- D / a
       C <- 1 - (1.5 * DOVERa - 0.5 * (DOVERa ^ 3) )
-      C[which(DOVERa > 1)] <- 0
+      C[Matrix::which(DOVERa > 1)] <- 0
       C <- c1 * C
     }else{
       C <- NA
@@ -359,8 +359,8 @@ maternCov <- function(D , pars){
     ####################################################    
     ### below block updated below, 27/2/20, to save memory...
     ####################################################    
-    # iD0 <- which(D == 0)
-    # iDGT0 <- which(D > 0)
+    # iD0 <- Matrix::which(D == 0)
+    # iDGT0 <- Matrix::which(D > 0)
     # 
     # ### range is approx rho * 3...this is from wiki, 
     # ### and is i think what stein's parameterization was supposed to be.
@@ -377,12 +377,12 @@ maternCov <- function(D , pars){
     # print(class(lnconstmatern))
     # 
     # realmin <- 3.448490e-304 
-    # ibesGT0 <- which(bes > realmin)
+    # ibesGT0 <- Matrix::which(bes > realmin)
     # 
     # C <- 0 * D # initiate.
     # C[ibesGT0] <- c1 * exp(lnconstmatern[ibesGT0]+log(bes[ibesGT0]))
     # C[iD0] <- c1
-    # C[which(is.infinite(bes))] <- c1
+    # C[Matrix::which(is.infinite(bes))] <- c1
     
     ####################################################    
     ### range is approx rho * 3...this is from wiki, 
@@ -427,7 +427,7 @@ maternCov <- function(D , pars){
 setupIAK3D <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE , sdfdType_cd1 = 0 , sdfdType_cxd0 = 0 , sdfdType_cxd1 = 0 , sdfdKnots = NULL){
   ### note, I only use 'U' for unique in xU and dIU.
   ### Dx and other mats are defined with the unique locations, 
-  ### but for simpler notation I don't use the 'U' notation there. 
+  ### but for simpler notation I don't use the 'U' notation there::here. 
   
   # if(is.null(ncol(dIData))){
   #   dIData <- matrix(dIData , ncol = 2)
@@ -444,12 +444,12 @@ setupIAK3D <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE , sdfdTy
   ndIU <- nrow(dIU)
   nxU <- nrow(xU)
   
-  ijTmp = lapply(seq(nxU) , function(i){ which((xData[,1] == xU[i,1]) & (xData[,2] == xU[i,2])) })
-  Kx <- sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
+  ijTmp = lapply(seq(nxU) , function(i){ Matrix::which((xData[,1] == xU[i,1]) & (xData[,2] == xU[i,2])) })
+  Kx <- Matrix::sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
   rm(ijTmp)
   
-  ijTmp = lapply(seq(ndIU) , function(i){ which((dIData[,1] == dIU[i,1]) & (dIData[,2] == dIU[i,2])) })
-  Kd <- sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
+  ijTmp = lapply(seq(ndIU) , function(i){ Matrix::which((dIData[,1] == dIU[i,1]) & (dIData[,2] == dIU[i,2])) })
+  Kd <- Matrix::sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
   rm(ijTmp)
   
   #############################################################
@@ -458,7 +458,7 @@ setupIAK3D <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE , sdfdTy
   maxd <- max(max(dIU) , 2) 
   
   #################################################    
-  ### can return here if partSetup is TRUE...
+  ### can return here::here if partSetup is TRUE...
   #################################################    
   if(partSetup){
     ### added 3/12/2020 - add sdfdKnots to setupMats...
@@ -469,29 +469,42 @@ setupIAK3D <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE , sdfdTy
   Dx <- new('dspMatrix' , Dim = as.integer(c(nxU,nxU)) ,  x = Dx[upper.tri(Dx ,  diag = TRUE)] , uplo = "U")
   
   Idxx <- new("dspMatrix" , Dim = as.integer(c(nxU,nxU)), x =  as.numeric(seq(nxU * (nxU+1) / 2))) 
-  utriKxIdxxKx <- Kx %*% Idxx %*% t(Kx)
+  utriKxIdxxKx <- Kx %*% Idxx %*% Matrix::t(Kx)
   utriKxIdxxKx <- utriKxIdxxKx[upper.tri(utriKxIdxxKx , diag = TRUE)] # get in col form...
   rm(Idxx)
   
   Idxd <- new("dspMatrix" , Dim = as.integer(c(ndIU,ndIU)), x =  as.numeric(seq(ndIU * (ndIU+1) / 2))) 
-  utriKdIdxdKd <- Kd %*% Idxd %*% t(Kd)
+  utriKdIdxdKd <- Kd %*% Idxd %*% Matrix::t(Kd)
   utriKdIdxdKd <- utriKdIdxdKd[upper.tri(utriKdIdxdKd , diag = TRUE)] # get in col form...
   rm(Idxd)
   
   ### get summary of KxKx and get which indices within the upp tri of KxKx are 1?
-  summKxKx <- summary(as(Kx %*% t(Kx) , "symmetricMatrix"))
-  summKxKx$idxUtri <- summKxKx$j * (summKxKx$j - 1) / 2 + summKxKx$i
+  #summKxKx <- summary(as(Kx %*% Matrix::t(Kx) , "symmetricMatrix"))
+  #summKxKx <- as.data.frame(as(Kx %*% Matrix::t(Kx) , "dgTMatrix"))
+  mm <- as(Kx %*% Matrix::t(Kx), "dgCMatrix")
   
+  i <- mm@i + 1
+  j <- rep(1:mm@Dim[2], diff(mm@p))
+  x <- mm@x
+  summKxKx <- as.data.frame(list('i'= i, 'j'=j,'x' = x))
+  summKxKx <- summKxKx %>% tibble::as_tibble() %>% dplyr::filter(i <= j) #triplet with upper triangle
+
+  
+  
+  summKxKx$idxUtri <- summKxKx$j * (summKxKx$j - 1) / 2 + summKxKx$i 
+ 
+  
+    
   #############################################
   ### and the disc pts, if numerical approx of average covariances is being used...
   ### not being used in the current code, but left in as might be used for checking in future.
   #############################################
   if(nDscPts > 0){
     dDsc <- dIU[,1] + (dIU[,2] - dIU[,1]) %*% matrix(seq(0.5/nDscPts, 1 - 0.5/nDscPts , 1 / nDscPts) , 1 , nDscPts)
-    dDsc <- matrix(t(dDsc) , nDscPts * ndIU , 1)
+    dDsc <- matrix(Matrix::t(dDsc) , nDscPts * ndIU , 1)
     
     DdDsc <- xyDist(dDsc , dDsc)
-    KdDsc <- kronecker(sparseMatrix(i=seq(ndIU) , j = seq(ndIU) , x = 1), matrix(1 , nDscPts , 1))
+    KdDsc <- kronecker(Matrix::sparseMatrix(i=seq(ndIU) , j = seq(ndIU) , x = 1), matrix(1 , nDscPts , 1))
   }else{
     dDsc <- DdDsc <- KdDsc <- NA
   }
@@ -506,12 +519,12 @@ setupIAK3D <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE , sdfdTy
   ijTmp[,1] <- kronecker(seq(ndIU) , matrix(1 , ndIU , 1))
   ijTmp[,2] <- kronecker(matrix(1 , ndIU , 1) , seq(ndIU))
   
-  iUElements <- which(ijTmp[,1] <= ijTmp[,2])
+  iUElements <- Matrix::which(ijTmp[,1] <= ijTmp[,2])
   ijTmp <- ijTmp[iUElements ,,drop=FALSE]
   abcd <- cbind(dIU[ijTmp[,1],,drop=FALSE] , dIU[ijTmp[,2],,drop=FALSE])
   
   iTmp <- apply(abcd[,c(1,3),drop=FALSE] , 1 , which.min)
-  iTmp <- which(iTmp == 2)
+  iTmp <- Matrix::which(iTmp == 2)
   if(length(iTmp) > 0){ abcd[iTmp,] <- abcd[iTmp,c(3,4,1,2),drop=FALSE] }else{}
   
   ### added 15-8-20
@@ -566,12 +579,12 @@ setupIAK3D_CL <- function(xData , dIData , nDscPts = 0 , partSetup = FALSE , com
 
 ##################################################################
 ### as above, but for non-symmetric case...
-### no option of disc pts here, and abcd not calculated (done in calcC fn)
+### no option of disc pts here::here, and abcd not calculated (done in calcC fn)
 ##################################################################
 setupIAK3D2 <- function(xData , dIData , xData2 , dIData2 , sdfdType_cd1 = 0 , sdfdType_cxd0 = 0 , sdfdType_cxd1 = 0 , sdfdKnots = NULL){
   ### note, I only use 'U' for unique in xU and dIU.
   ### Dx and other mats are defined with the unique locations, 
-  ### but for simpler notation I don't use the 'U' notation there. 
+  ### but for simpler notation I don't use the 'U' notation there::here. 
   xU <- xData[!duplicated(xData),,drop=FALSE]
   dIU <- dIData[!duplicated(dIData),,drop=FALSE]
   
@@ -586,7 +599,7 @@ setupIAK3D2 <- function(xData , dIData , xData2 , dIData2 , sdfdType_cd1 = 0 , s
   
   # iK <- jK <- c()
   # for (i in 1:nxU){
-  #   iKThis <- which((xData[,1] == xU[i,1]) & (xData[,2] == xU[i,2]))
+  #   iKThis <- Matrix::which((xData[,1] == xU[i,1]) & (xData[,2] == xU[i,2]))
   #   iK <- c(iK , iKThis)
   #   jK <- c(jK , matrix(i , length(iKThis) , 1))
   # }
@@ -594,24 +607,24 @@ setupIAK3D2 <- function(xData , dIData , xData2 , dIData2 , sdfdType_cd1 = 0 , s
   # 
   # iK <- jK <- c()
   # for (i in 1:ndIU){
-  #   iKThis <- which((dIData[,1] == dIU[i,1]) & (dIData[,2] == dIU[i,2]))
+  #   iKThis <- Matrix::which((dIData[,1] == dIU[i,1]) & (dIData[,2] == dIU[i,2]))
   #   iK <- c(iK , iKThis)
   #   jK <- c(jK , matrix(i , length(iKThis) , 1))
   # }
   # Kd <- sparseMatrix(i = iK , j = jK , x = 1)
   
-  ijTmp = lapply(seq(nxU) , function(i){ which((xData[,1] == xU[i,1]) & (xData[,2] == xU[i,2])) })
-  Kx <- sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
+  ijTmp = lapply(seq(nxU) , function(i){ Matrix::which((xData[,1] == xU[i,1]) & (xData[,2] == xU[i,2])) })
+  Kx <- Matrix::sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
   rm(ijTmp)
   
-  ijTmp = lapply(seq(ndIU) , function(i){ which((dIData[,1] == dIU[i,1]) & (dIData[,2] == dIU[i,2])) })
-  Kd <- sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
+  ijTmp = lapply(seq(ndIU) , function(i){ Matrix::which((dIData[,1] == dIU[i,1]) & (dIData[,2] == dIU[i,2])) })
+  Kd <- Matrix::sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
   rm(ijTmp)
   
   
   # iK <- jK <- c()
   # for (i in 1:nxU2){
-  #   iKThis <- which((xData2[,1] == xU2[i,1]) & (xData2[,2] == xU2[i,2]))
+  #   iKThis <- Matrix::which((xData2[,1] == xU2[i,1]) & (xData2[,2] == xU2[i,2]))
   #   iK <- c(iK , iKThis)
   #   jK <- c(jK , matrix(i , length(iKThis) , 1))
   # }
@@ -619,18 +632,18 @@ setupIAK3D2 <- function(xData , dIData , xData2 , dIData2 , sdfdType_cd1 = 0 , s
   # 
   # iK <- jK <- c()
   # for (i in 1:ndIU2){
-  #   iKThis <- which((dIData2[,1] == dIU2[i,1]) & (dIData2[,2] == dIU2[i,2]))
+  #   iKThis <- Matrix::which((dIData2[,1] == dIU2[i,1]) & (dIData2[,2] == dIU2[i,2]))
   #   iK <- c(iK , iKThis)
   #   jK <- c(jK , matrix(i , length(iKThis) , 1))
   # }
   # Kd2 <- sparseMatrix(i = iK , j = jK , x = 1)
   
-  ijTmp = lapply(seq(nxU2) , function(i){ which((xData2[,1] == xU2[i,1]) & (xData2[,2] == xU2[i,2])) })
-  Kx2 <- sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
+  ijTmp = lapply(seq(nxU2) , function(i){ Matrix::which((xData2[,1] == xU2[i,1]) & (xData2[,2] == xU2[i,2])) })
+  Kx2 <- Matrix::sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
   rm(ijTmp)
   
-  ijTmp = lapply(seq(ndIU2) , function(i){ which((dIData2[,1] == dIU2[i,1]) & (dIData2[,2] == dIU2[i,2])) })
-  Kd2 <- sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
+  ijTmp = lapply(seq(ndIU2) , function(i){ Matrix::which((dIData2[,1] == dIU2[i,1]) & (dIData2[,2] == dIU2[i,2])) })
+  Kd2 <- Matrix::sparseMatrix(i = unlist(ijTmp) , j = rep(seq(length(ijTmp)) , times = unlist(lapply(ijTmp , length))) , x = 1)
   rm(ijTmp)
   
   
@@ -705,7 +718,7 @@ iaCovDsc <- function(dIData , ad , nud , sdfdPars , sdfdType , dDsc , DdDsc , Kd
   ### put these in as inputs...
   if(missing(dDsc)){
     dDsc <- dIData[,1] + (dIData[,2] - dIData[,1]) %*% matrix(seq(0.5/nDscPts, 1 - 0.5/nDscPts , 1 / nDscPts) , 1 , nDscPts)
-    dDsc <- matrix(t(dDsc) , nDscPts * ndI , 1)
+    dDsc <- matrix(Matrix::t(dDsc) , nDscPts * ndI , 1)
     
     DdDsc <- xyDist(dDsc , dDsc)
     KdDsc <- kronecker(sparseMatrix(i=seq(ndI) , j = seq(ndI) , x = 1), matrix(1 , nDscPts , 1))
@@ -721,10 +734,10 @@ iaCovDsc <- function(dIData , ad , nud , sdfdPars , sdfdType , dDsc , DdDsc , Kd
   
   if(parsOK){
     ### make CdDsc...
-    CdDsc <- (sdfdDsc %*% t(sdfdDsc)) * phidDsc
+    CdDsc <- (sdfdDsc %*% Matrix::t(sdfdDsc)) * phidDsc
     
     ### average...
-    Cd <- (1/(nDscPts^2)) * (t(KdDsc) %*% CdDsc %*% KdDsc)
+    Cd <- (1/(nDscPts^2)) * (Matrix::t(KdDsc) %*% CdDsc %*% KdDsc)
   }else{
     Cd <- NA
   }
@@ -739,8 +752,8 @@ varioCloud <- function(xData , zData , sepDists = NULL , decl = 0){
   if(is.null(sepDists)){ sepDists <- xyDist(xData , xData) }else{}
   
   if(decl > 0){
-    #    wData <- rowSums(sepDists < (max(sepDists)/50))
-    wData <- rowSums(sepDists < decl)
+    #    wData <- raster::rowSums(sepDists < (max(sepDists)/50))
+    wData <- raster::rowSums(sepDists < decl)
     wData <- 1 / wData
     wData <- wData / sum(wData)
     ww <- matrix(wData , ncol = 1) %*% matrix(wData , nrow = 1)
@@ -754,14 +767,14 @@ varioCloud <- function(xData , zData , sepDists = NULL , decl = 0){
   n <- length(zData)
   
   ijTmp <- cbind(kronecker(seq(n) , matrix(1 , n , 1)) , kronecker(matrix(1 , n , 1) , seq(n)))
-  ijTmp <- ijTmp[which(ijTmp[,2] > ijTmp[,1]),]
+  ijTmp <- ijTmp[Matrix::which(ijTmp[,2] > ijTmp[,1]),]
   sepDists <- sepDists[ijTmp]
   semivar <- semivar[ijTmp]
   if(decl > 0){
     ww <- ww[ijTmp]
   }else{}
   
-  iGT0 <- which(sepDists > 0)
+  iGT0 <- Matrix::which(sepDists > 0)
   sepDists <- sepDists[iGT0]
   semivar <- semivar[iGT0] 
   if(decl > 0){
@@ -777,7 +790,7 @@ vario <- function(hxBins , xData , zData , sepDists = NULL , decl = 0){
   
   vgm <- hxAv <- nAv <- NA * hxBins[,1]
   for(ihx in 1:nrow(hxBins)){
-    iThis <- which(vTmp$sepDists >= hxBins[ihx,1] & vTmp$sepDists < hxBins[ihx,2])
+    iThis <- Matrix::which(vTmp$sepDists >= hxBins[ihx,1] & vTmp$sepDists < hxBins[ihx,2])
     if(decl > 0){
       vgm[ihx] <- sum(vTmp$ww[iThis] * vTmp$semivar[iThis])/sum(vTmp$ww[iThis])
     }else{
@@ -927,7 +940,7 @@ plotCovx <- function(lmm.fit , hx , dIPlot , addExpmntlV = TRUE , hzntlUnits = '
     }else{}
     
     if(spline4ExpV){
-      iDataThis <- which(!is.na(hrmnzdResData[,i]))
+      iDataThis <- Matrix::which(!is.na(hrmnzdResData[,i]))
       n4dIPlot[i] <- length(iDataThis)
       if(length(iDataThis) > 10){
         vTmp <- vario(hxBins = hxBins , xData = xDataH[iDataThis,,drop=FALSE] , zData = hrmnzdResData[iDataThis,i])
@@ -938,14 +951,14 @@ plotCovx <- function(lmm.fit , hx , dIPlot , addExpmntlV = TRUE , hzntlUnits = '
       }else{}
       
     }else{  
-      iDataThis <- which(abs(dIFitRnd[,1] - dIPlot[i,1]) < 1E-4 & abs(dIFitRnd[,2] - dIPlot[i,2]) < 1E-4)
+      iDataThis <- Matrix::which(abs(dIFitRnd[,1] - dIPlot[i,1]) < 1E-4 & abs(dIFitRnd[,2] - dIPlot[i,2]) < 1E-4)
       n4dIPlot[i] <- length(iDataThis)
       if(length(iDataThis) > 10){
         xDataThis <- lmm.fit$xData[iDataThis,]
         zDataThis <- lmm.fit$zData[iDataThis]
         resDataThis <- zDataThis - lmm.fit$XData[iDataThis,,drop=FALSE] %*% lmm.fit$betahat
         
-        iU <- which(!duplicated(xDataThis))
+        iU <- Matrix::which(!duplicated(xDataThis))
         xDataThis <- xDataThis[iU,,drop=FALSE]
         zDataThis <- zDataThis[iU]
         resDataThis <- resDataThis[iU]
@@ -1009,7 +1022,7 @@ plotCovx <- function(lmm.fit , hx , dIPlot , addExpmntlV = TRUE , hzntlUnits = '
 
 #####################################################
 ### simple plot of the vertical correlation function on point support
-### (non-stationary) variances not included here. 
+### (non-stationary) variances not included here::here. 
 #####################################################
 plotCord <- function(lmm.fit , hdPlot , vrtclUnits = 'm'){
   
@@ -1060,7 +1073,7 @@ getCovs4Plot <- function(lmm.fit = NULL , dIPlot , roundTo = NULL , singlesByReg
     
     dfCovariances <- NULL
     for (i in 1:nProfs){
-      iOKThis <- which(!is.na(hrmnzdResData[i,]))
+      iOKThis <- Matrix::which(!is.na(hrmnzdResData[i,]))
       if(length(iOKThis) > 0){
         if(is.null(dfCovariances)){
           dfCovariances <- covCloud(xData = dIPlot[iOKThis,,drop=FALSE] , zData = hrmnzdResData[i,iOKThis])
@@ -1077,9 +1090,9 @@ getCovs4Plot <- function(lmm.fit = NULL , dIPlot , roundTo = NULL , singlesByReg
     dIFitRnd[,2] <- round(dIFitRnd[,2] / roundTo) * roundTo
     
     resData <- lmm.fit$zData - lmm.fit$XData %*% lmm.fit$betahat
-    iU <- which(!duplicated(lmm.fit$xData)) 
+    iU <- Matrix::which(!duplicated(lmm.fit$xData)) 
     for (i in 1:length(iU)){
-      iThis <- which(lmm.fit$xData[,1] == lmm.fit$xData[iU[i],1] & lmm.fit$xData[,2] == lmm.fit$xData[iU[i],2])
+      iThis <- Matrix::which(lmm.fit$xData[,1] == lmm.fit$xData[iU[i],1] & lmm.fit$xData[,2] == lmm.fit$xData[iU[i],2])
       dIDataThis <- dIFitRnd[iThis,,drop=FALSE]
       resDataThis <- resData[iThis]
       if(i == 1){
@@ -1095,8 +1108,8 @@ getCovs4Plot <- function(lmm.fit = NULL , dIPlot , roundTo = NULL , singlesByReg
   empiricalC <- nempiricalC <- matrix(NA , nrow(dIPlot) , nrow(dIPlot))
   for (i in 1:nrow(dIPlot)){ # for y
     for (j in 1:nrow(dIPlot)){ # for x
-      ### find all the cases where these two depth intervals appear in the same profile...      
-      iThis <- which((dfCovariances$x1.1 == dIPlot[i,1] & dfCovariances$x1.2 == dIPlot[i,2] & dfCovariances$x2.1 == dIPlot[j,1] & dfCovariances$x2.2 == dIPlot[j,2]) |
+      ### find all the cases where::here these two depth intervals appear in the same profile...      
+      iThis <- Matrix::which((dfCovariances$x1.1 == dIPlot[i,1] & dfCovariances$x1.2 == dIPlot[i,2] & dfCovariances$x2.1 == dIPlot[j,1] & dfCovariances$x2.2 == dIPlot[j,2]) |
                        (dfCovariances$x1.1 == dIPlot[j,1] & dfCovariances$x1.2 == dIPlot[j,2] & dfCovariances$x2.1 == dIPlot[i,1] & dfCovariances$x2.2 == dIPlot[i,2]))
       if(length(iThis) >= minn4EmpC){
         empiricalC[i,j] <- mean(dfCovariances$cov[iThis])
@@ -1110,7 +1123,7 @@ getCovs4Plot <- function(lmm.fit = NULL , dIPlot , roundTo = NULL , singlesByReg
 }
 
 plotCovd <- function(lmm.fit , dIPlot , vrtclUnits = 'm' , breaksVec = NULL , addScalebar = FALSE , roundTo = NULL , singlesByRegression = TRUE){
-  
+  #browser()
   tmp <- getCovs4Plot(lmm.fit = lmm.fit , dIPlot = dIPlot , roundTo = roundTo , singlesByRegression = singlesByRegression)
   empiricalC <- tmp$empiricalC 
   modelC <- tmp$modelC 
@@ -1131,22 +1144,22 @@ plotCovd <- function(lmm.fit , dIPlot , vrtclUnits = 'm' , breaksVec = NULL , ad
   colMtxModelC <- colMtxEmpiricalC <- matrix(NA , nrow(modelC) , ncol(modelC))
   for (i in 1:ncols){
     if(i == 1){
-      iThis <- which(modelC < plotValBnds[i,2])
+      iThis <- Matrix::which(modelC < plotValBnds[i,2])
     }else if(i == ncols){
-      iThis <- which(modelC >= plotValBnds[i,1])
+      iThis <- Matrix::which(modelC >= plotValBnds[i,1])
     }else{    
-      iThis <- which(modelC >= plotValBnds[i,1] & modelC < plotValBnds[i,2])
+      iThis <- Matrix::which(modelC >= plotValBnds[i,1] & modelC < plotValBnds[i,2])
     }
     if(length(iThis) > 0){
       colMtxModelC[iThis] <- colVec[i]
     }else{}
     
     if(i == 1){
-      iThis <- which(empiricalC < plotValBnds[i,2])
+      iThis <- Matrix::which(empiricalC < plotValBnds[i,2])
     }else if(i == ncols){
-      iThis <- which(empiricalC >= plotValBnds[i,1])
+      iThis <- Matrix::which(empiricalC >= plotValBnds[i,1])
     }else{    
-      iThis <- which(empiricalC >= plotValBnds[i,1] & empiricalC < plotValBnds[i,2])
+      iThis <- Matrix::which(empiricalC >= plotValBnds[i,1] & empiricalC < plotValBnds[i,2])
     }
     if(length(iThis) > 0){
       colMtxEmpiricalC[iThis] <- colVec[i]
@@ -1233,9 +1246,9 @@ plotVarComps <- function(lmm.fit , dPlot , xlim = NULL){
   }
   
   legTxt <- character(length(listComps))
-  legTxt[which(listComps == 'cd1')] <- expression(italic(v[d]))
-  legTxt[which(listComps == 'cxd0')] <- expression(italic(v[xd0])) 
-  legTxt[which(listComps == 'cxd1')] <- expression(italic(v[xd1])) 
+  legTxt[Matrix::which(listComps == 'cd1')] <- expression(italic(v[d]))
+  legTxt[Matrix::which(listComps == 'cxd0')] <- expression(italic(v[xd0])) 
+  legTxt[Matrix::which(listComps == 'cxd1')] <- expression(italic(v[xd1])) 
   
   vdPlot <- matrix(NA , length(dPlot) , length(listComps))
   for(i in 1:length(listComps)){
@@ -1243,9 +1256,9 @@ plotVarComps <- function(lmm.fit , dPlot , xlim = NULL){
   }
   
   colVec <- character(length(listComps))
-  colVec[which(listComps == 'cd1')] <- 'magenta'
-  colVec[which(listComps == 'cxd0')] <- 'red'
-  colVec[which(listComps == 'cxd1')] <- 'blue'
+  colVec[Matrix::which(listComps == 'cd1')] <- 'magenta'
+  colVec[Matrix::which(listComps == 'cxd0')] <- 'red'
+  colVec[Matrix::which(listComps == 'cxd1')] <- 'blue'
   
   if(is.null(xlim)){ xlim <- c(0 , max(vdPlot)) }else{}
   

@@ -16,7 +16,7 @@ makeXvX_gam2 <- function(covData = NA , dIData , listfefdKnots , incInts = TRUE 
   if(is.null(colnamesXcns)){ stop('Error - enter colnamesXcns for makeXvX_gam2 function!') }else{}
   
   p <- length(colnamesXcns)
-  colsd <- which(grepl('dIMidPts_KNOT' , colnamesXcns))
+  colsd <- Matrix::which(grepl('dIMidPts_KNOT' , colnamesXcns))
   colsnod <- setdiff(seq(p) , colsd)
 
   if(lnTfmdData & (length(colsd) > 0)){
@@ -65,7 +65,7 @@ makeXvX_gam2 <- function(covData = NA , dIData , listfefdKnots , incInts = TRUE 
       ### if we don't pass in dIData, then makeXcns will use the given dIMidPts on pt support... 
       XTmp <- makeXcns(dfCovs = covData , listfefdKnots = listfefdKnots , incInts = incInts , intMthd = intMthd , colnamesX = colnamesXcns)
       
-      mXTmp <- t(apply(i4Apply , 2 , fnMeanApply , X4Apply = XTmp))
+      mXTmp <- Matrix::t(apply(i4Apply , 2 , fnMeanApply , X4Apply = XTmp))
 
       Xcns[i,] <- as.matrix(mXTmp)
       

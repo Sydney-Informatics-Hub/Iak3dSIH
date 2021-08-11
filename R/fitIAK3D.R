@@ -1,3 +1,34 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 fitIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx = 'matern' , nud = 0.5 , allKnotsd = c() , 
                 sdfdType_cd1 = 0 , sdfdType_cxd0 = 0 , sdfdType_cxd1 = 0 , cmeOpt = 0 , sdfdKnots = NULL , prodSum = TRUE , 
                 lnTfmdData = FALSE , useReml = TRUE , compLikMats = list('compLikOptn' = 0) , namePlot = NA , 
@@ -6,9 +37,11 @@ fitIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx = 'mate
   
   # if(!identical(class(xData) , 'matrix')){ stop('Stopping - for fitIAKD3D function, enter xData as a matrix') }else{}
   # if(!identical(class(dIData) , 'matrix')){ stop('Stopping - for fitIAKD3D function, enter dIData as a matrix with 2 columns') }else{}
+    # KM TRUE
+    #browser()
   
 ########################################################
-### if xData or dIData were dataframes, convert to matrices here.
+### if xData or dIData were dataframes, convert to matrices here::here.
 ### and make sure all are numeric...
 ########################################################
     if(!is.matrix(xData)){
@@ -32,14 +65,14 @@ fitIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx = 'mate
 ### error check for duplicated xData,dIData data, if no measurement error being included...
 #########################################################
     if(cmeOpt == 0){
-      iDuplicated <- which(duplicated(cbind(xData , dIData)))
+      iDuplicated <- Matrix::which(duplicated(cbind(xData , dIData)))
       if(length(iDuplicated) > 0){ stop(paste0('Error - the data at positions ' , iDuplicated , ' are duplicated!')) }else{} 
     }else{}
     
 #########################################################
 ### error check for any NAs; removing them if found...
 #########################################################
-    iNA <- which(is.na(zData) | rowSums(is.na(covsData)) > 0)
+    iNA <- Matrix::which(is.na(zData) | raster::rowSums(is.na(covsData)) > 0)
     if(length(iNA) > 0){ 
       print('Attention! Some NAs found in data ; removing them.')
       xData <- xData[-iNA,drop = FALSE]
@@ -76,7 +109,7 @@ fitIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx = 'mate
 ### so assume has to be ml...
         if(useReml){
             print('Attention! When underlying point-support variable assumed lognormal, cannot use REML because beta parameters contribute non-linearly to likelihood function!')
-            print('Therefore switching option to use ML.')
+            print('There::herefore switching option to use ML.')
             useReml <- F
         }else{}
     }else{}
@@ -86,7 +119,7 @@ fitIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx = 'mate
 ###################################################
     if(compLikMats$compLikOptn == 2 || compLikMats$compLikOptn == 3){
       if(useReml){
-        print('Attention - do not useReml with Eidsvik CL - appropriate for ML only! Changing option here.')
+        print('Attention - do not useReml with Eidsvik CL - appropriate for ML only! Changing option here::here.')
         useReml <- FALSE
       }else{}
     }else{}
@@ -123,7 +156,7 @@ fitIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx = 'mate
         }else{}
       }else{}
     }
-    
+    # browser() #XData looks same here
 ######################################################
 ### set up fixed-effect design matrices...
 ######################################################
@@ -187,6 +220,7 @@ fitIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx = 'mate
     if(is.null(lmmFit$pars)){
     
       if(is.null(parsInit)){
+        #browser()
         parsInit <- setInitsIAK3D(xData = xData , dIData = dIData , zData = zData , XData = XData , vXU = vXU , iU = iU , modelx = modelx , nud = nud , 
             sdfdType_cd1 = sdfdType_cd1 , sdfdType_cxd0 = sdfdType_cxd0 , sdfdType_cxd1 = sdfdType_cxd1 , 
             cmeOpt = cmeOpt , prodSum = prodSum , setupMats = setupMats , parBnds = parBnds , lnTfmdData = lnTfmdData , lmmFit = lmmFit , compLikMats = compLikMats)$pars
@@ -221,7 +255,8 @@ fitIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx = 'mate
     }else{
       fitRange <- lmmFit$fitRange
     }
-
+    #browser() # xData is not returned from nlIAK3D, parsInit is different here
+    
 ######################################################
 ### optimize parameters...
 ######################################################
@@ -364,8 +399,8 @@ print(head(lmmFit$setupMats$XsdfdSplineU_cxd0))
       dIPred <- cbind(seq(0 , parBnds$maxd-0.02 , 0.02) , seq(0.02 , parBnds$maxd , 0.02))
 
 ### below 1m, only do every 5th one of these depth intervals...
-      iKeep1 <- which(dIPred[,1] < 1)
-      iKeep2 <- which(dIPred[,1] >= 1)
+      iKeep1 <- Matrix::which(dIPred[,1] < 1)
+      iKeep2 <- Matrix::which(dIPred[,1] >= 1)
       if(length(iKeep2) > 0){ iKeep2 <- iKeep2[seq(1,length(iKeep2),5)] }else{}
       dIPred <- dIPred[c(iKeep1,iKeep2),,drop=FALSE]
       rm(iKeep1,iKeep2)
@@ -373,7 +408,7 @@ print(head(lmmFit$setupMats$XsdfdSplineU_cxd0))
       dIPred <- round(dIPred , digits = 2)
       ndIPred <- nrow(dIPred)
 
-      iTmp <- which(!duplicated(xData))
+      iTmp <- Matrix::which(!duplicated(xData))
       
       maxnProfPlot <- 100
       if(length(iTmp) > maxnProfPlot){
@@ -398,7 +433,7 @@ print(head(lmmFit$setupMats$XsdfdSplineU_cxd0))
 ### initialise with first row...      
       covsPredDistant <- covsData[1,,drop=FALSE]
 ### don't include the depths in finding medoid...
-      idCovs <- which(names(covsData) == 'dIMidPts')
+      idCovs <- Matrix::which(names(covsData) == 'dIMidPts')
       if(length(idCovs) > 0){ covsPredDistant[1,idCovs] <- NA }else{}
       if(length(idCovs) < ncol(covsData)){ covsPredDistant[1,-idCovs] <- medoid(covsData[,-idCovs,drop=FALSE]) }else{}
             
@@ -425,10 +460,10 @@ print(head(lmmFit$setupMats$XsdfdSplineU_cxd0))
       }else{}
 
 #################################################    
-### make a pdf with the distant profile prediction (page 1) and all data profiles (6 per page thereafter)...
+### make a pdf with the distant profile prediction (page 1) and all data profiles (6 per page there::hereafter)...
 ### note these are not validation predictions, they are predicted at the data profiles given the data for the same profiles
-### also note, they are a bi-product of the method (ie you can use the method to predict at profiles where we have data), 
-### not to be confused with the spline-then-krige type approach where similar plots may be produced in the first step of analysis
+### also note, they are a bi-product of the method (ie you can use the method to predict at profiles where::here we have data), 
+### not to be confused with the spline-then-krige type approach where::here similar plots may be produced in the first step of analysis
 #################################################    
       tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = xData , dIData = dIData , zData = zData , 
                 xPred = xPred , dIPred = dIPred , zPred = zPred , pi90LPred = pi90LPred , pi90UPred = pi90UPred , zPredDistant = zPredDistant , profNames = profNamesPlot)
@@ -451,7 +486,8 @@ print(head(lmmFit$setupMats$XsdfdSplineU_cxd0))
 ###################################################################
 nllIAK3D <- function(pars , zData , XData , vXU , iU , modelx , nud ,  
                      sdfdType_cd1 , sdfdType_cxd0 , sdfdType_cxd1 , cmeOpt , prodSum , setupMats = NULL , parBnds , useReml , lnTfmdData , rtnAll = F , forCompLik = FALSE , attachBigMats = FALSE){
-
+    # False XData different form here
+    # browser()
 ### default values for return...
     badnll <- 9E99
     cxdhat <- NA
@@ -481,11 +517,12 @@ nllIAK3D <- function(pars , zData , XData , vXU , iU , modelx , nud ,
       }else{}
       
     }else{}
-
+    #browser() # begin of slight diff in A due to pars!!
     parsBTfmd <- readPars(pars = pars , modelx = modelx , nud = nud , 
                 sdfdType_cd1 = sdfdType_cd1 , sdfdType_cxd0 = sdfdType_cxd0 , sdfdType_cxd1 = sdfdType_cxd1 , 
                 cmeOpt = cmeOpt , prodSum = prodSum , parBnds = parBnds , lnTfmdData = lnTfmdData)
-
+    
+    
     if(any(is.na(c(parsBTfmd$sdfdPars_cd1,parsBTfmd$sdfdPars_cxd0,parsBTfmd$sdfdPars_cxd1))) || 
        any(is.nan(c(parsBTfmd$sdfdPars_cd1,parsBTfmd$sdfdPars_cxd0,parsBTfmd$sdfdPars_cxd1))) ||
        any(is.infinite(c(parsBTfmd$sdfdPars_cd1,parsBTfmd$sdfdPars_cxd0,parsBTfmd$sdfdPars_cxd1)))){
@@ -502,6 +539,7 @@ nllIAK3D <- function(pars , zData , XData , vXU , iU , modelx , nud ,
                          sdfdType_cd1 = sdfdType_cd1 , sdfdType_cxd0 = sdfdType_cxd0 , sdfdType_cxd1 = sdfdType_cxd1 , 
                          cmeOpt = cmeOpt , setupMats = setupMats)
 
+      
       A <- tmp$C
       sigma2Vec <- tmp$sigma2Vec
       remove(tmp) ; 
@@ -518,7 +556,7 @@ nllIAK3D <- function(pars , zData , XData , vXU , iU , modelx , nud ,
         W <- cbind(XData,zData)
 
 ### just to make sure numerical errors have not made it non-symmetric...  		
-        if(!is(A , 'dspMatrix')){ A <- forceSymmetric(A) }else{}
+        if(!is(A , 'dspMatrix')){ A <- Matrix::forceSymmetric(A) }else{}
 
         if(lnTfmdData){
             tmp <- nrUpdatesIAK3DlnN(zData = zData , XData = XData , vXU = vXU , iU = iU , C = A , sigma2Vec = sigma2Vec)
@@ -531,7 +569,7 @@ nllIAK3D <- function(pars , zData , XData , vXU , iU , modelx , nud ,
                 vXUTmp[kronecker(seq(0 , (n - 1) * p , p) , matrix(1 , length(iU) , 1)) + rep(iU , n) , iU] <- vXU
                 tmp <- gradHessIAK3DlnN(zData = zData , XData = XData , vXU = vXUTmp , iU = seq(p) , betaU = betahat , C = A , lndetC = 0 , TK  = tmp$iC , iXKiCXKXKiC = c() , sigma2Vec = sigma2Vec)
 
-                vbetahat <- solve(tmp$fim) 
+                vbetahat <- Matrix::solve(tmp$fim) 
 
             }else{ 
                 vbetahat <- NA 
@@ -568,8 +606,8 @@ nllIAK3D <- function(pars , zData , XData , vXU , iU , modelx , nud ,
           
           iAW <- matrix(iAW , ncol = ncol(W))
 
-          WiAW <- t(W) %*% iAW
-          if(!is(WiAW , 'dspMatrix')){ WiAW <- forceSymmetric(WiAW) }else{}
+          WiAW <- Matrix::t(W) %*% iAW
+          if(!is(WiAW , 'dspMatrix')){ WiAW <- Matrix::forceSymmetric(WiAW) }else{}
           
           if(forCompLik){
             return(list('pars' = pars , 'parsBTfmd' = parsBTfmd , 'sigma2Vec' = sigma2Vec , 'WiAW' = WiAW , 'lndetA' = lndetA , 'A' = A , 'iAW' = iAW))
@@ -578,7 +616,9 @@ nllIAK3D <- function(pars , zData , XData , vXU , iU , modelx , nud ,
           XiAX <- WiAW[1:p , 1:p , drop = FALSE]
           XiAz <- WiAW[1:p , p+1 , drop = FALSE]
           ziAz <- as.numeric(WiAW[p+1 , p+1])
-
+          # KM Error in betahad - NA
+          # some slight diffs in XiAX and parsBTfmd$ad before
+          # browser() # solving gives a silent error
           betahat <- lndetANDinvCb(XiAX , XiAz)
           lndetXiAX <- betahat$lndetC
           betahat <- betahat$invCb
@@ -603,7 +643,7 @@ nllIAK3D <- function(pars , zData , XData , vXU , iU , modelx , nud ,
             
           betahat <- matrix(betahat , ncol = 1)
           
-          resiAres <- as.numeric(ziAz - 2 * t(betahat) %*% XiAz + t(betahat) %*% XiAX %*% betahat)
+          resiAres <- as.numeric(ziAz - 2 * Matrix::t(betahat) %*% XiAz + Matrix::t(betahat) %*% XiAX %*% betahat)
 
           if(useReml){
               cxdhat <- resiAres / (n - p)
@@ -623,7 +663,7 @@ nllIAK3D <- function(pars , zData , XData , vXU , iU , modelx , nud ,
           resiCres <- resiAres / cxdhat
 
           if(rtnAll){ 
-              vbetahat <- cxdhat * solve(XiAX) 
+              vbetahat <- cxdhat * Matrix::solve(XiAX) 
               C <- cxdhat * A
               sigma2Vec <- cxdhat * sigma2Vec 
           }else{}
@@ -677,7 +717,7 @@ nllIAK3D <- function(pars , zData , XData , vXU , iU , modelx , nud ,
         if(!lnTfmdData){
           muhat <- XData %*% betahat 
         }else{
-          muhat <- setmuIAK3D(XData = XData , vXU = vXU , iU = iU , beta = betahat , diagC = diag(C) , sigma2Vec = sigma2Vec) 
+          muhat <- setmuIAK3D(XData = XData , vXU = vXU , iU = iU , beta = betahat , diagC = Matrix::diag(C) , sigma2Vec = sigma2Vec) 
         }
 
 #        tmp <- lndetANDinvCb(C , cbind(XData , zData - muhat))
@@ -703,7 +743,7 @@ nllIAK3D <- function(pars , zData , XData , vXU , iU , modelx , nud ,
 ### updated from the above function, 28/2/20-5/3/20, to use dspMatrix class for more efficient memory.
 setCIAK3D <- function(parsBTfmd , modelx , 
                         sdfdType_cd1 , sdfdType_cxd0 , sdfdType_cxd1 , cmeOpt , setupMats){
-
+  
 ### check sdfdTypes - if any > 0, use the approx version...  
   if(max(c(sdfdType_cd1 , sdfdType_cxd0 , sdfdType_cxd1)) > 0){
     return(setCApproxIAK3D(parsBTfmd = parsBTfmd , modelx = modelx , 
@@ -718,10 +758,10 @@ setCIAK3D <- function(parsBTfmd , modelx ,
   }else{}
   
   n <- nrow(setupMats$Kx)
-  C <- sparseMatrix(i=seq(n),j=seq(n),x=parsBTfmd$cme , symmetric = TRUE) # initiate with just meas err on diag. , dims = as.integer(c(n,n))
+  C <- Matrix::sparseMatrix(i=seq(n),j=seq(n),x=parsBTfmd$cme , symmetric = TRUE) # initiate with just meas err on diag. , dims = as.integer(c(n,n))
 
   ### adding Cx0...
-  C <- C + parsBTfmd$cx0 * forceSymmetric(setupMats$Kx %*% t(setupMats$Kx))
+  C <- C + parsBTfmd$cx0 * Matrix::forceSymmetric(setupMats$Kx %*% Matrix::t(setupMats$Kx))
 
   if (modelx == 'matern'){
     phix1 <- maternCov(setupMats$Dx , c(1 , parsBTfmd$ax , parsBTfmd$nux))
@@ -732,7 +772,7 @@ setCIAK3D <- function(parsBTfmd , modelx ,
   }
   
   ### if any components are stationary, function only neds to be run once...
-  iStat <- which(c(sdfdType_cd1 , sdfdType_cxd0 , sdfdType_cxd1) == 0)
+  iStat <- Matrix::which(c(sdfdType_cd1 , sdfdType_cxd0 , sdfdType_cxd1) == 0)
   if(length(iStat) > 0){
     tmp <- iaCovMatern(dIData = setupMats$dIU , ad = parsBTfmd$ad , nud = parsBTfmd$nud , sdfdPars = c(1 , 0 , 1) , sdfdType = 0 , abcd = setupMats$dIUabcd , iUElements = setupMats$dIUiUElements)
     phidStat <- tmp$avCovMtx
@@ -783,7 +823,8 @@ setCIAK3D <- function(parsBTfmd , modelx ,
   
   if(parsOK){
     ### adding Cxd0...
-    C <- C + parsBTfmd$cxd0 * sparseMatrix(i=setupMats$summKxKx$i , j=setupMats$summKxKx$j,x = phid_cxd0@x[setupMats$utriKdIdxdKd][setupMats$summKxKx$idxUtri],symmetric = TRUE)
+    
+    C <- C + parsBTfmd$cxd0 * Matrix::sparseMatrix(i=setupMats$summKxKx$i , j=setupMats$summKxKx$j,x = phid_cxd0@x[setupMats$utriKdIdxdKd][setupMats$summKxKx$idxUtri],symmetric = TRUE)
     remove(phid_cxd0)
 
     ### without using diagBlocks fn...    
@@ -867,13 +908,13 @@ setCIAK3D2 <- function(parsBTfmd , modelx ,
   
   ### starting with Cx0...
   ### defined for the unique locations...
-  ijTmp <- which(setupMats$Dx == 0 , arr.ind = TRUE)
+  ijTmp <- Matrix::which(setupMats$Dx == 0 , arr.ind = TRUE)
   if(nrow(ijTmp) > 0){
-    phix0 <- sparseMatrix(i = ijTmp[,1] , j = ijTmp[,2] , x = 1 , dims = c(nrow(setupMats$Dx) , ncol(setupMats$Dx)))
-    C <- parsBTfmd$cx0 * setupMats$Kx %*% phix0 %*% t(setupMats$Kx2)
+    phix0 <- Matrix::sparseMatrix(i = ijTmp[,1] , j = ijTmp[,2] , x = 1 , dims = c(nrow(setupMats$Dx) , ncol(setupMats$Dx)))
+    C <- parsBTfmd$cx0 * setupMats$Kx %*% phix0 %*% Matrix::t(setupMats$Kx2)
   }else{
-    phix0 <- sparseMatrix(i = 1 , ,j=1 , x=0 , dims = c(nrow(setupMats$Dx),ncol(setupMats$Dx)))
-    C <- sparseMatrix(i=1,j=1,x=0,dims = c(nrow(setupMats$Kx),nrow(setupMats$Kx2)))
+    phix0 <- Matrix::sparseMatrix(i = 1 , ,j=1 , x=0 , dims = c(nrow(setupMats$Dx),ncol(setupMats$Dx)))
+    C <- Matrix::sparseMatrix(i=1,j=1,x=0,dims = c(nrow(setupMats$Kx),nrow(setupMats$Kx2)))
   }
   
   if (modelx == 'matern'){
@@ -885,7 +926,7 @@ setCIAK3D2 <- function(parsBTfmd , modelx ,
   }
   
   ### if any components are stationary, function only neds to be run once...
-  iStat <- which(c(sdfdType_cd1 , sdfdType_cxd0 , sdfdType_cxd1) == 0)
+  iStat <- Matrix::which(c(sdfdType_cd1 , sdfdType_cxd0 , sdfdType_cxd1) == 0)
   if(length(iStat) > 0){
     phidStat <- iaCovMatern2(dIData = setupMats$dIU , dIData2 = setupMats$dIU2 , ad = parsBTfmd$ad , nud = parsBTfmd$nud , sdfdPars = c(1 , 0 , 1) , sdfdType = 0)
   }else{}
@@ -923,14 +964,14 @@ setCIAK3D2 <- function(parsBTfmd , modelx ,
     if(length(iStat) > 0){
       
       if(modelx == 'nugget' & sdfdType_cd1 == -9){
-        KphidKStat <- (setupMats$Kx %*% phix0 %*% t(setupMats$Kx2)) * (setupMats$Kd %*% phidStat %*% t(setupMats$Kd2))
-        C <- C + parsBTfmd$cxd0 * (setupMats$Kx %*% phix0 %*% t(setupMats$Kx2)) * (setupMats$Kd %*% phid_cxd0 %*% t(setupMats$Kd2))
+        KphidKStat <- (setupMats$Kx %*% phix0 %*% Matrix::t(setupMats$Kx2)) * (setupMats$Kd %*% phidStat %*% Matrix::t(setupMats$Kd2))
+        C <- C + parsBTfmd$cxd0 * (setupMats$Kx %*% phix0 %*% Matrix::t(setupMats$Kx2)) * (setupMats$Kd %*% phid_cxd0 %*% Matrix::t(setupMats$Kd2))
       }else{        
-        KphidKStat <- setupMats$Kd %*% phidStat %*% t(setupMats$Kd2)	
-        C <- C + parsBTfmd$cxd0 * (setupMats$Kx %*% phix0 %*% t(setupMats$Kx2)) * (setupMats$Kd %*% phid_cxd0 %*% t(setupMats$Kd2))
+        KphidKStat <- setupMats$Kd %*% phidStat %*% Matrix::t(setupMats$Kd2)	
+        C <- C + parsBTfmd$cxd0 * (setupMats$Kx %*% phix0 %*% Matrix::t(setupMats$Kx2)) * (setupMats$Kd %*% phid_cxd0 %*% Matrix::t(setupMats$Kd2))
       }
     }else{
-      C <- C + parsBTfmd$cxd0 * (setupMats$Kx %*% phix0 %*% t(setupMats$Kx2)) * (setupMats$Kd %*% phid_cxd0 %*% t(setupMats$Kd2))
+      C <- C + parsBTfmd$cxd0 * (setupMats$Kx %*% phix0 %*% Matrix::t(setupMats$Kx2)) * (setupMats$Kd %*% phid_cxd0 %*% Matrix::t(setupMats$Kd2))
     }
     
 ### adding Cd...    
@@ -939,20 +980,20 @@ setCIAK3D2 <- function(parsBTfmd , modelx ,
     }else if(sdfdType_cd1 == -9){
       Cd <- 0
     }else{
-      C <- C + parsBTfmd$cd1 * (setupMats$Kd %*% phid_cd1 %*% t(setupMats$Kd2))
+      C <- C + parsBTfmd$cd1 * (setupMats$Kd %*% phid_cd1 %*% Matrix::t(setupMats$Kd2))
     }
 
     if(modelx == 'nugget'){
       Cx1 <- Cxd1 <- 0
     }else{
-      Kphix1K <- setupMats$Kx %*% phix1 %*% t(setupMats$Kx2)
+      Kphix1K <- setupMats$Kx %*% phix1 %*% Matrix::t(setupMats$Kx2)
       ### adding Cx1...    
       C <- C + parsBTfmd$cx1 * Kphix1K 
       ### adding Cxd1...    
       if(sdfdType_cxd1 == 0){
         C <- C + parsBTfmd$cxd1 * Kphix1K * KphidKStat 
       }else{
-        C <- C + parsBTfmd$cxd1 * Kphix1K * (setupMats$Kd %*% phid_cxd1 %*% t(setupMats$Kd2))
+        C <- C + parsBTfmd$cxd1 * Kphix1K * (setupMats$Kd %*% phid_cxd1 %*% Matrix::t(setupMats$Kd2))
       }
       remove(Kphix1K) ; 
     }
@@ -986,7 +1027,7 @@ setmuIAK3D <- function(XData , vXU , iU , beta , diagC , sigma2Vec){
 
 ######################################################################
 ### function for calculating (Kx %*% t(Kx)) * (Kd %*% M %*% t(Kd)) 
-### where one entry of 1 in each row of Kx and in each row of Kd
+### where::here one entry of 1 in each row of Kx and in each row of Kd
 ### ie only the diagonal blocks of (Kd %*% M %*% t(Kd)) rqd
 ### useful for nugget.
 ######################################################################
@@ -995,7 +1036,7 @@ diagBlocksKdMKd <- function(setupMats , M){
   ijx <- summary(setupMats$Kd)
   ijx <- ijx[order(ijx$i),]
   ijx$j <- ijx$j + newcoladds
-  KdB <- sparseMatrix(i = ijx$i , j = ijx$j , x = ijx$x , dims = c(nrow(setupMats$Kd) , ncol(setupMats$Kd) * ncol(setupMats$Kx)))
+  KdB <- Matrix::sparseMatrix(i = ijx$i , j = ijx$j , x = ijx$x , dims = c(nrow(setupMats$Kd) , ncol(setupMats$Kd) * ncol(setupMats$Kx)))
 
 ### M is dense matrix, as is Kd %*% M...
 ### this bit could be improved so that sorting isn't needed, and so that M could be a list of similarly sized matrices.
@@ -1008,14 +1049,14 @@ diagBlocksKdMKd <- function(setupMats , M){
                  
     KdMKd <- list()
     for(i in 1:length(M)){
-      KdMKd[[i]] <- sparseMatrix(i = iTmp , j = jTmp , x = as.numeric(t(setupMats$Kd %*% M[[i]])) , dims = c(nrow(setupMats$Kd) , ncol(setupMats$Kd) * ncol(setupMats$Kx)))
-      KdMKd[[i]] <- KdMKd[[i]] %*% t(KdB)
+      KdMKd[[i]] <- Matrix::sparseMatrix(i = iTmp , j = jTmp , x = as.numeric(Matrix::t(setupMats$Kd %*% M[[i]])) , dims = c(nrow(setupMats$Kd) , ncol(setupMats$Kd) * ncol(setupMats$Kx)))
+      KdMKd[[i]] <- KdMKd[[i]] %*% Matrix::t(KdB)
     }  
   }else{
-    KdMKd <- sparseMatrix(i = rep(seq(nrow(setupMats$Kd)) , each = ncol(setupMats$Kd)) , 
+    KdMKd <- Matrix::sparseMatrix(i = rep(seq(nrow(setupMats$Kd)) , each = ncol(setupMats$Kd)) , 
                           j = rep(seq(ncol(setupMats$Kd)), nrow(setupMats$Kd)) + newcoladds , 
-                          x = as.numeric(t(setupMats$Kd %*% M)) , dims = c(nrow(setupMats$Kd) , ncol(setupMats$Kd) * ncol(setupMats$Kx)))
-    KdMKd <- KdMKd %*% t(KdB)
+                          x = as.numeric(Matrix::t(setupMats$Kd %*% M)) , dims = c(nrow(setupMats$Kd) , ncol(setupMats$Kd) * ncol(setupMats$Kx)))
+    KdMKd <- KdMKd %*% Matrix::t(KdB)
   }
   return(KdMKd)
 }
@@ -1036,7 +1077,7 @@ calcbetavXbeta <- function(vX , beta){
     i1 <- kronecker(seq(n) , matrix(1 , p , 1))
     j1 <- seq(n * p)
 
-    tKTEMP <- sparseMatrix(i = i1 , j = j1 , x = 1)
+    tKTEMP <- Matrix::sparseMatrix(i = i1 , j = j1 , x = 1)
     betavXbeta <- tKTEMP %*% (kronecker(matrix(1, n , 1) , beta) * vXbeta)
 
     return(betavXbeta) 
@@ -1044,7 +1085,7 @@ calcbetavXbeta <- function(vX , beta){
 
     
 readPars <- function(pars , modelx , nud , sdfdType_cd1 , sdfdType_cxd0 , sdfdType_cxd1 , cmeOpt , prodSum , parBnds , lnTfmdData){
-
+    
     inext <- 1
     parsOK <- T
     if (modelx == 'matern'){
@@ -1056,7 +1097,7 @@ readPars <- function(pars , modelx , nud , sdfdType_cd1 , sdfdType_cxd0 , sdfdTy
     }else{
         stop('Build in options for other spatial correlation models')
     }
-
+    # I know ad slight diff
     ad <- logitab(pars[inext] , parBnds$adBnds[1] , parBnds$adBnds[2] , invt = T); inext <- inext + 1  
 
     if(prodSum){    
@@ -1223,15 +1264,15 @@ tauTfm <- function(parsIn , parBnds , invt = F){
 }
 
 updateLmmFitNames <- function(lmmFit){
-  ix <- which(names(lmmFit) == 'x')
+  ix <- Matrix::which(names(lmmFit) == 'x')
   if (length(ix) == 1){ names(lmmFit)[ix] <- 'xData' }else{}
-  idI <- which(names(lmmFit) == 'dI')
+  idI <- Matrix::which(names(lmmFit) == 'dI')
   if (length(idI) == 1){ names(lmmFit)[idI] <- 'dIData' }else{}
-  iz <- which(names(lmmFit) == 'z')
+  iz <- Matrix::which(names(lmmFit) == 'z')
   if (length(iz) == 1){ names(lmmFit)[iz] <- 'zData' }else{}
-  icovs <- which(names(lmmFit) == 'covs')
+  icovs <- Matrix::which(names(lmmFit) == 'covs')
   if (length(icovs) == 1){ names(lmmFit)[icovs] <- 'covsData' }else{}
-  iX <- which(names(lmmFit) == 'X')
+  iX <- Matrix::which(names(lmmFit) == 'X')
   if (length(iX) == 1){ names(lmmFit)[iX] <- 'XData' }else{}
   
   # if(class(lmmFit$modelX) == "cubist"){
@@ -1390,14 +1431,14 @@ lndetANDinvCb_OLD <- function(C , b = NA){
     if (is.character(cholC)){
         lndetC <- invCb <- NA
     }else{
-        lndetC <- 2 * sum(log(diag(cholC)))
+        lndetC <- 2 * sum(log(Matrix::diag(cholC)))
         if (is.na(as.numeric(b)[1])){        
             invCb <- chol2inv(cholC)
         }else{
 ### test if C is sparse...
           if(is.matrix(C)){    
 ### seems to be most efficient way if dense...
-            invCb<- backsolve(cholC , forwardsolve(t(cholC) , b))   
+            invCb<- backsolve(cholC , forwardsolve(Matrix::t(cholC) , b))   
           }else{
 ### but above doesn't work for sparse matrices, so...          
             invCb <- chol2inv(cholC) %*% b 
@@ -1415,22 +1456,23 @@ lndetANDinvCb_OLD <- function(C , b = NA){
 ### not returning chol to save mem
 ##########################################################
 lndetANDinvCb <- function(C , b = NULL){
+  
   if(is.null(dim(C))){ stop('Error - enter matrix for lndetANDinvCb_NEW') }else{}
   if(is.null(b)){
-    invCb <- try(solve(C) , silent = TRUE)
+    invCb <- try(Matrix::solve(C) , silent = TRUE)
   }else{
-    invCb <- try(solve(C , b) , silent = TRUE)
+    invCb <- try(Matrix::solve(C , b) , silent = TRUE)
   }
   if (is.character(invCb)){
     lndetC <- invCb <- NA
   }else{
     # if(class(C) == 'dspMatrix'){
     if(is(C , 'dspMatrix')){
-      ### side effect of solve should have added BunchKaufman factorization (not used by determinant fn, so doing it here)...     
-      lndetC <- sum(log(diag(C@factors$pBunchKaufman)))
+      ### side effect of solve should have added BunchKaufman factorization (not used by determinant fn, so doing it here::here)...     
+      lndetC <- sum(log(Matrix::diag(C@factors$pBunchKaufman)))
     }else{
       ### for matrix, side effect of solve should have added chol factorization, used by determinant fn...     
-      lndetC <- as.numeric(determinant(C , logarithm = TRUE)$modulus)
+      lndetC <- as.numeric(Matrix::determinant(C , logarithm = TRUE)$modulus)
     }
   }
   
@@ -1480,7 +1522,7 @@ tauTfm <- function(parsIn , parBnds , invt = F){
 ### bounds can be put on this ratio (sdfdmaxdBnds)
 ### only used in defining initial parameters... 
 ### in DEFUNCT version,
-### parsIn here are on the transformed scale...
+### parsIn here::here are on the transformed scale...
 ### with tfmed pars, sd(d) = 1 - [1-exp(tau1Tfmd)] * [1 - exp(-tau2 d)] / [1 - exp(-tau2 maxd)]
 ### and              sd(maxd) = exp(tau1Tfmd)    
 ########################################################################
@@ -1576,7 +1618,7 @@ medoid <- function(dfIn){
         dfIn[,j] <- NA
         dfIn[,j] <- as.numeric(dfIn[,j])
         for(i in 1:nrow(tableTmp)){
-          iThis <- which(dfInOrig[,j] == rownames(tableTmp)[i])
+          iThis <- Matrix::which(dfInOrig[,j] == rownames(tableTmp)[i])
           if(length(iThis) > 0){
             dfIn[iThis,j] <- 1 - tableTmp[i]/max(tableTmp)
           }else{}
@@ -1597,7 +1639,7 @@ medoid <- function(dfIn){
 ### distance = sum of all univariate distances (city block metric)
 ### distance for factor is 0 if most common class
 ############################################################
-    jFactors <- which(is.na(avD))
+    jFactors <- Matrix::which(is.na(avD))
     if(length(jFactors) > 0){
       for (j in jFactors){
         dfIn[,j] <- dfIn[,j] * mavD / mean(dfIn[,j])
@@ -1605,7 +1647,7 @@ medoid <- function(dfIn){
     }
 
 ### get row with min sum of dists and return that row of the original df...
-    imed <- which.min(rowSums(dfIn))
+    imed <- which.min(raster::rowSums(dfIn))
 
     return(dfInOrig[imed,,drop=FALSE])
   }else{
@@ -1623,10 +1665,10 @@ gradnllIAK3D.mc <- function(pars , zData , XData , vXU , iU , modelx , nud ,
   if(length(pars) == 1){ stop('Error - do not use gradnllIAK3D.mc with 1 parameter!') }else{}
 
   delVec <- rep(1E-6 , length(pars))
-  numCores <- min(detectCores() , 8)
+  numCores <- min(parallel::detectCores() , 8)
   
   parsMtx <- matrix(pars , length(pars) , length(pars) + 1)
-  parsMtx[1:length(pars),1:length(pars)] <- parsMtx[1:length(pars),1:length(pars)] +  diag(delVec)
+  parsMtx[1:length(pars),1:length(pars)] <- parsMtx[1:length(pars),1:length(pars)] +  Matrix::diag(delVec)
   parsList <- split(parsMtx, rep(1:ncol(parsMtx), each = nrow(parsMtx)))
 
   if (Sys.info()[1] == "Windows"){
@@ -1665,10 +1707,10 @@ gradnllIAK3D_CL.mc <- function(pars , zData , XData , modelx , nud ,
   if(length(pars) == 1){ stop('Error - do not use gradnllIAK3D.mc with 1 parameter!') }else{}
 
   delVec <- rep(1E-6 , length(pars))
-  numCores <- min(detectCores() , 8)
+  numCores <- min(parallel::detectCores() , 8)
   
   parsMtx <- matrix(pars , length(pars) , length(pars) + 1)
-  parsMtx[1:length(pars),1:length(pars)] <- parsMtx[1:length(pars),1:length(pars)] +  diag(delVec)
+  parsMtx[1:length(pars),1:length(pars)] <- parsMtx[1:length(pars),1:length(pars)] +  Matrix::diag(delVec)
   parsList <- split(parsMtx, rep(1:ncol(parsMtx), each = nrow(parsMtx)))
 
   if (Sys.info()[1] == "Windows"){
@@ -1712,7 +1754,7 @@ gradnllIAK3D <- function(pars , zData , XData , vXU , iU , modelx , nud ,
   delVec <- rep(1E-6 , length(pars))
 
   parsMtx <- matrix(pars , length(pars) , length(pars) + 1)
-  parsMtx[1:length(pars),1:length(pars)] <- parsMtx[1:length(pars),1:length(pars)] +  diag(delVec)
+  parsMtx[1:length(pars),1:length(pars)] <- parsMtx[1:length(pars),1:length(pars)] +  Matrix::diag(delVec)
   parsList <- split(parsMtx, rep(1:ncol(parsMtx), each = nrow(parsMtx)))
   
   outtmp <- lapply(parsList , nllIAK3D , 
@@ -1736,7 +1778,7 @@ gradnllIAK3D_CL <- function(pars , zData , XData , modelx , nud ,
   delVec <- rep(1E-6 , length(pars))
 
   parsMtx <- matrix(pars , length(pars) , length(pars) + 1)
-  parsMtx[1:length(pars),1:length(pars)] <- parsMtx[1:length(pars),1:length(pars)] +  diag(delVec)
+  parsMtx[1:length(pars),1:length(pars)] <- parsMtx[1:length(pars),1:length(pars)] +  Matrix::diag(delVec)
   parsList <- split(parsMtx, rep(1:ncol(parsMtx), each = nrow(parsMtx)))
   
   outtmp <- lapply(parsList , nllIAK3D_CL , 
@@ -1769,10 +1811,10 @@ setCApproxIAK3D <- function(parsBTfmd , modelx ,
   }else{}
   
   n <- nrow(setupMats$Kx)
-  C <- sparseMatrix(i=seq(n),j=seq(n),x=parsBTfmd$cme , symmetric = TRUE) # initiate with just meas err on diag. , dims = as.integer(c(n,n))
+  C <- Matrix::sparseMatrix(i=seq(n),j=seq(n),x=parsBTfmd$cme , symmetric = TRUE) # initiate with just meas err on diag. , dims = as.integer(c(n,n))
   
   ### adding Cx0...
-  C <- C + parsBTfmd$cx0 * forceSymmetric(setupMats$Kx %*% t(setupMats$Kx))
+  C <- C + parsBTfmd$cx0 * Matrix::forceSymmetric(setupMats$Kx %*% Matrix::t(setupMats$Kx))
   
   if (modelx == 'matern'){
     phix1 <- maternCov(setupMats$Dx , c(1 , parsBTfmd$ax , parsBTfmd$nux))
@@ -1855,7 +1897,7 @@ setCApproxIAK3D <- function(parsBTfmd , modelx ,
   
   if(parsOK){
     ### adding Cxd0...
-    C <- C + parsBTfmd$cxd0 * sparseMatrix(i=setupMats$summKxKx$i , j=setupMats$summKxKx$j,x = phid_cxd0@x[setupMats$utriKdIdxdKd][setupMats$summKxKx$idxUtri],symmetric = TRUE)
+    C <- C + parsBTfmd$cxd0 * Matrix::sparseMatrix(i=setupMats$summKxKx$i , j=setupMats$summKxKx$j,x = phid_cxd0@x[setupMats$utriKdIdxdKd][setupMats$summKxKx$idxUtri],symmetric = TRUE)
     remove(phid_cxd0)
     
     ### without using diagBlocks fn...    
@@ -1930,13 +1972,13 @@ setCApproxIAK3D2 <- function(parsBTfmd , modelx ,
   
   ### starting with Cx0...
   ### defined for the unique locations...
-  ijTmp <- which(setupMats$Dx == 0 , arr.ind = TRUE)
+  ijTmp <- Matrix::which(setupMats$Dx == 0 , arr.ind = TRUE)
   if(nrow(ijTmp) > 0){
-    phix0 <- sparseMatrix(i = ijTmp[,1] , j = ijTmp[,2] , x = 1 , dims = c(nrow(setupMats$Dx) , ncol(setupMats$Dx)))
-    C <- parsBTfmd$cx0 * setupMats$Kx %*% phix0 %*% t(setupMats$Kx2)
+    phix0 <- Matrix::sparseMatrix(i = ijTmp[,1] , j = ijTmp[,2] , x = 1 , dims = c(nrow(setupMats$Dx) , ncol(setupMats$Dx)))
+    C <- parsBTfmd$cx0 * setupMats$Kx %*% phix0 %*% Matrix::t(setupMats$Kx2)
   }else{
-    phix0 <- sparseMatrix(i = 1 , ,j=1 , x=0 , dims = c(nrow(setupMats$Dx),ncol(setupMats$Dx)))
-    C <- sparseMatrix(i=1,j=1,x=0,dims = c(nrow(setupMats$Kx),nrow(setupMats$Kx2)))
+    phix0 <- Matrix::sparseMatrix(i = 1 , ,j=1 , x=0 , dims = c(nrow(setupMats$Dx),ncol(setupMats$Dx)))
+    C <- Matrix::sparseMatrix(i=1,j=1,x=0,dims = c(nrow(setupMats$Kx),nrow(setupMats$Kx2)))
   }
   
   if (modelx == 'matern'){
@@ -2000,11 +2042,11 @@ setCApproxIAK3D2 <- function(parsBTfmd , modelx ,
     
     ### adding Cxd0...    
     if(modelx == 'nugget' & sdfdType_cd1 == -9){
-      KphidKStat <- (setupMats$Kx %*% phix0 %*% t(setupMats$Kx2)) * (setupMats$Kd %*% phidStat %*% t(setupMats$Kd2))
-      C <- C + parsBTfmd$cxd0 * (setupMats$Kx %*% phix0 %*% t(setupMats$Kx2)) * (setupMats$Kd %*% phid_cxd0 %*% t(setupMats$Kd2))
+      KphidKStat <- (setupMats$Kx %*% phix0 %*% Matrix::t(setupMats$Kx2)) * (setupMats$Kd %*% phidStat %*% Matrix::t(setupMats$Kd2))
+      C <- C + parsBTfmd$cxd0 * (setupMats$Kx %*% phix0 %*% Matrix::t(setupMats$Kx2)) * (setupMats$Kd %*% phid_cxd0 %*% Matrix::t(setupMats$Kd2))
     }else{        
-      KphidKStat <- setupMats$Kd %*% phidStat %*% t(setupMats$Kd2)	
-      C <- C + parsBTfmd$cxd0 * (setupMats$Kx %*% phix0 %*% t(setupMats$Kx2)) * (setupMats$Kd %*% phid_cxd0 %*% t(setupMats$Kd2))
+      KphidKStat <- setupMats$Kd %*% phidStat %*% Matrix::t(setupMats$Kd2)	
+      C <- C + parsBTfmd$cxd0 * (setupMats$Kx %*% phix0 %*% Matrix::t(setupMats$Kx2)) * (setupMats$Kd %*% phid_cxd0 %*% Matrix::t(setupMats$Kd2))
     }
     
     ### adding Cd...    
@@ -2013,20 +2055,20 @@ setCApproxIAK3D2 <- function(parsBTfmd , modelx ,
     }else if(sdfdType_cd1 == -9){
       Cd <- 0
     }else{
-      C <- C + parsBTfmd$cd1 * (setupMats$Kd %*% phid_cd1 %*% t(setupMats$Kd2))
+      C <- C + parsBTfmd$cd1 * (setupMats$Kd %*% phid_cd1 %*% Matrix::t(setupMats$Kd2))
     }
     
     if(modelx == 'nugget'){
       Cx1 <- Cxd1 <- 0
     }else{
-      Kphix1K <- setupMats$Kx %*% phix1 %*% t(setupMats$Kx2)
+      Kphix1K <- setupMats$Kx %*% phix1 %*% Matrix::t(setupMats$Kx2)
       ### adding Cx1...    
       C <- C + parsBTfmd$cx1 * Kphix1K 
       ### adding Cxd1...    
       if(sdfdType_cxd1 == 0){
         C <- C + parsBTfmd$cxd1 * Kphix1K * KphidKStat 
       }else{
-        C <- C + parsBTfmd$cxd1 * Kphix1K * (setupMats$Kd %*% phid_cxd1 %*% t(setupMats$Kd2))
+        C <- C + parsBTfmd$cxd1 * Kphix1K * (setupMats$Kd %*% phid_cxd1 %*% Matrix::t(setupMats$Kd2))
       }
       remove(Kphix1K) ; 
     }
