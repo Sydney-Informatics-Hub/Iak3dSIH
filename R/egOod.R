@@ -321,26 +321,26 @@
   if(plotVargiogramFit){
     dIPlot <- data.frame('dU' = c(0 , 15 , 30 , 60)/100 , 'dL' = c(15 , 30 , 60 , 90)/100) #c(0 , 20 , 50 , 90 , 150 , 190)/100 , 'dL' = c(10 , 30 , 60 , 100 , 160 , 200)/100)
     hx <- seq(0 , 15 , 1)
-    pdf(file = paste0(dataDir , '/varioFitgam22.pdf'))
+    grDevices::pdf(file = paste0(dataDir , '/varioFitgam22.pdf'))
     tmp <- plotCovx(lmm.fit = lmm.fit.selected , hx = hx , dIPlot = dIPlot , addExpmntlV = TRUE , hzntlUnits = 'km')
-    dev.off()
+    grDevices::dev.off()
     
     hdPlot <- seq(0 , 1 , 0.01)
-    pdf(file = paste0(dataDir , '/cordFit.pdf'))
+    grDevices::pdf(file = paste0(dataDir , '/cordFit.pdf'))
     qwe <- plotCord(lmm.fit = lmm.fit.selected , hdPlot = hdPlot, vrtclUnits = 'm')
-    dev.off()
+    grDevices::dev.off()
     
     dTmp <- seq(0 , 0.9 , 0.1)  # Need to fix back end code though as predictions exceed 1m
     dIPlot <- data.frame('dU' = dTmp[-length(dTmp)] , 'dL' = dTmp[-1])
-    pdf(file = paste0(dataDir , '/covardFit.pdf'))
+    grDevices::pdf(file = paste0(dataDir , '/covardFit.pdf'))
     qwe <- plotCovd(lmm.fit = lmm.fit.selected , dIPlot = dIPlot , vrtclUnits = 'm')
-    dev.off()
+    grDevices::dev.off()
     
     ### plot of the variances...
-    pdf(file = paste0(dataDir , '/varComps.pdf'))
+    grDevices::pdf(file = paste0(dataDir , '/varComps.pdf'))
     dPlot <- seq(0 , 1, 0.01)
     plotVarComps(lmm.fit = lmm.fit.selected , dPlot = dPlot)
-    dev.off()
+    grDevices::dev.off()
   
   }else{}
   

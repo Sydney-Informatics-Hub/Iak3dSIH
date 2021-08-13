@@ -570,9 +570,10 @@ xValIAK3D <- function(lmmFit , removeAllWithin = 0 , namePlot = 'xvPlots.pdf' , 
 ########################################
 ### plot...
 ########################################
-    tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = lmmFit$xData , dIData = lmmFit$dIData, zData = lmmFit$zData , 
-                xPred = xPred , dIPred = dIPredPlot , zPred = zhatPlot , pi90LPred = pi90LPlot , pi90UPred = pi90UPlot , 
-                zhatxv = zhatxv , pi90Lxv = pi90Lxv , pi90Uxv = pi90Uxv)
+    # Turn off plot for now
+    #tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = lmmFit$xData , dIData = lmmFit$dIData, zData = lmmFit$zData , 
+    #            xPred = xPred , dIPred = dIPredPlot , zPred = zhatPlot , pi90LPred = pi90LPlot , pi90UPred = pi90UPlot , 
+    #            zhatxv = zhatxv , pi90Lxv = pi90Lxv , pi90Uxv = pi90Uxv)
 
 ########################################
 ### and return...
@@ -679,7 +680,7 @@ plotProfilesIAK3D <- function(namePlot = 'profilePlots.pdf' , xData , dIData , z
       xlab <- 'z'
     }else{}
     
-    pdf(file = namePlot)
+    grDevices::pdf(file = namePlot)
     if(!is.null(zPredDistant)){
       if(is.character(xlim) && xlim == 'flex'){
         xlimThis <- c(min(c(zData,zPredDistant)) , max(c(zData,zPredDistant)))
@@ -772,7 +773,7 @@ plotProfilesIAK3D <- function(namePlot = 'profilePlots.pdf' , xData , dIData , z
         }else{}
       }
     }
-    dev.off()
+    grDevices::dev.off()
 
     return()
 }

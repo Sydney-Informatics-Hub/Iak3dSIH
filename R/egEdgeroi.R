@@ -178,26 +178,26 @@ LoadData <- function(paramaters){
 RunPlots <- function(ModelOutput,dataDir,lmm.fit.selected) {
   dIPlot <- data.frame('dU' = c(0 , 20 , 50 , 90 , 150 , 190)/100 , 'dL' = c(10 , 30 , 60 , 100 , 160 , 200)/100)
   hx <- seq(0 , 20 , 1)
-  pdf(file = paste0(dataDir , '/varioFitgam22.pdf'))
+  grDevices::pdf(file = paste0(dataDir , '/varioFitgam22.pdf'))
   tmp <- plotCovx(lmm.fit = lmm.fit.selected , hx = hx , dIPlot = dIPlot , addExpmntlV = TRUE , hzntlUnits = 'km')
-  dev.off()
+  grDevices::dev.off()
   
   hdPlot <- seq(0 , 2 , 0.01)
-  pdf(file = paste0(dataDir , '/cordFit.pdf'))
+  grDevices::pdf(file = paste0(dataDir , '/cordFit.pdf'))
   qwe <- plotCord(lmm.fit = lmm.fit.selected , hdPlot = hdPlot, vrtclUnits = 'm')
-  dev.off()
+  grDevices::dev.off()
   
   dTmp <- seq(0 , 2 , 0.1)
   dIPlot <- data.frame('dU' = dTmp[-length(dTmp)] , 'dL' = dTmp[-1])
-  pdf(file = paste0(dataDir , '/covardFit.pdf'))
+  grDevices::pdf(file = paste0(dataDir , '/covardFit.pdf'))
   qwe <- plotCovd(lmm.fit = lmm.fit.selected , dIPlot = dIPlot , vrtclUnits = 'm')
-  dev.off()
+  grDevices::dev.off()
   
   ### plot of the variances...
-  pdf(file = paste0(dataDir , '/varComps.pdf'))
+  grDevices::pdf(file = paste0(dataDir , '/varComps.pdf'))
   dPlot <- seq(0 , 2 , 0.01)
   plotVarComps(lmm.fit = lmm.fit.selected , dPlot = dPlot)
-  dev.off()
+  grDevices::dev.off()
   
 }
 RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal) {
@@ -228,9 +228,10 @@ RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmd
   valStatsAllLayers <- tmp$valStatsAllLayers
   valStatsTot <- tmp$valStatsTot
   
-  tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = ModelOutput$cVal , dIData = ModelOutput$dIVal , zData = ModelOutput$zVal ,
-                           xPred = cValU , dIPred = dIPred , zPred = zkProfPred , pi90LPred = pi90LkProfPred , pi90UPred = pi90UkProfPred ,
-                           zhatxv = zkVal , pi90Lxv = zkVal - 1.64 * sqrt(vkVal) , pi90Uxv = zkVal + 1.64 * sqrt(vkVal))
+  #Turned off for now - seperate plottting elsewhere
+  #tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = ModelOutput$cVal , dIData = ModelOutput$dIVal , zData = ModelOutput$zVal ,
+  #                         xPred = cValU , dIPred = dIPred , zPred = zkProfPred , pi90LPred = pi90LkProfPred , pi90UPred = pi90UkProfPred ,
+  #                         zhatxv = zkVal , pi90Lxv = zkVal - 1.64 * sqrt(vkVal) , pi90Uxv = zkVal + 1.64 * sqrt(vkVal))
   
   
 
@@ -290,10 +291,11 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
   
   namePlot = paste0(dataDir , '/plotVal4Plot.pdf')
   
-  tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = cVal4Plot , dIData = dIVal4Plot , zData = zVal4Plot_PLOT , 
-                           xPred = cVal4PlotU , dIPred = dIPred , zPred = zkProfPred_PLOT , pi90LPred = pi90LkProfPred_PLOT , pi90UPred = pi90UkProfPred_PLOT , 
-                           zhatxv = zkVal4Plot_PLOT , pi90Lxv = pi90LkVal4Plot_PLOT , pi90Uxv = pi90UkVal4Plot_PLOT , 
-                           profNames = paste0('Profile ' , rand6ForPlot) , xlim = xlim , xlab = xlab) 
+  # turned off for now. 
+  #tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = cVal4Plot , dIData = dIVal4Plot , zData = zVal4Plot_PLOT , 
+  #                         xPred = cVal4PlotU , dIPred = dIPred , zPred = zkProfPred_PLOT , pi90LPred = pi90LkProfPred_PLOT , pi90UPred = pi90UkProfPred_PLOT , 
+  #                         zhatxv = zkVal4Plot_PLOT , pi90Lxv = pi90LkVal4Plot_PLOT , pi90Uxv = pi90UkVal4Plot_PLOT , 
+  #                         profNames = paste0('Profile ' , rand6ForPlot) , xlim = xlim , xlab = xlab) 
   
 }
 
@@ -372,6 +374,7 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel){
   wDir <- here::here()
   lmm2Dir <- here::here('R/fLMM2')
   dataDir <- here::here('tests/run_results') # change this to /src or /data #https://r-pkgs.org/package-structure-state.html
+  #dataDir <- here::here('data')
   # when incorporating R package structure
   setwd(wDir)
   
@@ -418,9 +421,9 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel){
   ###########################################################################
   ### some plots of the fitted covariance model...
   ###########################################################################
-  if(plotVargiogramFit){
-    RunPlots(ModelOutput,dataDir,lmm.fit.selected)
-  }else{}
+  #if(plotVargiogramFit){
+  #  RunPlots(ModelOutput,dataDir,lmm.fit.selected)
+  #}else{}
   
   #VAIDATIONS BIT
   fnamezkVal <- paste0(dataDir , '/zkVal.RData')

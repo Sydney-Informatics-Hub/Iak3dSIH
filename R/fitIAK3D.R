@@ -277,7 +277,7 @@ fitIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx = 'mate
       verboseOptim <<- F
       end_time <- Sys.time()
       nllTime <- end_time - start_time
-      
+      #browser()
 ### and fit...
       if (compLikMats$compLikOptn == 0){
 
@@ -465,8 +465,9 @@ print(head(lmmFit$setupMats$XsdfdSplineU_cxd0))
 ### also note, they are a bi-product of the method (ie you can use the method to predict at profiles where::here we have data), 
 ### not to be confused with the spline-then-krige type approach where::here similar plots may be produced in the first step of analysis
 #################################################    
-      tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = xData , dIData = dIData , zData = zData , 
-                xPred = xPred , dIPred = dIPred , zPred = zPred , pi90LPred = pi90LPred , pi90UPred = pi90UPred , zPredDistant = zPredDistant , profNames = profNamesPlot)
+      # plot not passed at moment
+      #tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = xData , dIData = dIData , zData = zData , 
+      #          xPred = xPred , dIPred = dIPred , zPred = zPred , pi90LPred = pi90LPred , pi90UPred = pi90UPred , zPredDistant = zPredDistant , profNames = profNamesPlot)
 
     }else{
       zPredDistant <- vPredDistant <- zPred <- vPred <- pi90LPred <- pi90UPred <- xPred <- dIPred <- NA
@@ -1665,7 +1666,16 @@ gradnllIAK3D.mc <- function(pars , zData , XData , vXU , iU , modelx , nud ,
   if(length(pars) == 1){ stop('Error - do not use gradnllIAK3D.mc with 1 parameter!') }else{}
 
   delVec <- rep(1E-6 , length(pars))
-  numCores <- min(parallel::detectCores() , 8)
+  chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+  # https://stackoverflow.com/questions/50571325/r-cran-check-fail-when-using-parallel-functions
+  if (nzchar(chk) && chk == "TRUE") {
+      # use 2 cores in CRAN/Travis/AppVeyor
+      numCores  <- 2L
+  } else {
+      # use all cores in devtools::test()
+      numCores <- parallel::detectCores()
+  }
+  #numCores <- min(parallel::detectCores() , 8)
   
   parsMtx <- matrix(pars , length(pars) , length(pars) + 1)
   parsMtx[1:length(pars),1:length(pars)] <- parsMtx[1:length(pars),1:length(pars)] +  Matrix::diag(delVec)
@@ -1687,7 +1697,7 @@ gradnllIAK3D.mc <- function(pars , zData , XData , vXU , iU , modelx , nud ,
 
     stopCluster(cl) 
   }else{
-    outtmp <- mclapply(X = parsList , FUN = nllIAK3D , mc.cores = numCores , 
+    outtmp <- parallel::mclapply(X = parsList , FUN = nllIAK3D , mc.cores = numCores , 
                        zData = zData , XData = XData , vXU = vXU , iU = iU , modelx = modelx , nud = nud ,  
                        sdfdType_cd1 = sdfdType_cd1 , sdfdType_cxd0 = sdfdType_cxd0 , sdfdType_cxd1 = sdfdType_cxd1 , cmeOpt = cmeOpt , 
                        prodSum = prodSum , setupMats = setupMats , parBnds = parBnds , useReml = useReml , lnTfmdData = lnTfmdData , rtnAll = F , forCompLik = FALSE)
@@ -1729,7 +1739,7 @@ gradnllIAK3D_CL.mc <- function(pars , zData , XData , modelx , nud ,
 
     stopCluster(cl) 
   }else{
-    outtmp <- mclapply(X = parsList , FUN = nllIAK3D_CL , mc.cores = numCores , 
+    outtmp <- parallel::mclapply(X = parsList , FUN = nllIAK3D_CL , mc.cores = numCores , 
                        zData = zData , XData = XData , modelx = modelx , nud = nud ,  
                        sdfdType_cd1 = sdfdType_cd1 , sdfdType_cxd0 = sdfdType_cxd0 , sdfdType_cxd1 = sdfdType_cxd1 , cmeOpt = cmeOpt , 
                        prodSum = prodSum , setupMats = setupMats , parBnds = parBnds , useReml = useReml , compLikMats = compLikMats , rtnAll = F)
