@@ -172,29 +172,32 @@ LoadData <- function(paramaters){
   
 }
 
-# ModelOutput
-#list(modelX=modelX,cFit=cFit, dIFit=dIFit, covsFit=covsFit, zFit=zFit, profIDFit=profIDFit, cVal=cVal, dIVal=dIVal, covsVal=covsVal, zVal=zVal, profIDVal=profIDVal, rList=rList))
-
-RunPlots <- function(ModelOutput,dataDir,lmm.fit.selected) {
+#' Run Iak3d project with building spline model
+#'
+#' RunPlots(iakdata$lmm.fit.selected)
+#' @param lmm.fit.selected
+#' @return saves plots in the working directory
+#' @export
+RunPlots <- function(lmm.fit.selected) {
   dIPlot <- data.frame('dU' = c(0 , 20 , 50 , 90 , 150 , 190)/100 , 'dL' = c(10 , 30 , 60 , 100 , 160 , 200)/100)
   hx <- seq(0 , 20 , 1)
-  grDevices::pdf(file = paste0(dataDir , '/varioFitgam22.pdf'))
+  grDevices::pdf(file = paste0(getwd() , '/varioFitgam22.pdf'))
   tmp <- plotCovx(lmm.fit = lmm.fit.selected , hx = hx , dIPlot = dIPlot , addExpmntlV = TRUE , hzntlUnits = 'km')
   grDevices::dev.off()
   
   hdPlot <- seq(0 , 2 , 0.01)
-  grDevices::pdf(file = paste0(dataDir , '/cordFit.pdf'))
+  grDevices::pdf(file = paste0(getwd() , '/cordFit.pdf'))
   qwe <- plotCord(lmm.fit = lmm.fit.selected , hdPlot = hdPlot, vrtclUnits = 'm')
   grDevices::dev.off()
   
   dTmp <- seq(0 , 2 , 0.1)
   dIPlot <- data.frame('dU' = dTmp[-length(dTmp)] , 'dL' = dTmp[-1])
-  grDevices::pdf(file = paste0(dataDir , '/covardFit.pdf'))
+  grDevices::pdf(file = paste0(getwd() , '/covardFit.pdf'))
   qwe <- plotCovd(lmm.fit = lmm.fit.selected , dIPlot = dIPlot , vrtclUnits = 'm')
   grDevices::dev.off()
   
   ### plot of the variances...
-  grDevices::pdf(file = paste0(dataDir , '/varComps.pdf'))
+  grDevices::pdf(file = paste0(getwd() , '/varComps.pdf'))
   dPlot <- seq(0 , 2 , 0.01)
   plotVarComps(lmm.fit = lmm.fit.selected , dPlot = dPlot)
   grDevices::dev.off()
@@ -301,7 +304,7 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
 
 #' Run Iak3d project with building spline model
 #'
-#' This function allows you to express your love of cats.
+#' This function builds spline model
 #' @param None
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
@@ -313,7 +316,7 @@ SplineIAK <- function() {
 
 #' Run Iak3d project with building Cubist model
 #'
-#' This function allows you to express your love of cats.
+#' This function builds cubist model
 #' @param None
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
@@ -420,10 +423,11 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel){
   
   ###########################################################################
   ### some plots of the fitted covariance model...
+  # saves pdfs to getwd()
   ###########################################################################
-  #if(plotVargiogramFit){
-  #  RunPlots(ModelOutput,dataDir,lmm.fit.selected)
-  #}else{}
+  if(plotVargiogramFit){
+    RunPlots(lmm.fit.selected)
+  }else{}
   
   #VAIDATIONS BIT
   fnamezkVal <- paste0(dataDir , '/zkVal.RData')
