@@ -2,5 +2,6 @@
 
 export("%>%")
 export(CubistIAK)
+export(RunPlots)
 export(SplineIAK)
 importFrom(magrittr,"%>%")

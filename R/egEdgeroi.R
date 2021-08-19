@@ -1,20 +1,22 @@
 ##############################################################
 # libraries required
-library(sp)
-library(raster)
-library(rgdal)
-library(Cubist)
-library(mgcv)
-library(Matrix)
-library(MASS)
-library(splines)
-library(deldir)
-library(lme4)
-library(aqp)
-library(GSIF)
-library(ithir)
-library(parallel)
-library(here)
+# library(sp)
+# library(raster)
+# library(rgdal)
+# library(Cubist)
+# library(mgcv)
+# library(Matrix)
+# library(MASS)
+# library(splines)
+# library(deldir)
+# library(lme4)
+# library(aqp)
+# library(GSIF)
+# library(ithir)
+# library(parallel)
+# library(here)
+# from data(edgeroi) and data(edgeroiCovariates)
+# datafeed <- list(edgeroi=edgeroi,elevation=elevation,landsat_b3=landsat_b3,landsat_b4=landsat_b4,radK=radK,twi=twi)
 ##############################################################
 FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList) {
   #################################################################################################
@@ -150,14 +152,14 @@ LoadModel <- function(paramaters) {
   return(ModelOutput)
 }
 
-LoadData <- function(paramaters){
+LoadData <- function(paramaters,datafeed){
   
   ##############################################
   ### load the edgeroi dataset (from GSIF package) and put into format for iak3d...
   ##############################################
   print("now in loadData................................")
   
-  tmp <- getEdgeroiData()
+  tmp <- getEdgeroiData(datafeed$edgeroi, datafeed$elevation , datafeed$twi , datafeed$radK , datafeed$landsat_b3 , datafeed$landsat_b4)
   
   #determin model options from flags and be able to pass all other paramaters needed
   print("Print constructed ModelOptions")
@@ -305,33 +307,33 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
 #' Run Iak3d project with building spline model
 #'
 #' This function builds spline model
-#' @param None
+#' @param datafeed
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Splinedata <- SplineIAK()
-SplineIAK <- function() {
-  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE))
+#' Splinedata <- SplineIAK(datafeed)
+SplineIAK <- function(datafeed) {
+  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,datafeed))
 }
 
 #' Run Iak3d project with building Cubist model
 #'
 #' This function builds cubist model
-#' @param None
+#' @param datafeed
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Cubistdata <- CubistIAK()
-CubistIAK <- function() {
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE))
+#' Cubistdata <- CubistIAK(datafeed)
+CubistIAK <- function(datafeed) {
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,datafeed))
 }
 
 
-ModelFromFile <- function(){
+ModelFromFile <- function(datafeed){
   #expect a cmFit.RData file to load 
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE))
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,datafeed))
 }
-RunEdgeroi <- function(fitCubistModelNow,LoadModel){
+RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeed){
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
@@ -372,7 +374,7 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel){
   
   #Create main parameter list
   paramaters <- list(fitCubistModelNow=fitCubistModelNow,useCubistForTrend=useCubistForTrend,fitModelNow=fitModelNow, otherparamaters=otherparamaters)
-  ModelOutput <- LoadData(paramaters)
+  ModelOutput <- LoadData(paramaters,datafeed)
   #iftestCL logic was here::here
   wDir <- here::here()
   lmm2Dir <- here::here('R/fLMM2')

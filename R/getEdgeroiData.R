@@ -1,6 +1,6 @@
-getEdgeroiData <- function(){
+getEdgeroiData <- function(edgeroi,elevation , twi , radK , landsat_b3 , landsat_b4){
 
-  data(edgeroi)
+  #data(edgeroi)
   edgeroi$sites[edgeroi$sites$SOURCEID=="399_EDGEROI_ed095_1",]
   edgeroi$horizons[edgeroi$horizons$SOURCEID=="399_EDGEROI_ed095_1",]
 ## spPoints:
@@ -54,7 +54,7 @@ getEdgeroiData <- function(){
 ##############################################################  
 ### get the ithir::edgeroiCovariates...
 ##############################################################  
-  data(edgeroiCovariates)
+  #data(edgeroiCovariates)
   rList <- list(elevation , twi , radK , landsat_b3 , landsat_b4)
   names(rList) <- c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
   covsTmp <- data.frame('elevation' = NA * numeric(nrow(edgeroi$horizons)) , 'twi' = NA , 'radK' = NA , 'landsat_b3' = NA , 'landsat_b4' = NA)

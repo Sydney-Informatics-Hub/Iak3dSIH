@@ -8,9 +8,6 @@ Description: Increment Average kriging for 3d predicted soil samples
 License: use_gpl3_license()
 Encoding: UTF-8
 LazyData: true
-Depends:
-  methods,
-  ithir
 Imports:
   Matrix,
   sp,
@@ -31,7 +28,8 @@ Imports:
   tibble,
   magrittr,
   dplyr,
-  grDevices
+  grDevices,
+  methods
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
