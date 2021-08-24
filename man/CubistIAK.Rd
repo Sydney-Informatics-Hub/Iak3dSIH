@@ -4,7 +4,7 @@
 \alias{CubistIAK}
 \title{Run Iak3d project with building Cubist model}
 \usage{
-CubistIAK(datafeed)
+CubistIAK(datafeedin)
 }
 \value{
 an object with lmm.fit.selected,xkVal and vkVal
@@ -13,5 +13,5 @@ an object with lmm.fit.selected,xkVal and vkVal
 This function builds cubist model
 }
 \examples{
-Cubistdata <- CubistIAK(datafeed)
+Cubistdata <- CubistIAK(Uniform_Data_Edgeroi)
 }

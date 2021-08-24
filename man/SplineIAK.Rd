@@ -2,16 +2,16 @@
 % Please edit documentation in R/egEdgeroi.R
 \name{SplineIAK}
 \alias{SplineIAK}
-\title{Run Iak3d project with building spline model}
+\title{This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).}
 \usage{
-SplineIAK(datafeed)
+SplineIAK(datafeedin)
 }
 \value{
 an object with lmm.fit.selected,xkVal and vkVal
 }
 \description{
-This function builds spline model
+This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).
 }
 \examples{
-Splinedata <- SplineIAK(datafeed)
+Splinedata <- SplineIAK(Uniform_Data_Edgeroi)
 }

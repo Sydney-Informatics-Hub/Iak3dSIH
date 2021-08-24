@@ -1,23 +1,27 @@
 ##############################################################
-# libraries required
-# library(sp)
-# library(raster)
-# library(rgdal)
-# library(Cubist)
-# library(mgcv)
-# library(Matrix)
-# library(MASS)
-# library(splines)
-# library(deldir)
-# library(lme4)
-# library(aqp)
-# library(GSIF)
-# library(ithir)
-# library(parallel)
-# library(here)
-# from data(edgeroi) and data(edgeroiCovariates)
+#
+# Underlying data taken from data(edgeroi) and data(edgeroiCovariates) packages
+# in GSIF
 # datafeed <- list(edgeroi=edgeroi,elevation=elevation,landsat_b3=landsat_b3,landsat_b4=landsat_b4,radK=radK,twi=twi)
+#Usage: 
+# result <- Iak3dSIH::CubistIAK(datafeedin = Uniform_Data_Edgeroi) OR
+# result <- Iak3dSIH::SplineIAK(datafeedin = Uniform_Data_Edgeroi)
+
 ##############################################################
+
+
+#' Represents the underlying data needed to run Spline or Cubist Models within this package.
+#' Underlying data taken from data(edgeroi) and data(edgeroiCovariates) packages
+#' in GSIF. Functions that build on this data (i.e. getEdgeroiData() or getOodnadattaData()
+#' have been applied to give this data i.e. Uniform_Data_Edgeroi. 
+#' You can supply other data objects within the model (i.e.Uniform_Data_Ood ) taken 
+#' from other regions, provided it fits similar structures.
+#' @name Uniform_Data_Edgeroi
+#' @docType data
+#' @keywords data
+NULL
+
+
 FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList) {
   #################################################################################################
   ### set knots for sdfd spline fn (if used)
@@ -152,15 +156,16 @@ LoadModel <- function(paramaters) {
   return(ModelOutput)
 }
 
-LoadData <- function(paramaters,datafeed){
+LoadData <- function(paramaters,datafeedin){
   
   ##############################################
   ### load the edgeroi dataset (from GSIF package) and put into format for iak3d...
   ##############################################
   print("now in loadData................................")
   
-  tmp <- getEdgeroiData(datafeed$edgeroi, datafeed$elevation , datafeed$twi , datafeed$radK , datafeed$landsat_b3 , datafeed$landsat_b4)
-  
+  tmp <- datafeedin
+  #tmp <- getEdgeroiData(datafeed$edgeroi, datafeed$elevation , datafeed$twi , datafeed$radK , datafeed$landsat_b3 , datafeed$landsat_b4)
+  #saveRDS(tmp,here::here("Original_Edgeroi.rds"))
   #determin model options from flags and be able to pass all other paramaters needed
   print("Print constructed ModelOptions")
   ModelOptions <- list(FitCubits=paramaters$fitCubistModelNow, 
@@ -304,36 +309,35 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
   
 }
 
-#' Run Iak3d project with building spline model
-#'
-#' This function builds spline model
-#' @param datafeed
+
+#' This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).
+#' @param Uniform_Data_Edgeroi
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Splinedata <- SplineIAK(datafeed)
-SplineIAK <- function(datafeed) {
-  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,datafeed))
+#' Splinedata <- SplineIAK(Uniform_Data_Edgeroi)
+SplineIAK <- function(datafeedin) {
+  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,datafeedin))
 }
 
 #' Run Iak3d project with building Cubist model
 #'
 #' This function builds cubist model
-#' @param datafeed
+#' @param Uniform_Data_Edgeroi
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Cubistdata <- CubistIAK(datafeed)
-CubistIAK <- function(datafeed) {
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,datafeed))
+#' Cubistdata <- CubistIAK(Uniform_Data_Edgeroi)
+CubistIAK <- function(datafeedin) {
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,datafeedin))
 }
 
 
-ModelFromFile <- function(datafeed){
+ModelFromFile <- function(datafeedin){
   #expect a cmFit.RData file to load 
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,datafeed))
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,datafeedin))
 }
-RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeed){
+RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeedin){
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
@@ -374,7 +378,7 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeed){
   
   #Create main parameter list
   paramaters <- list(fitCubistModelNow=fitCubistModelNow,useCubistForTrend=useCubistForTrend,fitModelNow=fitModelNow, otherparamaters=otherparamaters)
-  ModelOutput <- LoadData(paramaters,datafeed)
+  ModelOutput <- LoadData(paramaters,datafeedin)
   #iftestCL logic was here::here
   wDir <- here::here()
   lmm2Dir <- here::here('R/fLMM2')
