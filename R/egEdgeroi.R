@@ -22,6 +22,7 @@
 NULL
 
 
+
 FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList) {
   #################################################################################################
   ### set knots for sdfd spline fn (if used)
@@ -182,7 +183,7 @@ LoadData <- function(paramaters,datafeedin){
 #' Run Iak3d project with building spline model
 #'
 #' RunPlots(iakdata$lmm.fit.selected)
-#' @param lmm.fit.selected
+#' @param lmm.fit.selected The result of running either Cubist or Spline Models
 #' @return saves plots in the working directory
 #' @export
 RunPlots <- function(lmm.fit.selected) {
@@ -209,6 +210,7 @@ RunPlots <- function(lmm.fit.selected) {
   plotVarComps(lmm.fit = lmm.fit.selected , dPlot = dPlot)
   grDevices::dev.off()
   
+
 }
 RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal) {
   
@@ -252,8 +254,8 @@ RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmd
 LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred){
   
   
-  rand6ForPlot <- c(6 , 19 , 49 , 41 , 3 , 24)
-  
+  rand6ForPlot <- c(6 , 19 , 49 , 41 , 3 , 24) # For edg
+  #rand6ForPlot <- c(6 , 8, 15 , 5 , 3 , 4) # For OOd
   i4PlotU <- Matrix::which(!duplicated(ModelOutput$cVal))[rand6ForPlot]
   cVal4PlotU <- ModelOutput$cVal[i4PlotU,,drop=FALSE]
   covsVal4PlotU <- ModelOutput$covsVal[i4PlotU,,drop=FALSE]
@@ -270,6 +272,7 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
   zVal4Plot <- ModelOutput$zVal[iVal4Plot]
   
   zkVal4Plot <- vkVal4Plot <- NA * numeric(length(zVal4Plot))
+  
   for(i in 1:nrow(cVal4PlotU)){
     iTmp <- Matrix::which(cVal4Plot[,1] == cVal4PlotU[i,1] & cVal4Plot[,2] == cVal4PlotU[i,2])
     tmp <- profilePredictIAK3D(xMap = cVal4PlotU[i,,drop=FALSE] , covsMap = covsVal4Plot[iTmp,,drop=FALSE] , dIMap = dIVal4Plot[iTmp,,drop=FALSE] , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
@@ -299,45 +302,48 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
   vecTmp <- c(zVal4Plot_PLOT , zkVal4Plot_PLOT , as.numeric(zkProfPred_PLOT))
   xlim <- c(min(vecTmp) , max(vecTmp))
   
-  namePlot = paste0(dataDir , '/plotVal4Plot.pdf')
+  namePlot = paste0(getwd() , '/plotVal4Plot.pdf')
   
-  # turned off for now. 
-  #tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = cVal4Plot , dIData = dIVal4Plot , zData = zVal4Plot_PLOT , 
-  #                         xPred = cVal4PlotU , dIPred = dIPred , zPred = zkProfPred_PLOT , pi90LPred = pi90LkProfPred_PLOT , pi90UPred = pi90UkProfPred_PLOT , 
-  #                         zhatxv = zkVal4Plot_PLOT , pi90Lxv = pi90LkVal4Plot_PLOT , pi90Uxv = pi90UkVal4Plot_PLOT , 
-  #                         profNames = paste0('Profile ' , rand6ForPlot) , xlim = xlim , xlab = xlab) 
+  # turned off for now.  returns null
+  
+  tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = cVal4Plot , dIData = dIVal4Plot , zData = zVal4Plot_PLOT , 
+                           xPred = cVal4PlotU , dIPred = dIPred , zPred = zkProfPred_PLOT , pi90LPred = pi90LkProfPred_PLOT , pi90UPred = pi90UkProfPred_PLOT , 
+                           zhatxv = zkVal4Plot_PLOT , pi90Lxv = pi90LkVal4Plot_PLOT , pi90Uxv = pi90UkVal4Plot_PLOT , 
+                           profNames = paste0('Profile ' , rand6ForPlot) , xlim = xlim , xlab = xlab) 
   
 }
 
 
 #' This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).
-#' @param Uniform_Data_Edgeroi
+#' @param datafeedin data to feed in such as Uniform_Data_Edgeroi
+#' @param vaidation Boolean TRUE or FALSE
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Splinedata <- SplineIAK(Uniform_Data_Edgeroi)
-SplineIAK <- function(datafeedin) {
-  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,datafeedin))
+#' Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE)
+SplineIAK <- function(datafeedin,validation) {
+  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,datafeedin,validation = TRUE))
 }
 
 #' Run Iak3d project with building Cubist model
 #'
 #' This function builds cubist model
-#' @param Uniform_Data_Edgeroi
+#' @param datafeedin data to feed in such as Uniform_Data_Edgeroi
+#' @param vaidation Boolean TRUE or FALSE
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Cubistdata <- CubistIAK(Uniform_Data_Edgeroi)
-CubistIAK <- function(datafeedin) {
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,datafeedin))
+#' Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE)
+CubistIAK <- function(datafeedin,validation) {
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,datafeedin,validation = TRUE))
 }
 
 
 ModelFromFile <- function(datafeedin){
   #expect a cmFit.RData file to load 
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,datafeedin))
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,datafeedin,validation = TRUE))
 }
-RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeedin){
+RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeedin,validation = TRUE){
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
@@ -350,8 +356,8 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeedin){
   #browser()
   #other paramaters
   plotVargiogramFit <- TRUE
-  valNow <- TRUE
-  val4PlotNow <- TRUE
+  valNow <- validation
+  val4PlotNow <- validation
   mapNow <- FALSE 
   printnllTime <<- FALSE
   CRSAusAlbers <- sp::CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
@@ -431,25 +437,21 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeedin){
   ### some plots of the fitted covariance model...
   # saves pdfs to getwd()
   ###########################################################################
-  if(plotVargiogramFit){
-    RunPlots(lmm.fit.selected)
-  }else{}
-  
-  #VAIDATIONS BIT
-  fnamezkVal <- paste0(dataDir , '/zkVal.RData')
-  fnamevkVal <- paste0(dataDir , '/vkVal.RData')
-  namePlot = paste0(dataDir , '/plotVal.pdf')
-  if(valNow) {
+  # Run plots are exported function requiring result of this run
+  #if(plotVargiogramFit){
+  #  RunPlots(lmm.fit.selected)
+  #}else{}
+  if (valNow) {
+    #VAIDATIONS BIT
+    fnamezkVal <- paste0(getwd() , '/zkVal.RData')
+    fnamevkVal <- paste0(getwd() , '/vkVal.RData')
+    namePlot = paste0(getwd(), '/plotVal.pdf')
     xkvkVal <- RunValidation(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal)
-  } else {
-    load(file = fnamezkVal)
-    load(file = fnamevkVal)
-  }
-  
-  ### keeping this bit separate. 
-  if(val4PlotNow){
     LastSeperation(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred)
-  }else{}
+  } else {
+    xkvkVal <- NULL
+  }
+
   return(list(lmm.fit.selected=lmm.fit.selected,xkvkVal=xkvkVal))
 }
 

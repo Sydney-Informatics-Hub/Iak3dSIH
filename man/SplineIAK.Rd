@@ -6,6 +6,11 @@
 \usage{
 SplineIAK(datafeedin)
 }
+\arguments{
+\item{datafeedin}{data to feed in such as Uniform_Data_Edgeroi}
+
+\item{vaidation}{Boolean TRUE or FALSE}
+}
 \value{
 an object with lmm.fit.selected,xkVal and vkVal
 }
@@ -13,5 +18,5 @@ an object with lmm.fit.selected,xkVal and vkVal
 This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).
 }
 \examples{
-Splinedata <- SplineIAK(Uniform_Data_Edgeroi)
+Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE)
 }

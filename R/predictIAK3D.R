@@ -680,7 +680,7 @@ plotProfilesIAK3D <- function(namePlot = 'profilePlots.pdf' , xData , dIData , z
       xlab <- 'z'
     }else{}
     
-    grDevices::pdf(file = namePlot)
+    grDevices::pdf(file = namePlot) 
     if(!is.null(zPredDistant)){
       if(is.character(xlim) && xlim == 'flex'){
         xlimThis <- c(min(c(zData,zPredDistant)) , max(c(zData,zPredDistant)))
