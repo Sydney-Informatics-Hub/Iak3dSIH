@@ -4,10 +4,10 @@
 \alias{CubistIAK}
 \title{Run Iak3d project with building Cubist model}
 \usage{
-CubistIAK(datafeedin)
+CubistIAK(data, validation)
 }
 \arguments{
-\item{datafeedin}{data to feed in such as Uniform_Data_Edgeroi}
+\item{data}{data to feed in such as Uniform_Data_Edgeroi}
 
 \item{vaidation}{Boolean TRUE or FALSE}
 }

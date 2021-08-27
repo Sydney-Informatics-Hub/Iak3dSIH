@@ -315,35 +315,35 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
 
 
 #' This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).
-#' @param datafeedin data to feed in such as Uniform_Data_Edgeroi
+#' @param data data to feed in such as Uniform_Data_Edgeroi
 #' @param vaidation Boolean TRUE or FALSE
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
 #' Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE)
-SplineIAK <- function(datafeedin,validation) {
-  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,datafeedin,validation = TRUE))
+SplineIAK <- function(data,validation) {
+  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,validation,data))
 }
 
 #' Run Iak3d project with building Cubist model
 #'
 #' This function builds cubist model
-#' @param datafeedin data to feed in such as Uniform_Data_Edgeroi
+#' @param data data to feed in such as Uniform_Data_Edgeroi
 #' @param vaidation Boolean TRUE or FALSE
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
 #' Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE)
-CubistIAK <- function(datafeedin,validation) {
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,datafeedin,validation = TRUE))
+CubistIAK <- function(data,validation) {
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,validation, data))
 }
 
 
 ModelFromFile <- function(datafeedin){
   #expect a cmFit.RData file to load 
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,datafeedin,validation = TRUE))
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,validation,data))
 }
-RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeedin,validation = TRUE){
+RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin){
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
@@ -441,12 +441,13 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeedin,validation = TRUE)
   #if(plotVargiogramFit){
   #  RunPlots(lmm.fit.selected)
   #}else{}
-  if (valNow) {
+  if (valNow == TRUE) {
     #VAIDATIONS BIT
     fnamezkVal <- paste0(getwd() , '/zkVal.RData')
     fnamevkVal <- paste0(getwd() , '/vkVal.RData')
     namePlot = paste0(getwd(), '/plotVal.pdf')
     xkvkVal <- RunValidation(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal)
+    browser()
     LastSeperation(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred)
   } else {
     xkvkVal <- NULL

@@ -6,6 +6,9 @@
 \usage{
 RunPlots(lmm.fit.selected)
 }
+\arguments{
+\item{lmm.fit.selected}{The result of running either Cubist or Spline Models}
+}
 \value{
 saves plots in the working directory
 }

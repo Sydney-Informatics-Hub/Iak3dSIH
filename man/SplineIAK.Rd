@@ -4,10 +4,10 @@
 \alias{SplineIAK}
 \title{This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).}
 \usage{
-SplineIAK(datafeedin)
+SplineIAK(data, validation)
 }
 \arguments{
-\item{datafeedin}{data to feed in such as Uniform_Data_Edgeroi}
+\item{data}{data to feed in such as Uniform_Data_Edgeroi}
 
 \item{vaidation}{Boolean TRUE or FALSE}
 }
