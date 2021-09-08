@@ -1,11 +1,8 @@
 ##############################################################
 #
-# Underlying data taken from data(edgeroi) and data(edgeroiCovariates) packages
-# in GSIF
-# datafeed <- list(edgeroi=edgeroi,elevation=elevation,landsat_b3=landsat_b3,landsat_b4=landsat_b4,radK=radK,twi=twi)
-#Usage: 
-# result <- Iak3dSIH::CubistIAK(datafeedin = Uniform_Data_Edgeroi) OR
-# result <- Iak3dSIH::SplineIAK(datafeedin = Uniform_Data_Edgeroi)
+# Example For Oodnadatta data 
+#Iak3dSIH::CubistIAK(Ood2,FALSE,c('DEM_30','SlopeDeg','RED_5'),c(6 , 8, 15 , 5 , 3 , 4))
+
 
 ##############################################################
 
@@ -23,7 +20,7 @@ NULL
 
 
 
-FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList) {
+FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs) {
   #################################################################################################
   ### set knots for sdfd spline fn (if used)
   #################################################################################################
@@ -37,7 +34,7 @@ FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit,
   nIntKnotss <- 4 # number of internal knots for the spline functions (nat spline, clamped to have grad=0 at upper and lower bdries) of covariates
   
   ### don't include depth here::here.   
-  spatialCovs <- c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
+  
   if(scaleCovs){
     print("Scaled covariates created")
     ### to work with scaled covariates
@@ -67,7 +64,7 @@ FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit,
   
 }
 
-FitCubistModel <- function(paramaters, tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList) {
+FitCubistModel <- function(paramaters, tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs) {
   ##############################################################
   ### an algorithm to select number of rules for cubist model
   
@@ -116,7 +113,8 @@ LoadModelDirectly <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDF
   return(list(modelX=modelX,cFit=cFit, dIFit=dIFit, covsFit=covsFit, zFit=zFit, profIDFit=profIDFit, cVal=cVal, dIVal=dIVal, covsVal=covsVal, zVal=zVal, profIDVal=profIDVal, rList=rList))
   
 }
-LoadModel <- function(paramaters) {
+#spatialCovs <- c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
+LoadModel <- function(paramaters,spatialCovs) {
   #  input : list(FitCubits=paramaters$fitCubistModelNow, 
   #       useCubistForTrend = paramaters$useCubistForTrend, 
   #       LoadModel = paramaters$fitModelNow, #NEGATE THIS
@@ -142,7 +140,7 @@ LoadModel <- function(paramaters) {
   
   if(paramaters$FitCubits){
     print("doing cubist")
-    ModelOutput <- FitCubistModel(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList) #................
+    ModelOutput <- FitCubistModel(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs) #................
   }
   else if (paramaters$LoadModel) {
     print("loading directly from a file")
@@ -152,12 +150,12 @@ LoadModel <- function(paramaters) {
   else {
     print("doing spline")
     #spline model
-    ModelOutput <- FitSplineModel(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList) # first seperation into Spline and return stuff
+    ModelOutput <- FitSplineModel(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs) # first seperation into Spline and return stuff
   }
   return(ModelOutput)
 }
 
-LoadData <- function(paramaters,datafeedin){
+LoadData <- function(paramaters,datafeedin,spatialCovs){
   
   ##############################################
   ### load the edgeroi dataset (from GSIF package) and put into format for iak3d...
@@ -174,7 +172,7 @@ LoadData <- function(paramaters,datafeedin){
                        LoadModel = !paramaters$fitModelNow, 
                        otherparamaters=paramaters$otherparamaters,
                        data=tmp)
-  output <- LoadModel(ModelOptions)
+  output <- LoadModel(ModelOptions,spatialCovs)
   
   return(output)
   
@@ -251,10 +249,10 @@ RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmd
   return(list(zkVal=zkVal,vkVal=vkVal))
 }
 
-LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred){
+LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred,rand6ForPlot){
   
   
-  rand6ForPlot <- c(6 , 19 , 49 , 41 , 3 , 24) # For edg
+  #rand6ForPlot <- c(6 , 19 , 49 , 41 , 3 , 24) # For edg
   #rand6ForPlot <- c(6 , 8, 15 , 5 , 3 , 4) # For OOd
   i4PlotU <- Matrix::which(!duplicated(ModelOutput$cVal))[rand6ForPlot]
   cVal4PlotU <- ModelOutput$cVal[i4PlotU,,drop=FALSE]
@@ -272,7 +270,7 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
   zVal4Plot <- ModelOutput$zVal[iVal4Plot]
   
   zkVal4Plot <- vkVal4Plot <- NA * numeric(length(zVal4Plot))
-  
+  #browser() #for Ood at this point some nulls in dataframe cVal4PlotU
   for(i in 1:nrow(cVal4PlotU)){
     iTmp <- Matrix::which(cVal4Plot[,1] == cVal4PlotU[i,1] & cVal4Plot[,2] == cVal4PlotU[i,2])
     tmp <- profilePredictIAK3D(xMap = cVal4PlotU[i,,drop=FALSE] , covsMap = covsVal4Plot[iTmp,,drop=FALSE] , dIMap = dIVal4Plot[iTmp,,drop=FALSE] , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
@@ -316,34 +314,38 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
 
 #' This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).
 #' @param data data to feed in such as Uniform_Data_Edgeroi
-#' @param vaidation Boolean TRUE or FALSE
+#' @param validation Boolean TRUE or FALSE
+#' @param spatialCovs lsit of spatial covariates, i.e  c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4') For Edgeroi Dataset
+#' @param rand6ForPlot parameters passed onto the plot XX if if validation is set to TRUE i.e c(6 , 19 , 49 , 41 , 3 , 24) For Edgeroi Dataset
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE)
-SplineIAK <- function(data,validation) {
-  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,validation,data))
+#' Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))
+SplineIAK <- function(data,validation,spatialCovs,rand6ForPlot) {
+  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,validation,data,spatialCovs,rand6ForPlot))
 }
 
 #' Run Iak3d project with building Cubist model
 #'
 #' This function builds cubist model
 #' @param data data to feed in such as Uniform_Data_Edgeroi
-#' @param vaidation Boolean TRUE or FALSE
+#' @param validation Boolean TRUE or FALSE
+#' @param spatialCovs lsit of spatial covariates example c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
+#' @param rand6ForPlot parameters passed onto the plot XX if if validation is set to TRUE
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE)
-CubistIAK <- function(data,validation) {
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,validation, data))
+#' Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))
+CubistIAK <- function(data,validation,spatialCovs,rand6ForPlot) {
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,validation, data,spatialCovs,rand6ForPlot))
 }
 
 
 ModelFromFile <- function(datafeedin){
   #expect a cmFit.RData file to load 
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,validation,data))
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,validation,data,rand6ForPlot))
 }
-RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin){
+RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatialCovs,rand6ForPlot){
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
@@ -384,7 +386,7 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin){
   
   #Create main parameter list
   paramaters <- list(fitCubistModelNow=fitCubistModelNow,useCubistForTrend=useCubistForTrend,fitModelNow=fitModelNow, otherparamaters=otherparamaters)
-  ModelOutput <- LoadData(paramaters,datafeedin)
+  ModelOutput <- LoadData(paramaters,datafeedin,spatialCovs)
   #iftestCL logic was here::here
   wDir <- here::here()
   lmm2Dir <- here::here('R/fLMM2')
@@ -447,8 +449,8 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin){
     fnamevkVal <- paste0(getwd() , '/vkVal.RData')
     namePlot = paste0(getwd(), '/plotVal.pdf')
     xkvkVal <- RunValidation(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal)
-    browser()
-    LastSeperation(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred)
+    
+    LastSeperation(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred,rand6ForPlot)
   } else {
     xkvkVal <- NULL
   }

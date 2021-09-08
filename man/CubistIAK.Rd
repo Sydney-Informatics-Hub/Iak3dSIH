@@ -4,12 +4,16 @@
 \alias{CubistIAK}
 \title{Run Iak3d project with building Cubist model}
 \usage{
-CubistIAK(data, validation)
+CubistIAK(data, validation, spatialCovs, rand6ForPlot)
 }
 \arguments{
 \item{data}{data to feed in such as Uniform_Data_Edgeroi}
 
-\item{vaidation}{Boolean TRUE or FALSE}
+\item{validation}{Boolean TRUE or FALSE}
+
+\item{spatialCovs}{lsit of spatial covariates example c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')}
+
+\item{rand6ForPlot}{parameters passed onto the plot XX if if validation is set to TRUE}
 }
 \value{
 an object with lmm.fit.selected,xkVal and vkVal
@@ -18,5 +22,5 @@ an object with lmm.fit.selected,xkVal and vkVal
 This function builds cubist model
 }
 \examples{
-Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE)
+Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))
 }
