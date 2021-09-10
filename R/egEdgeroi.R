@@ -1,23 +1,39 @@
 ##############################################################
-#
-# Example For Oodnadatta data 
-#Iak3dSIH::CubistIAK(Ood2,FALSE,c('DEM_30','SlopeDeg','RED_5'),c(6 , 8, 15 , 5 , 3 , 4))
+# Main package improvements
+#1. Turn Edgeroi into downloadable package
+#2. Run Edgeroi with input parameters in more modular way, including model selection and plots
+#3. Expand to support different data inputs 
 
+#Notes on usages: 
+# Example For Oodnadatta data and running plots 
 
+#result_Ood <- Iak3dSIH::CubistIAK(Ood2,TRUE,c('DEM_30','SlopeDeg','RED_5'),c(6 , 8, 10 , 5 , 3 , 4))
+#Iak3dSIH::RunPlots(result_Ood$lmm.fit.selected) #Produces plots...although null device message
+#validation = TRUE doesnt work for Ood data, affects pdf 
+
+#result_Edg <- Iak3dSIH::CubistIAK(Iak3dSIH::Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))
 ##############################################################
 
 
 #' Represents the underlying data needed to run Spline or Cubist Models within this package.
-#' Underlying data taken from data(edgeroi) and data(edgeroiCovariates) packages
-#' in GSIF. Functions that build on this data (i.e. getEdgeroiData() or getOodnadattaData()
-#' have been applied to give this data i.e. Uniform_Data_Edgeroi. 
-#' You can supply other data objects within the model (i.e.Uniform_Data_Ood ) taken 
-#' from other regions, provided it fits similar structures.
+#' Example data has been included in the package, sourced from the Edgeroi Package (i.e data(edgeroi) and data(edgeroiCovariates), 
+#' named Iak3dSIH::Uniform_Data_Edgeroi. Any data can be inputted provided the structure is as follows:
+#'
+# cFit : Coordinates (in Km) of calib set
+# dIFit : Depth intervals of fit set (metres)
+# covsFit : covariates of fit set, with column names that represent covariates aligned with param spatialCovs
+# zFit : response variable of fit set
+# profIDFit : profile ID of fit set
+# cVal :  Coordinates (in Km) of valid set
+# dIVal : depth intervals of valid set (in metres)
+# covsVal :  Covariates for valid set, with column names that represent covariates aligned with param spatialCovs
+# zVal :  response variable for valid set
+# profIDVal :  profile ID representing unique strings or numbers
+# rList :  raster list of covariate -OPTIONAL
 #' @name Uniform_Data_Edgeroi
 #' @docType data
 #' @keywords data
 NULL
-
 
 
 FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs) {
@@ -163,9 +179,6 @@ LoadData <- function(paramaters,datafeedin,spatialCovs){
   print("now in loadData................................")
   
   tmp <- datafeedin
-  #tmp <- getEdgeroiData(datafeed$edgeroi, datafeed$elevation , datafeed$twi , datafeed$radK , datafeed$landsat_b3 , datafeed$landsat_b4)
-  #saveRDS(tmp,here::here("Original_Edgeroi.rds"))
-  #determin model options from flags and be able to pass all other paramaters needed
   print("Print constructed ModelOptions")
   ModelOptions <- list(FitCubits=paramaters$fitCubistModelNow, 
                        useCubistForTrend = paramaters$useCubistForTrend, 
@@ -178,13 +191,14 @@ LoadData <- function(paramaters,datafeedin,spatialCovs){
   
 }
 
-#' Run Iak3d project with building spline model
-#'
-#' RunPlots(iakdata$lmm.fit.selected)
-#' @param lmm.fit.selected The result of running either Cubist or Spline Models
+#' Run Iak3d project with building spline model. Use after running either SplineIAK OR CubistIAK functions.
+#' Example: RunPlots(lmm.fit.selected,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))
+#' @param lmm.fit.selected Included in the result of running either Cubist or Spline Mode.
+#' @param InputParamatersList Included in the result of running either Cubist or Spline Models. Attaches as input run to an output result and enables plots on the outputs for analysis.
+#' @param chooseToPlot Select a maximum of six co-ordinate points to plot for inspection, example: c(1,2,3,4,5,6). Plot is calebrated for 6 plots. These are rrediction plots that are saved in plotVal4Plot.pdf. Upper limit Limited by unique number of cVal. 
 #' @return saves plots in the working directory
 #' @export
-RunPlots <- function(lmm.fit.selected) {
+RunPlots <- function(fit = lmm.fit.selected,InputParamatersList = InputParamatersList,chooseToPlot = chooseToPlot) {
   dIPlot <- data.frame('dU' = c(0 , 20 , 50 , 90 , 150 , 190)/100 , 'dL' = c(10 , 30 , 60 , 100 , 160 , 200)/100)
   hx <- seq(0 , 20 , 1)
   grDevices::pdf(file = paste0(getwd() , '/varioFitgam22.pdf'))
@@ -207,7 +221,9 @@ RunPlots <- function(lmm.fit.selected) {
   dPlot <- seq(0 , 2 , 0.01)
   plotVarComps(lmm.fit = lmm.fit.selected , dPlot = dPlot)
   grDevices::dev.off()
-  
+  #Prediction Plots
+  ModelOutput <- InputParamatersList
+  LastSeperation(ModelOutput,lmm.fit.selected ,chooseToPlot)
 
 }
 RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal) {
@@ -249,9 +265,9 @@ RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmd
   return(list(zkVal=zkVal,vkVal=vkVal))
 }
 
-LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred,rand6ForPlot){
+LastSeperation <- function(ModelOutput,lmm.fit.selected , rand6ForPlot,rqrBTfmdPreds = FALSE, constrainX4Pred = FALSE){
   
-  
+  #browser()
   #rand6ForPlot <- c(6 , 19 , 49 , 41 , 3 , 24) # For edg
   #rand6ForPlot <- c(6 , 8, 15 , 5 , 3 , 4) # For OOd
   i4PlotU <- Matrix::which(!duplicated(ModelOutput$cVal))[rand6ForPlot]
@@ -296,13 +312,11 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
   pi90LkProfPred_PLOT <- pi90LkProfPred
   pi90UkProfPred_PLOT <- pi90UkProfPred
   
-  xlab <- "Clay percent"
+  xlab <- "Response Variable"
   vecTmp <- c(zVal4Plot_PLOT , zkVal4Plot_PLOT , as.numeric(zkProfPred_PLOT))
   xlim <- c(min(vecTmp) , max(vecTmp))
   
   namePlot = paste0(getwd() , '/plotVal4Plot.pdf')
-  
-  # turned off for now.  returns null
   
   tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = cVal4Plot , dIData = dIVal4Plot , zData = zVal4Plot_PLOT , 
                            xPred = cVal4PlotU , dIPred = dIPred , zPred = zkProfPred_PLOT , pi90LPred = pi90LkProfPred_PLOT , pi90UPred = pi90UkProfPred_PLOT , 
@@ -314,38 +328,36 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
 
 #' This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).
 #' @param data data to feed in such as Uniform_Data_Edgeroi
-#' @param validation Boolean TRUE or FALSE
-#' @param spatialCovs lsit of spatial covariates, i.e  c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4') For Edgeroi Dataset
-#' @param rand6ForPlot parameters passed onto the plot XX if if validation is set to TRUE i.e c(6 , 19 , 49 , 41 , 3 , 24) For Edgeroi Dataset
+#' @param validation Boolean TRUE or FALSE to run validation. If True, columns relating to validation is needed in the data. i.e. cVal, DIVal etc.
+#' @param spatialCovs list of spatial covariates, i.e  c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4') For Edgeroi Dataset
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))
-SplineIAK <- function(data,validation,spatialCovs,rand6ForPlot) {
-  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,validation,data,spatialCovs,rand6ForPlot))
+#' Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+SplineIAK <- function(data = data,validation = validation,spatialCovs = spatialCovs) {
+  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,validation,data,spatialCovs))
 }
 
 #' Run Iak3d project with building Cubist model
 #'
 #' This function builds cubist model
 #' @param data data to feed in such as Uniform_Data_Edgeroi
-#' @param validation Boolean TRUE or FALSE
+#' @param validation Boolean TRUE or FALSE to run validation. If True, columns relating to validation is needed in the data. i.e. cVal, DIVal etc.
 #' @param spatialCovs lsit of spatial covariates example c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
-#' @param rand6ForPlot parameters passed onto the plot XX if if validation is set to TRUE
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))
-CubistIAK <- function(data,validation,spatialCovs,rand6ForPlot) {
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,validation, data,spatialCovs,rand6ForPlot))
+#' Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+CubistIAK <- function(data = data,validation = validation,spatialCovs = spatialCovs) {
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,validation, data,spatialCovs))
 }
 
 
 ModelFromFile <- function(datafeedin){
   #expect a cmFit.RData file to load 
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,validation,data,rand6ForPlot))
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,validation,data))
 }
-RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatialCovs,rand6ForPlot){
+RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatialCovs){
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
@@ -449,13 +461,14 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatia
     fnamevkVal <- paste0(getwd() , '/vkVal.RData')
     namePlot = paste0(getwd(), '/plotVal.pdf')
     xkvkVal <- RunValidation(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal)
-    
-    LastSeperation(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred,rand6ForPlot)
+   
+    #Move this to plotting
+    #LastSeperation(ModelOutput,lmm.fit.selected ,rand6ForPlot)
   } else {
     xkvkVal <- NULL
   }
 
-  return(list(lmm.fit.selected=lmm.fit.selected,xkvkVal=xkvkVal))
+  return(list(lmm.fit.selected=lmm.fit.selected,xkvkVal=xkvkVal,InputParamatersList=ModelOutput))
 }
 
 

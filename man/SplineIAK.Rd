@@ -4,16 +4,14 @@
 \alias{SplineIAK}
 \title{This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).}
 \usage{
-SplineIAK(data, validation, spatialCovs, rand6ForPlot)
+SplineIAK(data = data, validation = validation, spatialCovs = spatialCovs)
 }
 \arguments{
 \item{data}{data to feed in such as Uniform_Data_Edgeroi}
 
-\item{validation}{Boolean TRUE or FALSE}
+\item{validation}{Boolean TRUE or FALSE to run validation. If True, columns relating to validation is needed in the data. i.e. cVal, DIVal etc.}
 
-\item{spatialCovs}{lsit of spatial covariates, i.e  c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4') For Edgeroi Dataset}
-
-\item{rand6ForPlot}{parameters passed onto the plot XX if if validation is set to TRUE i.e c(6 , 19 , 49 , 41 , 3 , 24) For Edgeroi Dataset}
+\item{spatialCovs}{list of spatial covariates, i.e  c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4') For Edgeroi Dataset}
 }
 \value{
 an object with lmm.fit.selected,xkVal and vkVal
@@ -22,5 +20,5 @@ an object with lmm.fit.selected,xkVal and vkVal
 This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).
 }
 \examples{
-Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))
+Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
 }

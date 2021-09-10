@@ -4,17 +4,11 @@
 \name{Uniform_Data_Edgeroi}
 \alias{Uniform_Data_Edgeroi}
 \title{Represents the underlying data needed to run Spline or Cubist Models within this package.
-Underlying data taken from data(edgeroi) and data(edgeroiCovariates) packages
-in GSIF. Functions that build on this data (i.e. getEdgeroiData() or getOodnadattaData()
-have been applied to give this data i.e. Uniform_Data_Edgeroi. 
-You can supply other data objects within the model (i.e.Uniform_Data_Ood ) taken 
-from other regions, provided it fits similar structures.}
+Example data has been included in the package, sourced from the Edgeroi Package (i.e data(edgeroi) and data(edgeroiCovariates), 
+named Iak3dSIH::Uniform_Data_Edgeroi. Any data can be inputted provided the structure is as follows:}
 \description{
 Represents the underlying data needed to run Spline or Cubist Models within this package.
-Underlying data taken from data(edgeroi) and data(edgeroiCovariates) packages
-in GSIF. Functions that build on this data (i.e. getEdgeroiData() or getOodnadattaData()
-have been applied to give this data i.e. Uniform_Data_Edgeroi. 
-You can supply other data objects within the model (i.e.Uniform_Data_Ood ) taken 
-from other regions, provided it fits similar structures.
+Example data has been included in the package, sourced from the Edgeroi Package (i.e data(edgeroi) and data(edgeroiCovariates), 
+named Iak3dSIH::Uniform_Data_Edgeroi. Any data can be inputted provided the structure is as follows:
 }
 \keyword{data}

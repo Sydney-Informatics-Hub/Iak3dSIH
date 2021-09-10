@@ -2,16 +2,26 @@
 % Please edit documentation in R/egEdgeroi.R
 \name{RunPlots}
 \alias{RunPlots}
-\title{Run Iak3d project with building spline model}
+\title{Run Iak3d project with building spline model. Use after running either SplineIAK OR CubistIAK functions.
+Example: RunPlots(lmm.fit.selected,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))}
 \usage{
-RunPlots(lmm.fit.selected)
+RunPlots(
+  fit = lmm.fit.selected,
+  InputParamatersList = InputParamatersList,
+  chooseToPlot = chooseToPlot
+)
 }
 \arguments{
-\item{lmm.fit.selected}{The result of running either Cubist or Spline Models}
+\item{InputParamatersList}{Included in the result of running either Cubist or Spline Models. Attaches as input run to an output result and enables plots on the outputs for analysis.}
+
+\item{chooseToPlot}{Select a maximum of six co-ordinate points to plot for inspection, example: c(1,2,3,4,5,6). Plot is calebrated for 6 plots. These are rrediction plots that are saved in plotVal4Plot.pdf. Upper limit Limited by unique number of cVal.}
+
+\item{lmm.fit.selected}{Included in the result of running either Cubist or Spline Mode.}
 }
 \value{
 saves plots in the working directory
 }
 \description{
-RunPlots(iakdata$lmm.fit.selected)
+Run Iak3d project with building spline model. Use after running either SplineIAK OR CubistIAK functions.
+Example: RunPlots(lmm.fit.selected,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))
 }
