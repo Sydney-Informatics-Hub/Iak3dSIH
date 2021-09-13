@@ -1,17 +1,14 @@
 ##############################################################
 # Main package improvements
-#1. Turn Edgeroi into downloadable package
-#2. Run Edgeroi with input parameters in more modular way, including model selection and plots
-#3. Expand to support different data inputs 
+#1. Turn Edgeroi into a portable package
+#2. Run Edgeroi with input parameters in more modular way, including model selection and plots using outputs from model run.
+#3. Expand to support different data inputs.
 
 #Notes on usages: 
-# Example For Oodnadatta data and running plots 
+#Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+#Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+#RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6))
 
-#result_Ood <- Iak3dSIH::CubistIAK(Ood2,TRUE,c('DEM_30','SlopeDeg','RED_5'),c(6 , 8, 10 , 5 , 3 , 4))
-#Iak3dSIH::RunPlots(result_Ood$lmm.fit.selected) #Produces plots...although null device message
-#validation = TRUE doesnt work for Ood data, affects pdf 
-
-#result_Edg <- Iak3dSIH::CubistIAK(Iak3dSIH::Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))
 ##############################################################
 
 
@@ -21,12 +18,12 @@
 #'
 # cFit : Coordinates (in Km) of calib set
 # dIFit : Depth intervals of fit set (metres)
-# covsFit : covariates of fit set, with column names that represent covariates aligned with param spatialCovs
+# covsFit : covariates of fit set, with column names that represent covariates aligned with param spatialCovs. Within this, dIMidPts Required (represents the mid depth i.e. average between the upper and lower depth of an observation.)
 # zFit : response variable of fit set
 # profIDFit : profile ID of fit set
 # cVal :  Coordinates (in Km) of valid set
 # dIVal : depth intervals of valid set (in metres)
-# covsVal :  Covariates for valid set, with column names that represent covariates aligned with param spatialCovs
+# covsVal :  Covariates for valid set, with column names that represent covariates aligned with param spatialCovs, Within this, dIMidPts Required (represents the mid depth i.e. average between the upper and lower depth of an observation.)
 # zVal :  response variable for valid set
 # profIDVal :  profile ID representing unique strings or numbers
 # rList :  raster list of covariate -OPTIONAL
@@ -107,9 +104,9 @@ FitCubistModel <- function(paramaters, tmp,cFit, dIFit, covsFit, zFit, profIDFit
     cmFit <- Cubist::cubist(x = covsFit , y = zFit , committees = 1 , Cubist::cubistControl(rules = paramaters$otherparamaters$nRules))
     
     ### convert to des mtx
-  
+
     tmp <- cubist2X(cubistModel = cmFit, dataFit = covsFit , zFit = zFit , profIDFit = profIDFit , allKnotsd = paramaters$otherparamaters$allKnotsd , refineCubistModel = paramaters$otherparamaters$refineCubistModel)
-   
+    #browser()
     cmFit <- tmp$cubistModel
     XFit <- tmp$X
     matRulesFit <- tmp$matRuleData
@@ -192,13 +189,14 @@ LoadData <- function(paramaters,datafeedin,spatialCovs){
 }
 
 #' Run Iak3d project with building spline model. Use after running either SplineIAK OR CubistIAK functions.
-#' Example: RunPlots(lmm.fit.selected,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))
+#' Example: RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6))
 #' @param lmm.fit.selected Included in the result of running either Cubist or Spline Mode.
 #' @param InputParamatersList Included in the result of running either Cubist or Spline Models. Attaches as input run to an output result and enables plots on the outputs for analysis.
 #' @param chooseToPlot Select a maximum of six co-ordinate points to plot for inspection, example: c(1,2,3,4,5,6). Plot is calebrated for 6 plots. These are rrediction plots that are saved in plotVal4Plot.pdf. Upper limit Limited by unique number of cVal. 
 #' @return saves plots in the working directory
 #' @export
-RunPlots <- function(fit = lmm.fit.selected,InputParamatersList = InputParamatersList,chooseToPlot = chooseToPlot) {
+RunPlots <- function(fit = lmm.fit.selected, InputParamatersList = InputParamatersList,chooseToPlot = chooseToPlot) {
+  lmm.fit.selected <- fit
   dIPlot <- data.frame('dU' = c(0 , 20 , 50 , 90 , 150 , 190)/100 , 'dL' = c(10 , 30 , 60 , 100 , 160 , 200)/100)
   hx <- seq(0 , 20 , 1)
   grDevices::pdf(file = paste0(getwd() , '/varioFitgam22.pdf'))

@@ -3,7 +3,7 @@
 \name{RunPlots}
 \alias{RunPlots}
 \title{Run Iak3d project with building spline model. Use after running either SplineIAK OR CubistIAK functions.
-Example: RunPlots(lmm.fit.selected,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))}
+Example: RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6))}
 \usage{
 RunPlots(
   fit = lmm.fit.selected,
@@ -23,5 +23,5 @@ saves plots in the working directory
 }
 \description{
 Run Iak3d project with building spline model. Use after running either SplineIAK OR CubistIAK functions.
-Example: RunPlots(lmm.fit.selected,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),c(6 , 19 , 49 , 41 , 3 , 24))
+Example: RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6))
 }
