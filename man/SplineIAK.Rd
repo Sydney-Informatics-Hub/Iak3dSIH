@@ -7,11 +7,11 @@
 SplineIAK(data = data, validation = validation, spatialCovs = spatialCovs)
 }
 \arguments{
-\item{data}{data to feed in such as Uniform_Data_Edgeroi}
+\item{data}{data to feed in such as Uniform_Data_Edgeroi. Please see associated documentation for expected structure.}
 
 \item{validation}{Boolean TRUE or FALSE to run validation. If True, columns relating to validation is needed in the data. i.e. cVal, DIVal etc.}
 
-\item{spatialCovs}{list of spatial covariates, i.e  c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4') For Edgeroi Dataset}
+\item{spatialCovs}{list of spatial covariates found in covariates data i.e covsFit and covsVal. Can be any subset of these covariates. For example  c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4') For Edgeroi Dataset}
 }
 \value{
 an object with lmm.fit.selected,xkVal and vkVal

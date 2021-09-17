@@ -12,21 +12,24 @@
 ##############################################################
 
 
-#' Represents the underlying data needed to run Spline or Cubist Models within this package.
+#' Represents the underlying data and required format needed to run IAK.
 #' Example data has been included in the package, sourced from the Edgeroi Package (i.e data(edgeroi) and data(edgeroiCovariates), 
 #' named Iak3dSIH::Uniform_Data_Edgeroi. Any data can be inputted provided the structure is as follows:
 #'
-# cFit : Coordinates (in Km) of calib set
-# dIFit : Depth intervals of fit set (metres)
-# covsFit : covariates of fit set, with column names that represent covariates aligned with param spatialCovs. Within this, dIMidPts Required (represents the mid depth i.e. average between the upper and lower depth of an observation.)
-# zFit : response variable of fit set
-# profIDFit : profile ID of fit set
-# cVal :  Coordinates (in Km) of valid set
-# dIVal : depth intervals of valid set (in metres)
-# covsVal :  Covariates for valid set, with column names that represent covariates aligned with param spatialCovs, Within this, dIMidPts Required (represents the mid depth i.e. average between the upper and lower depth of an observation.)
-# zVal :  response variable for valid set
-# profIDVal :  profile ID representing unique strings or numbers
-# rList :  raster list of covariate -OPTIONAL
+#' Model Fit set includes:
+#' cFit : Coordinates (in Km) of calib set, in two dimensions x y. 
+#' dIFit : Depth intervals of fit set (metres) in two dimensions representing upper and lower soil sample range.
+#' covsFit : covariates of fit set, with column names that represent covariates aligned with param spatialCovs. Within this, dIMidPts is Required (represents the mid depth i.e. average between the upper and lower depth of an observation.)
+#' zFit : response variable of fit set
+#' profIDFit : profile ID of fit set
+
+#' Validation Set - Required if validation flag is TRUE, includes:
+#' cVal :  Coordinates (in Km) of valid set
+#' dIVal : depth intervals of valid set (in metres)
+#' covsVal :  Covariates for valid set, with column names that represent covariates aligned with param spatialCovs, Within this, dIMidPts Required (represents the mid depth i.e. average between the upper and lower depth of an observation.)
+#' zVal :  response variable for valid set
+#' profIDVal :  profile ID representing unique strings or numbers
+#' rList :  raster list of covariate - OPTIONAL
 #' @name Uniform_Data_Edgeroi
 #' @docType data
 #' @keywords data
@@ -325,9 +328,9 @@ LastSeperation <- function(ModelOutput,lmm.fit.selected , rand6ForPlot,rqrBTfmdP
 
 
 #' This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).
-#' @param data data to feed in such as Uniform_Data_Edgeroi
+#' @param data data to feed in such as Uniform_Data_Edgeroi. Please see associated documentation for expected structure.
 #' @param validation Boolean TRUE or FALSE to run validation. If True, columns relating to validation is needed in the data. i.e. cVal, DIVal etc.
-#' @param spatialCovs list of spatial covariates, i.e  c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4') For Edgeroi Dataset
+#' @param spatialCovs list of spatial covariates found in covariates data i.e covsFit and covsVal. Can be any subset of these covariates. For example  c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4') For Edgeroi Dataset
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
@@ -339,8 +342,8 @@ SplineIAK <- function(data = data,validation = validation,spatialCovs = spatialC
 #' Run Iak3d project with building Cubist model
 #'
 #' This function builds cubist model
-#' @param data data to feed in such as Uniform_Data_Edgeroi
-#' @param validation Boolean TRUE or FALSE to run validation. If True, columns relating to validation is needed in the data. i.e. cVal, DIVal etc.
+#' @param data data to feed in such as Uniform_Data_Edgeroi. Please see associated documentation for expected structure.
+#' @param validation Boolean TRUE or FALSE to run validation. If True, columns relating to validation is needed in the data. i.e. cVal, DIVal, covsVal etc.
 #' @param spatialCovs lsit of spatial covariates example c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
