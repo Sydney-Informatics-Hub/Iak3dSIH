@@ -4,12 +4,19 @@
 \alias{SplineIAK}
 \title{This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).}
 \usage{
-SplineIAK(data = data, validation = validation, spatialCovs = spatialCovs)
+SplineIAK(
+  fit_data = fit_data,
+  validation = validation,
+  validate_data = validate_data,
+  spatialCovs = spatialCovs
+)
 }
 \arguments{
-\item{data}{data to feed in such as Uniform_Data_Edgeroi. Please see associated documentation for expected structure.}
+\item{fit_data}{Fit data to feed in such as EdgeroiFitData. Expected to be a dataframe.}
 
 \item{validation}{Boolean TRUE or FALSE to run validation. If True, columns relating to validation is needed in the data. i.e. cVal, DIVal etc.}
+
+\item{validate_data}{Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.}
 
 \item{spatialCovs}{list of spatial covariates found in covariates data i.e covsFit and covsVal. Can be any subset of these covariates. For example  c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4') For Edgeroi Dataset}
 }
@@ -20,5 +27,5 @@ an object with lmm.fit.selected,xkVal and vkVal
 This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).
 }
 \examples{
-Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+Splinedata <- SplineIAK(fit_data = EdgeroiFitData, validation = TRUE,validate_data = EdgeroiValidationData, spatialCovs = c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
 }

@@ -5,8 +5,8 @@
 #3. Expand to support different data inputs.
 
 #Notes on usages: 
-#Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
-#Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+#Splinedata <- SplineIAK(fit_data = EdgeroiFitData, validation = TRUE,validate_data = EdgeroiValidationData, spatialCovs = c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+#Cubistdata <- CubistIAK(fit_data = EdgeroiFitData,validation = TRUE,validate_data = EdgeroiValidationData, spatialCovs = c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
 #RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6))
 
 ##############################################################
@@ -31,6 +31,33 @@
 #' profIDVal :  profile ID representing unique strings or numbers
 #' rList :  raster list of covariate - OPTIONAL
 #' @name Uniform_Data_Edgeroi
+#' @docType data
+#' @keywords data
+NULL
+
+#' Validation data example for Edgeroi Area. Expected to be DataFrame with column names:
+#' x : x dimension (in Km)
+#' y : y dimension (in Km)
+#' lowerDI : lower Depth Interval of soil range in metres
+#' upperDI : upper Depth Interval of soil range in metres
+#' z:  response variable for valid set
+#' dIMidPts :  Mid point of Depth Interval
+#' Other columns relate to covariates and column names should reflect spatialCovs argument
+#' @name EdgeroiValidationData
+#' @docType data
+#' @keywords data
+NULL
+
+#' Fit data example for Edgeroi Area. Expected to be DataFrame with column names:
+#' x : x dimension (in Km)
+#' y : y dimension (in Km)
+#' lowerDI : lower Depth Interval of soil range in metres
+#' upperDI : upper Depth Interval of soil range in metres
+#' z:  response variable for valid set
+#' dIMidPts :  Mid point of Depth Interval
+#' Other columns relate to covariates and column names should reflect spatialCovs argument
+
+#' @name EdgeroiFitData
 #' @docType data
 #' @keywords data
 NULL
@@ -326,30 +353,78 @@ LastSeperation <- function(ModelOutput,lmm.fit.selected , rand6ForPlot,rqrBTfmdP
   
 }
 
+# to integrate
+recombine_data <- function(fit_data = fit_data, validate = TRUE, validate_data = NULL) {
+  #check if validate is true that validate_data is present
+  is_validate_data_missing <- is.data.frame(validate_data) && nrow(validate_data)==0
+  
+  if (is_validate_data_missing == TRUE & validate == TRUE) {
+    stop("expect validation data passed if validate set to TRUE")
+  }
+  #combining fitted data
+  labels_non_covariates <- c("x","y","lowerDI","upperDI","z", "profIDFit")
+  core_data_fit <- fit_data[, which(names(fit_data) %in% labels_non_covariates)]
+  covariates <- fit_data[ , -which(names(fit_data) %in% labels_non_covariates)]
+  new_fit <- list()
+  new_fit$cFit <- array(c(core_data_fit$x, core_data_fit$y),dim = c(nrow(core_data_fit),2))
+  new_fit$dIFit <- array(c(core_data_fit$lowerDI, core_data_fit$upperDI),dim = c(nrow(core_data_fit),2))
+  new_fit$covsFit <- covariates
+  new_fit$zFit <- core_data_fit$z
+  new_fit$profIDFit <- core_data_fit$profIDFit
+  
+  total <- c()
+  if (validate == TRUE){
+    # combine validation data in a like way and join data with fit
+    core_data_val <- validate_data[, which(names(validate_data) %in% labels_non_covariates)]
+    covariates <- validate_data[ , -which(names(validate_data) %in% labels_non_covariates)]
+    new_val = list()
+    new_val$cVal <- array(c(core_data_val$x, core_data_val$y),dim = c(nrow(core_data_val),2))
+    new_val$dIVal <- array(c(core_data_val$lowerDI, core_data_val$upperDI),dim = c(nrow(core_data_val),2))
+    new_val$covsVal <- covariates
+    new_val$zVal <- core_data_val$z
+    new_val$profIDVal <- core_data_val$profIDFit
+    total <- list()
+    total <- c(new_fit,new_val)
+    
+  } else {
+    
+    total <- new_fit
+  }
+  
+  return(total)
+}
 
 #' This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).
-#' @param data data to feed in such as Uniform_Data_Edgeroi. Please see associated documentation for expected structure.
+#' @param fit_data Fit data to feed in such as EdgeroiFitData. Expected to be a dataframe.
 #' @param validation Boolean TRUE or FALSE to run validation. If True, columns relating to validation is needed in the data. i.e. cVal, DIVal etc.
+#' @param validate_data Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.
 #' @param spatialCovs list of spatial covariates found in covariates data i.e covsFit and covsVal. Can be any subset of these covariates. For example  c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4') For Edgeroi Dataset
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
-SplineIAK <- function(data = data,validation = validation,spatialCovs = spatialCovs) {
+#' Splinedata <- SplineIAK(fit_data = EdgeroiFitData, validation = TRUE,validate_data = EdgeroiValidationData, spatialCovs = c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+SplineIAK <- function(fit_data = fit_data,validation = validation,validate_data = validate_data, spatialCovs = spatialCovs) {
+  #old usage
+  #Splinedata <- SplineIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+  data <- recombine_data(fit_data = fit_data, validate = validation, validate_data = validate_data)
   return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,validation,data,spatialCovs))
 }
 
 #' Run Iak3d project with building Cubist model
 #'
 #' This function builds cubist model
-#' @param data data to feed in such as Uniform_Data_Edgeroi. Please see associated documentation for expected structure.
+#' @param fit_data Fit data to feed in such as EdgeroiFitData. Expected to be a dataframe.
 #' @param validation Boolean TRUE or FALSE to run validation. If True, columns relating to validation is needed in the data. i.e. cVal, DIVal, covsVal etc.
+#' @param validate_data Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.
 #' @param spatialCovs lsit of spatial covariates example c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
-CubistIAK <- function(data = data,validation = validation,spatialCovs = spatialCovs) {
+#' Cubistdata <- CubistIAK(fit_data = EdgeroiFitData,validation = TRUE,validate_data = EdgeroiValidationData, spatialCovs = c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+CubistIAK <- function(fit_data = fit_data,validation = validation,validate_data = validate_data, spatialCovs = spatialCovs) {
+  #original usage
+  #Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+  data <- recombine_data(fit_data = fit_data, validate = validation, validate_data = validate_data)
   return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,validation, data,spatialCovs))
 }
 
