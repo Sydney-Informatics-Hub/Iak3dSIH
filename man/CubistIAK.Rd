@@ -6,7 +6,6 @@
 \usage{
 CubistIAK(
   fit_data = fit_data,
-  validation = validation,
   validate_data = validate_data,
   spatialCovs = spatialCovs
 )
@@ -14,11 +13,9 @@ CubistIAK(
 \arguments{
 \item{fit_data}{Fit data to feed in such as EdgeroiFitData. Expected to be a dataframe.}
 
-\item{validation}{Boolean TRUE or FALSE to run validation. If True, columns relating to validation is needed in the data. i.e. cVal, DIVal, covsVal etc.}
+\item{validate_data}{OPTIONAL Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.}
 
-\item{validate_data}{Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.}
-
-\item{spatialCovs}{lsit of spatial covariates example c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')}
+\item{spatialCovs}{list of spatial covariates with 'dIMidPts' required. example c(''dIMidPts',elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')}
 }
 \value{
 an object with lmm.fit.selected,xkVal and vkVal
@@ -27,5 +24,5 @@ an object with lmm.fit.selected,xkVal and vkVal
 This function builds cubist model
 }
 \examples{
-Cubistdata <- CubistIAK(fit_data = EdgeroiFitData,validation = TRUE,validate_data = EdgeroiValidationData, spatialCovs = c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+Cubistdata <- CubistIAK(fit_data = EdgeroiFitData,validate_data = EdgeroiValidationData, spatialCovs = c('dIMidPts','elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
 }
