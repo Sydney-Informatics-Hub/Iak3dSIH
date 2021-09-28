@@ -1,5 +1,4 @@
 ![Sydney Informatics Hub Logo](U_Sydney_Informatics_Hub_mono_300_152.png)
-
 ```
       /  /\        ___          /__/\   
      /  /:/_      /  /\         \  \:\  
@@ -11,11 +10,10 @@
     \__\/ /:/       /__/:/    \  \:\    
       /__/:/ please \__\/      \  \:\   
       \__\/ acknowledge your use\__\/   
-
 ```
 
-
 # Increment-averaged kriging for 3D prediction of soil properties.
+Rewrite of Tom Orton's [iak3d package](https://github.com/ortont/iak3d) by the [Sydney Informatics Hub](https://www.sydney.edu.au/informatics-hub)
 
 Example datasets from Edgeroi package dataset are given to illustrate using
 this model. However, any datasets can be used provided the required column
