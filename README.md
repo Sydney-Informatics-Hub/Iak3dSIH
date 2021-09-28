@@ -1,4 +1,4 @@
-![Sydney Informatics Hub Logo](U_Sydney_Informatics_Hub_mono_500_254.png)
+![Sydney Informatics Hub Logo](U_Sydney_Informatics_Hub_mono_300_152.png)
 
 ```
       /  /\        ___          /__/\   
