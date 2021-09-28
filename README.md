@@ -1,3 +1,5 @@
+![Sydney Informatics Hub Logo](U_Sydney_Informatics_Hub_mono_500_254.png)
+
 ```
 #      /  /\        ___          /__/\   
 #     /  /:/_      /  /\         \  \:\  
@@ -13,7 +15,7 @@
 ```
 
 
-Increment-averaged kriging for 3D prediction of soil properties.
+# Increment-averaged kriging for 3D prediction of soil properties.
 
 Example datasets from Edgeroi package dataset are given to illustrate using
 this model. However, any datasets can be used provided the required column
