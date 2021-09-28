@@ -48,7 +48,7 @@ RunPlots(fit = Cubistdata$lmm.fit.selected,
             chooseToPlot = c(1,2,3,4,5,6))
 ```
 
-# Example workflow on Prediction using IAK results with Edgeroi data.
+## Example workflow on Prediction using IAK results with Edgeroi data.
 This also reflects currently required variables in the data the package expects.
 ```r
 FitData <- Iak3dSIH::EdgeroiFitData
@@ -57,8 +57,10 @@ ValidateData <- Iak3dSIH::EdgeroiValidationData
 predictors <- c('dIMidPts','elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
 required <- c('x','y','lowerDI','upperDI','z','profIDFit')
 exclude <- c('z')
+```
 
-#Extra work to set up prediction dataset for demo purposes.
+Extra work to set up prediction dataset for demo purposes.
+```r
 in_train_set <- sample(1:nrow(FitData), floor(.8*nrow(FitData)))
 train_pred <- FitData[ in_train_set, c(predictors,required)]
 train_resp <- train_pred$z # repose variable for training
@@ -73,10 +75,15 @@ model_IAK <- Iak3dSIH::CubistIAK(fit_data = train_pred,
 model_tree <- model_IAK$lmm.fit.selected$modelX
 summary(model_tree)
 predict_using_IAK_model <- test_pred[predictors]
+```
 
-#using model result as prediction on new data
+Using model result as prediction on new data
+```r
 model_tree_pred <- predict(model_tree, predict_using_IAK_model) 
-## Test set RMSE from using prediction
+```
+
+Test set RMSE from using prediction
+```r
 sqrt(mean((model_tree_pred - test_resp)^2))
 ```
 
