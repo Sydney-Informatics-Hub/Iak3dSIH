@@ -15,10 +15,11 @@
 # Increment-averaged kriging for 3D prediction of soil properties.
 Rewrite of Tom Orton's [iak3d package](https://github.com/ortont/iak3d) by Kristian Maras of the [Sydney Informatics Hub](https://www.sydney.edu.au/informatics-hub)
 
+IAK is a framework that accounts for vertical and spatial correlation between observations. Regression parameters are obtained from either Cubist or Spline models. Model outputs are returned and optional plots can also be generated from the outputs.
+
 Example datasets from Edgeroi package dataset are given to illustrate using
 this model. However, any datasets can be used provided the required column
-names are present. Please refer to the EdgeroiValidationData and EdgeroiFitData
-documentation for more information on this.
+names are present (mentioned below). 
 
 Usage: 
 
@@ -38,7 +39,7 @@ Splinedata <- SplineIAK(fit_data = EdgeroiFitData,
 
 These return fitted model results, and paramaters that have been assigned during
 model run. A special mention on modelX within the lmm.fit.selected variable,
-which holds the fitted model which can be used for prediction purposes (below).
+which holds the fitted model which can be used for prediction purposes (below). Information on negative log-likelihood and semivariogram parameters are also given lmm.fit.selected    variable. zkVal and vkVal variables are also returned as outputs, where zkVal is the horizontal predictions made using the validation set, and vkVal are the vertical predictions made using the validation set.
 
 To run further plots using model output
 
@@ -86,5 +87,18 @@ Test set RMSE from using prediction
 ```r
 sqrt(mean((model_tree_pred - test_resp)^2))
 ```
+
+## Data Inputs
+Data inputs (either Fitting or Validation data) at the minimum expect some column names being:
+
+* Dataframe columns
+    + x : x dimension (in Km)
+    + y : y dimension (in Km)
+    + lowerDI : lower Depth Interval of soil range in metres
+    + upperDI : upper Depth Interval of soil range in metres
+    + z:  response variable for valid set
+    + dIMidPts :  Mid point of Depth Interval
+
+Other columns can be added that relate to covariates. These column names are expected to be referenced with the spatialCovs argument.
 
 
