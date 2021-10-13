@@ -4,7 +4,18 @@
 \alias{CubistIAK}
 \title{Run Iak3d project with building Cubist model}
 \usage{
-CubistIAK(datafeed)
+CubistIAK(
+  fit_data = fit_data,
+  validate_data = validate_data,
+  spatialCovs = spatialCovs
+)
+}
+\arguments{
+\item{fit_data}{Fit data to feed in such as EdgeroiFitData. Expected to be a dataframe.}
+
+\item{validate_data}{OPTIONAL Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.}
+
+\item{spatialCovs}{list of spatial covariates with 'dIMidPts' required. example c(''dIMidPts',elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')}
 }
 \value{
 an object with lmm.fit.selected,xkVal and vkVal
@@ -13,5 +24,5 @@ an object with lmm.fit.selected,xkVal and vkVal
 This function builds cubist model
 }
 \examples{
-Cubistdata <- CubistIAK(datafeed)
+Cubistdata <- CubistIAK(fit_data = EdgeroiFitData,validate_data = EdgeroiValidationData, spatialCovs = c('dIMidPts','elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
 }

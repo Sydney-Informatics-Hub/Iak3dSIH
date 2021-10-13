@@ -1,24 +1,69 @@
 ##############################################################
-# libraries required
-# library(sp)
-# library(raster)
-# library(rgdal)
-# library(Cubist)
-# library(mgcv)
-# library(Matrix)
-# library(MASS)
-# library(splines)
-# library(deldir)
-# library(lme4)
-# library(aqp)
-# library(GSIF)
-# library(ithir)
-# library(parallel)
-# library(here)
-# from data(edgeroi) and data(edgeroiCovariates)
-# datafeed <- list(edgeroi=edgeroi,elevation=elevation,landsat_b3=landsat_b3,landsat_b4=landsat_b4,radK=radK,twi=twi)
+# Main package improvements
+#1. Turn Edgeroi into a portable package
+#2. Run Edgeroi with input parameters in more modular way, including model selection and plots using outputs from model run.
+#3. Expand to support different data inputs.
+
+#Notes on usages: 
+#Splinedata <- SplineIAK(fit_data = EdgeroiFitData,validate_data = EdgeroiValidationData, spatialCovs = c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+#Cubistdata <- CubistIAK(fit_data = EdgeroiFitData,validate_data = EdgeroiValidationData, spatialCovs = c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+#RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6))
+
 ##############################################################
-FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList) {
+
+
+#' Represents the underlying data and required format needed to run IAK.
+#' Example data has been included in the package, sourced from the Edgeroi Package (i.e data(edgeroi) and data(edgeroiCovariates), 
+#' named Iak3dSIH::Uniform_Data_Edgeroi. Any data can be inputted provided the structure is as follows:
+#'
+#' Model Fit set includes:
+#' cFit : Coordinates (in Km) of calib set, in two dimensions x y. 
+#' dIFit : Depth intervals of fit set (metres) in two dimensions representing upper and lower soil sample range.
+#' covsFit : covariates of fit set, with column names that represent covariates aligned with param spatialCovs. Within this, dIMidPts is Required (represents the mid depth i.e. average between the upper and lower depth of an observation.)
+#' zFit : response variable of fit set
+#' profIDFit : profile ID of fit set
+
+#' Validation Set - Required if validation flag is TRUE, includes:
+#' cVal :  Coordinates (in Km) of valid set
+#' dIVal : depth intervals of valid set (in metres)
+#' covsVal :  Covariates for valid set, with column names that represent covariates aligned with param spatialCovs, Within this, dIMidPts Required (represents the mid depth i.e. average between the upper and lower depth of an observation.)
+#' zVal :  response variable for valid set
+#' profIDVal :  profile ID representing unique strings or numbers
+#' rList :  raster list of covariate - OPTIONAL
+#' @name Uniform_Data_Edgeroi
+#' @docType data
+#' @keywords data
+NULL
+
+#' Validation data example for Edgeroi Area. Expected to be DataFrame with column names:
+#' x : x dimension (in Km)
+#' y : y dimension (in Km)
+#' lowerDI : lower Depth Interval of soil range in metres
+#' upperDI : upper Depth Interval of soil range in metres
+#' z:  response variable for valid set
+#' dIMidPts :  Mid point of Depth Interval
+#' Other columns relate to covariates and column names should reflect spatialCovs argument
+#' @name EdgeroiValidationData
+#' @docType data
+#' @keywords data
+NULL
+
+#' Fit data example for Edgeroi Area. Expected to be DataFrame with column names:
+#' x : x dimension (in Km)
+#' y : y dimension (in Km)
+#' lowerDI : lower Depth Interval of soil range in metres
+#' upperDI : upper Depth Interval of soil range in metres
+#' z:  response variable for valid set
+#' dIMidPts :  Mid point of Depth Interval
+#' Other columns relate to covariates and column names should reflect spatialCovs argument
+
+#' @name EdgeroiFitData
+#' @docType data
+#' @keywords data
+NULL
+
+
+FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs) {
   #################################################################################################
   ### set knots for sdfd spline fn (if used)
   #################################################################################################
@@ -32,7 +77,7 @@ FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit,
   nIntKnotss <- 4 # number of internal knots for the spline functions (nat spline, clamped to have grad=0 at upper and lower bdries) of covariates
   
   ### don't include depth here::here.   
-  spatialCovs <- c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
+  
   if(scaleCovs){
     print("Scaled covariates created")
     ### to work with scaled covariates
@@ -62,7 +107,7 @@ FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit,
   
 }
 
-FitCubistModel <- function(paramaters, tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList) {
+FitCubistModel <- function(paramaters, tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs) {
   ##############################################################
   ### an algorithm to select number of rules for cubist model
   
@@ -89,9 +134,9 @@ FitCubistModel <- function(paramaters, tmp,cFit, dIFit, covsFit, zFit, profIDFit
     cmFit <- Cubist::cubist(x = covsFit , y = zFit , committees = 1 , Cubist::cubistControl(rules = paramaters$otherparamaters$nRules))
     
     ### convert to des mtx
-  
+
     tmp <- cubist2X(cubistModel = cmFit, dataFit = covsFit , zFit = zFit , profIDFit = profIDFit , allKnotsd = paramaters$otherparamaters$allKnotsd , refineCubistModel = paramaters$otherparamaters$refineCubistModel)
-   
+    #browser()
     cmFit <- tmp$cubistModel
     XFit <- tmp$X
     matRulesFit <- tmp$matRuleData
@@ -111,7 +156,8 @@ LoadModelDirectly <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDF
   return(list(modelX=modelX,cFit=cFit, dIFit=dIFit, covsFit=covsFit, zFit=zFit, profIDFit=profIDFit, cVal=cVal, dIVal=dIVal, covsVal=covsVal, zVal=zVal, profIDVal=profIDVal, rList=rList))
   
 }
-LoadModel <- function(paramaters) {
+#spatialCovs <- c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
+LoadModel <- function(paramaters,spatialCovs) {
   #  input : list(FitCubits=paramaters$fitCubistModelNow, 
   #       useCubistForTrend = paramaters$useCubistForTrend, 
   #       LoadModel = paramaters$fitModelNow, #NEGATE THIS
@@ -137,7 +183,7 @@ LoadModel <- function(paramaters) {
   
   if(paramaters$FitCubits){
     print("doing cubist")
-    ModelOutput <- FitCubistModel(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList) #................
+    ModelOutput <- FitCubistModel(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs) #................
   }
   else if (paramaters$LoadModel) {
     print("loading directly from a file")
@@ -147,40 +193,40 @@ LoadModel <- function(paramaters) {
   else {
     print("doing spline")
     #spline model
-    ModelOutput <- FitSplineModel(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList) # first seperation into Spline and return stuff
+    ModelOutput <- FitSplineModel(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs) # first seperation into Spline and return stuff
   }
   return(ModelOutput)
 }
 
-LoadData <- function(paramaters,datafeed){
+LoadData <- function(paramaters,datafeedin,spatialCovs){
   
   ##############################################
   ### load the edgeroi dataset (from GSIF package) and put into format for iak3d...
   ##############################################
   print("now in loadData................................")
   
-  tmp <- getEdgeroiData(datafeed$edgeroi, datafeed$elevation , datafeed$twi , datafeed$radK , datafeed$landsat_b3 , datafeed$landsat_b4)
-  
-  #determin model options from flags and be able to pass all other paramaters needed
+  tmp <- datafeedin
   print("Print constructed ModelOptions")
   ModelOptions <- list(FitCubits=paramaters$fitCubistModelNow, 
                        useCubistForTrend = paramaters$useCubistForTrend, 
                        LoadModel = !paramaters$fitModelNow, 
                        otherparamaters=paramaters$otherparamaters,
                        data=tmp)
-  output <- LoadModel(ModelOptions)
+  output <- LoadModel(ModelOptions,spatialCovs)
   
   return(output)
   
 }
 
-#' Run Iak3d project with building spline model
-#'
-#' RunPlots(iakdata$lmm.fit.selected)
-#' @param lmm.fit.selected
+#' Run Iak3d project with building spline model. Use after running either SplineIAK OR CubistIAK functions.
+#' Example: RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6))
+#' @param lmm.fit.selected Included in the result of running either Cubist or Spline Mode.
+#' @param InputParamatersList Included in the result of running either Cubist or Spline Models. Attaches as input run to an output result and enables plots on the outputs for analysis.
+#' @param chooseToPlot Select a maximum of six co-ordinate points to plot for inspection, example: c(1,2,3,4,5,6). Plot is calebrated for 6 plots. These are rrediction plots that are saved in plotVal4Plot.pdf. Upper limit Limited by unique number of cVal. 
 #' @return saves plots in the working directory
 #' @export
-RunPlots <- function(lmm.fit.selected) {
+RunPlots <- function(fit = lmm.fit.selected, InputParamatersList = InputParamatersList,chooseToPlot = chooseToPlot) {
+  lmm.fit.selected <- fit
   dIPlot <- data.frame('dU' = c(0 , 20 , 50 , 90 , 150 , 190)/100 , 'dL' = c(10 , 30 , 60 , 100 , 160 , 200)/100)
   hx <- seq(0 , 20 , 1)
   grDevices::pdf(file = paste0(getwd() , '/varioFitgam22.pdf'))
@@ -203,7 +249,10 @@ RunPlots <- function(lmm.fit.selected) {
   dPlot <- seq(0 , 2 , 0.01)
   plotVarComps(lmm.fit = lmm.fit.selected , dPlot = dPlot)
   grDevices::dev.off()
-  
+  #Prediction Plots
+  ModelOutput <- InputParamatersList
+  LastSeperation(ModelOutput,lmm.fit.selected ,chooseToPlot)
+
 }
 RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal) {
   
@@ -244,11 +293,11 @@ RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmd
   return(list(zkVal=zkVal,vkVal=vkVal))
 }
 
-LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred){
+LastSeperation <- function(ModelOutput,lmm.fit.selected , rand6ForPlot,rqrBTfmdPreds = FALSE, constrainX4Pred = FALSE){
   
-  
-  rand6ForPlot <- c(6 , 19 , 49 , 41 , 3 , 24)
-  
+  #browser()
+  #rand6ForPlot <- c(6 , 19 , 49 , 41 , 3 , 24) # For edg
+  #rand6ForPlot <- c(6 , 8, 15 , 5 , 3 , 4) # For OOd
   i4PlotU <- Matrix::which(!duplicated(ModelOutput$cVal))[rand6ForPlot]
   cVal4PlotU <- ModelOutput$cVal[i4PlotU,,drop=FALSE]
   covsVal4PlotU <- ModelOutput$covsVal[i4PlotU,,drop=FALSE]
@@ -265,6 +314,7 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
   zVal4Plot <- ModelOutput$zVal[iVal4Plot]
   
   zkVal4Plot <- vkVal4Plot <- NA * numeric(length(zVal4Plot))
+  #browser() #for Ood at this point some nulls in dataframe cVal4PlotU
   for(i in 1:nrow(cVal4PlotU)){
     iTmp <- Matrix::which(cVal4Plot[,1] == cVal4PlotU[i,1] & cVal4Plot[,2] == cVal4PlotU[i,2])
     tmp <- profilePredictIAK3D(xMap = cVal4PlotU[i,,drop=FALSE] , covsMap = covsVal4Plot[iTmp,,drop=FALSE] , dIMap = dIVal4Plot[iTmp,,drop=FALSE] , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
@@ -290,50 +340,127 @@ LastSeperation <- function(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds 
   pi90LkProfPred_PLOT <- pi90LkProfPred
   pi90UkProfPred_PLOT <- pi90UkProfPred
   
-  xlab <- "Clay percent"
+  xlab <- "Response Variable"
   vecTmp <- c(zVal4Plot_PLOT , zkVal4Plot_PLOT , as.numeric(zkProfPred_PLOT))
   xlim <- c(min(vecTmp) , max(vecTmp))
   
-  namePlot = paste0(dataDir , '/plotVal4Plot.pdf')
+  namePlot = paste0(getwd() , '/plotVal4Plot.pdf')
   
-  # turned off for now. 
-  #tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = cVal4Plot , dIData = dIVal4Plot , zData = zVal4Plot_PLOT , 
-  #                         xPred = cVal4PlotU , dIPred = dIPred , zPred = zkProfPred_PLOT , pi90LPred = pi90LkProfPred_PLOT , pi90UPred = pi90UkProfPred_PLOT , 
-  #                         zhatxv = zkVal4Plot_PLOT , pi90Lxv = pi90LkVal4Plot_PLOT , pi90Uxv = pi90UkVal4Plot_PLOT , 
-  #                         profNames = paste0('Profile ' , rand6ForPlot) , xlim = xlim , xlab = xlab) 
+  tmp <- plotProfilesIAK3D(namePlot = namePlot , xData = cVal4Plot , dIData = dIVal4Plot , zData = zVal4Plot_PLOT , 
+                           xPred = cVal4PlotU , dIPred = dIPred , zPred = zkProfPred_PLOT , pi90LPred = pi90LkProfPred_PLOT , pi90UPred = pi90UkProfPred_PLOT , 
+                           zhatxv = zkVal4Plot_PLOT , pi90Lxv = pi90LkVal4Plot_PLOT , pi90Uxv = pi90UkVal4Plot_PLOT , 
+                           profNames = paste0('Profile ' , rand6ForPlot) , xlim = xlim , xlab = xlab) 
   
 }
 
-#' Run Iak3d project with building spline model
-#'
-#' This function builds spline model
-#' @param datafeed
+# to integrate
+recombine_data <- function(fit_data = fit_data, validate = TRUE, validate_data = NULL) {
+  #check if validate is true that validate_data is present
+  is_validate_data_missing <- is.data.frame(validate_data) && nrow(validate_data)==0
+  
+  if (is_validate_data_missing == TRUE & validate == TRUE) {
+    stop("expect validation data passed if validate set to TRUE")
+  }
+  #combining fitted data
+  labels_non_covariates <- c("x","y","lowerDI","upperDI","z", "profIDFit")
+  core_data_fit <- fit_data[, which(names(fit_data) %in% labels_non_covariates)]
+  covariates <- fit_data[ , -which(names(fit_data) %in% labels_non_covariates)]
+  new_fit <- list()
+  new_fit$cFit <- array(c(core_data_fit$x, core_data_fit$y),dim = c(nrow(core_data_fit),2))
+  new_fit$dIFit <- array(c(core_data_fit$lowerDI, core_data_fit$upperDI),dim = c(nrow(core_data_fit),2))
+  new_fit$covsFit <- covariates
+  new_fit$zFit <- core_data_fit$z
+  new_fit$profIDFit <- core_data_fit$profIDFit
+  
+  total <- c()
+  if (validate == TRUE){
+    # combine validation data in a like way and join data with fit
+    core_data_val <- validate_data[, which(names(validate_data) %in% labels_non_covariates)]
+    covariates <- validate_data[ , -which(names(validate_data) %in% labels_non_covariates)]
+    new_val = list()
+    new_val$cVal <- array(c(core_data_val$x, core_data_val$y),dim = c(nrow(core_data_val),2))
+    new_val$dIVal <- array(c(core_data_val$lowerDI, core_data_val$upperDI),dim = c(nrow(core_data_val),2))
+    new_val$covsVal <- covariates
+    new_val$zVal <- core_data_val$z
+    new_val$profIDVal <- core_data_val$profIDFit
+    total <- list()
+    total <- c(new_fit,new_val)
+    
+  } else {
+    
+    total <- new_fit
+  }
+  
+  return(total)
+}
+
+reduce_data_based_on_covariate_selection <- function(data,covariate_subset) {
+  required <- c('x','y','lowerDI','upperDI','z','profIDFit')
+  select <- c(required,covariate_subset)
+  for (col in select) {
+    if(!(col %in% colnames(data)))
+      {
+        stop(paste0("missing column expected ",col))
+      } 
+  }
+  data <- data[select]
+  return(data)
+}
+#' This function builds spline model from a uniform data structure available in package (Uniform_Data_Edgeroi).
+#' @param fit_data Fit data to feed in such as EdgeroiFitData. Expected to be a dataframe.
+#' @param validate_data OPTIONAL Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.
+#' @param spatialCovs list of spatial covariates with 'dIMidPts' required. example c(''dIMidPts',elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4').
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Splinedata <- SplineIAK(datafeed)
-SplineIAK <- function(datafeed) {
-  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,datafeed))
+#' Splinedata <- SplineIAK(fit_data = EdgeroiFitData,validate_data = EdgeroiValidationData, spatialCovs = c('dIMidPts','elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+SplineIAK <- function(fit_data = fit_data,validate_data = validate_data, spatialCovs = spatialCovs) {
+  
+  fit_data <- reduce_data_based_on_covariate_selection(fit_data,spatialCovs)
+  if (exists('validate_data') && is.data.frame(get('validate_data'))) {
+    validation <- TRUE
+    validate_data <- reduce_data_based_on_covariate_selection(validate_data,spatialCovs)
+    } else {
+      validation <- FALSE
+      validate_data <- NULL
+    }
+  
+  data <- recombine_data(fit_data = fit_data, validate = validation, validate_data = validate_data)
+  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,validation,data,spatialCovs))
 }
 
 #' Run Iak3d project with building Cubist model
 #'
 #' This function builds cubist model
-#' @param datafeed
+#' @param fit_data Fit data to feed in such as EdgeroiFitData. Expected to be a dataframe.
+#' @param validate_data OPTIONAL Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.
+#' @param spatialCovs list of spatial covariates with 'dIMidPts' required. example c(''dIMidPts',elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
-#' Cubistdata <- CubistIAK(datafeed)
-CubistIAK <- function(datafeed) {
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,datafeed))
+#' Cubistdata <- CubistIAK(fit_data = EdgeroiFitData,validate_data = EdgeroiValidationData, spatialCovs = c('dIMidPts','elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+CubistIAK <- function(fit_data = fit_data,validate_data = validate_data, spatialCovs = spatialCovs) {
+  #original usage
+  #Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+  fit_data <- reduce_data_based_on_covariate_selection(fit_data,spatialCovs)
+  if (exists('validate_data') && is.data.frame(get('validate_data'))) {
+    validation <- TRUE
+    validate_data <- reduce_data_based_on_covariate_selection(validate_data,spatialCovs)
+    } else {
+      validation <- FALSE
+      validate_data <- NULL
+    }
+  
+  data <- recombine_data(fit_data = fit_data, validate = validation, validate_data = validate_data)
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,validation, data,spatialCovs))
 }
 
 
-ModelFromFile <- function(datafeed){
+ModelFromFile <- function(datafeedin){
   #expect a cmFit.RData file to load 
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,datafeed))
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,validation,data))
 }
-RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeed){
+RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatialCovs){
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
@@ -346,8 +473,8 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeed){
   #browser()
   #other paramaters
   plotVargiogramFit <- TRUE
-  valNow <- TRUE
-  val4PlotNow <- TRUE
+  valNow <- validation
+  val4PlotNow <- validation
   mapNow <- FALSE 
   printnllTime <<- FALSE
   CRSAusAlbers <- sp::CRS("+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
@@ -374,7 +501,7 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeed){
   
   #Create main parameter list
   paramaters <- list(fitCubistModelNow=fitCubistModelNow,useCubistForTrend=useCubistForTrend,fitModelNow=fitModelNow, otherparamaters=otherparamaters)
-  ModelOutput <- LoadData(paramaters,datafeed)
+  ModelOutput <- LoadData(paramaters,datafeedin,spatialCovs)
   #iftestCL logic was here::here
   wDir <- here::here()
   lmm2Dir <- here::here('R/fLMM2')
@@ -427,26 +554,24 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,datafeed){
   ### some plots of the fitted covariance model...
   # saves pdfs to getwd()
   ###########################################################################
-  if(plotVargiogramFit){
-    RunPlots(lmm.fit.selected)
-  }else{}
-  
-  #VAIDATIONS BIT
-  fnamezkVal <- paste0(dataDir , '/zkVal.RData')
-  fnamevkVal <- paste0(dataDir , '/vkVal.RData')
-  namePlot = paste0(dataDir , '/plotVal.pdf')
-  if(valNow) {
+  # Run plots are exported function requiring result of this run
+  #if(plotVargiogramFit){
+  #  RunPlots(lmm.fit.selected)
+  #}else{}
+  if (valNow == TRUE) {
+    #VAIDATIONS BIT
+    fnamezkVal <- paste0(getwd() , '/zkVal.RData')
+    fnamevkVal <- paste0(getwd() , '/vkVal.RData')
+    namePlot = paste0(getwd(), '/plotVal.pdf')
     xkvkVal <- RunValidation(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal)
+   
+    #Move this to plotting
+    #LastSeperation(ModelOutput,lmm.fit.selected ,rand6ForPlot)
   } else {
-    load(file = fnamezkVal)
-    load(file = fnamevkVal)
+    xkvkVal <- NULL
   }
-  
-  ### keeping this bit separate. 
-  if(val4PlotNow){
-    LastSeperation(ModelOutput,dataDir,lmm.fit.selected , rqrBTfmdPreds , constrainX4Pred)
-  }else{}
-  return(list(lmm.fit.selected=lmm.fit.selected,xkvkVal=xkvkVal))
+
+  return(list(lmm.fit.selected=lmm.fit.selected,xkvkVal=xkvkVal,InputParamatersList=ModelOutput))
 }
 
 
