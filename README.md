@@ -38,7 +38,7 @@ Select Personal Access Token and click generate new token
 
 Copy your Personal Access Token, you'll need it to install the package.
 
-1. In R, install the package (replace the auth_token with your Personal Access Token)
+2. In R, install the package (replace the auth_token with your Personal Access Token)
 
 ```r
 #install.packages("devtools")
@@ -48,7 +48,7 @@ devtools::install_github(repo = "informatics/PIPE-1434-iak3d",
                          auth_token = "8459c7bafde6dd1e2cface49d3c45ded7f249g57") #replace this with your Personal Access Token!
 ```
 
-If this doesn't work you can instead download the package as a zip file from here, then install it locally from source, with
+3. If this doesn't work you can instead download the package as a zip file from here, then install it locally from source, with
 
 ```r
 install.packages("~/Downloads/PIPE-1434-iak3d-master.zip", 
