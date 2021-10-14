@@ -21,7 +21,35 @@ Example datasets from Edgeroi package dataset are given to illustrate using
 this model. However, any datasets can be used provided the required column
 names are present (mentioned below). 
 
-Usage: 
+## Installation
+
+
+1. In github enterprise (github.sydney.edu.au) , go to your profile icon in the top right and click settings
+
+![./gh_doc/gh1.png](./gh_doc/gh1.png)
+
+Select Developer Settings
+
+![./gh_doc/gh1.png](./gh_doc/gh2.png)
+
+Select Personal Access Token and click generate new token
+
+![./gh_doc/gh1.png](./gh_doc/gh3.png)
+
+Copy your Personal Access Token, you'll need it to install the package.
+
+1. In R, install the package (replace the auth_token with your Personal Access Token)
+
+```r
+#install.packages("devtools")
+
+devtools::install_github(repo = "informatics/PIPE-1434-iak3d",
+                         host = "github.sydney.edu.au/api/v3", 
+                         auth_token = "8459c7bafde6dd1e2cface49d3c45ded7f249g57") #replace this with your Personal Access Token!
+```
+
+
+## Usage: 
 
 ```r
 Cubistdata <- CubistIAK(fit_data = EdgeroiFitData,
