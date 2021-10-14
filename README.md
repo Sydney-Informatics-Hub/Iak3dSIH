@@ -48,8 +48,23 @@ devtools::install_github(repo = "informatics/PIPE-1434-iak3d",
                          auth_token = "8459c7bafde6dd1e2cface49d3c45ded7f249g57") #replace this with your Personal Access Token!
 ```
 
+If this doesn't work you can instead download the package as a zip file from here, then install it locally from source, with
+
+```r
+install.packages("~/Downloads/PIPE-1434-iak3d-master.zip", 
+                 repos=NULL, 
+                 type="source")
+```
+as long as you change the path to match where the downloaded zip file is on your system.
+
 
 ## Usage: 
+
+To use the package
+
+```r
+library(Iak3dSIH)
+```
 
 ```r
 Cubistdata <- CubistIAK(fit_data = EdgeroiFitData,
