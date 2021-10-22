@@ -226,6 +226,8 @@ LoadData <- function(paramaters,datafeedin,spatialCovs){
 #' @return saves plots in the working directory
 #' @export
 RunPlots <- function(fit = lmm.fit.selected, InputParamatersList = InputParamatersList,chooseToPlot = chooseToPlot) {
+  
+  max_pred_for_plot <- max(InputParamatersList$dIVal)
   lmm.fit.selected <- fit
   dIPlot <- data.frame('dU' = c(0 , 20 , 50 , 90 , 150 , 190)/100 , 'dL' = c(10 , 30 , 60 , 100 , 160 , 200)/100)
   hx <- seq(0 , 20 , 1)
@@ -233,12 +235,12 @@ RunPlots <- function(fit = lmm.fit.selected, InputParamatersList = InputParamate
   tmp <- plotCovx(lmm.fit = lmm.fit.selected , hx = hx , dIPlot = dIPlot , addExpmntlV = TRUE , hzntlUnits = 'km')
   grDevices::dev.off()
   
-  hdPlot <- seq(0 , 2 , 0.01)
+  hdPlot <- seq(0 , max_pred_for_plot , 0.01)
   grDevices::pdf(file = paste0(getwd() , '/cordFit.pdf'))
   qwe <- plotCord(lmm.fit = lmm.fit.selected , hdPlot = hdPlot, vrtclUnits = 'm')
   grDevices::dev.off()
   
-  dTmp <- seq(0 , 2 , 0.1)
+  dTmp <- seq(0 , max_pred_for_plot , 0.1)
   dIPlot <- data.frame('dU' = dTmp[-length(dTmp)] , 'dL' = dTmp[-1])
   grDevices::pdf(file = paste0(getwd() , '/covardFit.pdf'))
   qwe <- plotCovd(lmm.fit = lmm.fit.selected , dIPlot = dIPlot , vrtclUnits = 'm')
@@ -246,7 +248,7 @@ RunPlots <- function(fit = lmm.fit.selected, InputParamatersList = InputParamate
   
   ### plot of the variances...
   grDevices::pdf(file = paste0(getwd() , '/varComps.pdf'))
-  dPlot <- seq(0 , 2 , 0.01)
+  dPlot <- seq(0 , max_pred_for_plot , 0.01)
   plotVarComps(lmm.fit = lmm.fit.selected , dPlot = dPlot)
   grDevices::dev.off()
   #Prediction Plots
@@ -254,7 +256,7 @@ RunPlots <- function(fit = lmm.fit.selected, InputParamatersList = InputParamate
   LastSeperation(ModelOutput,lmm.fit.selected ,chooseToPlot)
 
 }
-RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal) {
+RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal,max_pred_for_plot) {
   
   nVal <- nrow(ModelOutput$cVal) #YES
   iU <- Matrix::which(!duplicated(ModelOutput$cVal)) #YES
@@ -269,7 +271,7 @@ RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmd
   }
   
   
-  dIPred <- cbind(seq(0 , 1.98 , 0.02) , seq(0.02 , 2 , 0.02))
+  dIPred <- cbind(seq(0 , max_pred_for_plot , 0.01) , seq(0.01 , max_pred_for_plot , 0.01))
   tmp <- predictIAK3D(xMap = cValU , dIMap = dIPred , covsMap = covsValU , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
   
   zkProfPred <- tmp$zMap
@@ -314,7 +316,7 @@ LastSeperation <- function(ModelOutput,lmm.fit.selected , rand6ForPlot,rqrBTfmdP
   zVal4Plot <- ModelOutput$zVal[iVal4Plot]
   
   zkVal4Plot <- vkVal4Plot <- NA * numeric(length(zVal4Plot))
-  #browser() #for Ood at this point some nulls in dataframe cVal4PlotU
+  
   for(i in 1:nrow(cVal4PlotU)){
     iTmp <- Matrix::which(cVal4Plot[,1] == cVal4PlotU[i,1] & cVal4Plot[,2] == cVal4PlotU[i,2])
     tmp <- profilePredictIAK3D(xMap = cVal4PlotU[i,,drop=FALSE] , covsMap = covsVal4Plot[iTmp,,drop=FALSE] , dIMap = dIVal4Plot[iTmp,,drop=FALSE] , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
@@ -470,7 +472,7 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatia
   useCubistForTrend <- fitCubistModelNow # an algorithm to select number of rules for cubist model
   fitModelNow <- TRUE #  runs fitIAK3D assume is generally true. 
   #creates object lmm.fit.selected.RData, otherwise lmmFitFile (lmm.fit.selected.RData) is expected and loaded
-  #browser()
+  
   #other paramaters
   plotVargiogramFit <- TRUE
   valNow <- validation
@@ -563,7 +565,9 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatia
     fnamezkVal <- paste0(getwd() , '/zkVal.RData')
     fnamevkVal <- paste0(getwd() , '/vkVal.RData')
     namePlot = paste0(getwd(), '/plotVal.pdf')
-    xkvkVal <- RunValidation(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal)
+   
+    max_pred_for_plot <- max(datafeedin$covsFit$dIMidPts)
+    xkvkVal <- RunValidation(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal,max_pred_for_plot)
    
     #Move this to plotting
     #LastSeperation(ModelOutput,lmm.fit.selected ,rand6ForPlot)

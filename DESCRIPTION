@@ -22,7 +22,6 @@ Imports:
   lme4,
   aqp,
   GSIF,
-  ithir,
   parallel,
   here,
   tibble,

@@ -34,11 +34,13 @@ OR:
 ```r
 Splinedata <- SplineIAK(fit_data = EdgeroiFitData,
                 validate_data = EdgeroiValidationData, 
-                spatialCovs = c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
+                spatialCovs = c('dIMidPts','elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
 ```
 
-These return fitted model results, and paramaters that have been assigned during
-model run. A special mention on modelX within the lmm.fit.selected variable,
+ These return fitted model results, and paramaters that have been assigned during
+model run. At the moment, dIMidPts is a required parameter with the spatialCovs argument along with column in the fit and/or validate data.
+
+A special mention on modelX within the lmm.fit.selected variable,
 which holds the fitted model which can be used for prediction purposes (below). Information on negative log-likelihood and semivariogram parameters are also given lmm.fit.selected    variable. zkVal and vkVal variables are also returned as outputs, where zkVal is the horizontal predictions made using the validation set, and vkVal are the vertical predictions made using the validation set.
 
 To run further plots using model output
