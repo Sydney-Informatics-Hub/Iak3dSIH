@@ -1133,11 +1133,12 @@ makeProfID <- function(cAll , useOldVersion = TRUE){
 ### function to do a xv routine with cFit to select best nRules and whether refineCubistModel = T/F is best
 ### xv is with full profiles removed/kept.
 #############################################################################
-selectCubistOptsXV <- function(cFit , zFit , covsFit , allKnotsd = c() , nRulesVec = seq(10) , refineCubistModelVec = c(FALSE , TRUE)){
+selectCubistOptsXV <- function(prop4XVFit,cFit , zFit , covsFit , allKnotsd = c() , nRulesVec = seq(10) , refineCubistModelVec = c(FALSE , TRUE)){
 
 ### proportion of cFit profiles used to fit, the rest used as 'val' data
-  prop4XVFit <- 0.7
-
+#  prop4XVFit <- 0.7
+  print("prop4XVFit proportion check..............")
+  print(prop4XVFit)
 ### number of reps of this xval.  
   nXVReps <- 10
 

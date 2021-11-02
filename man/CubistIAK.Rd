@@ -7,7 +7,9 @@
 CubistIAK(
   fit_data = fit_data,
   validate_data = validate_data,
-  spatialCovs = spatialCovs
+  spatialCovs = spatialCovs,
+  proportion_crossvalidation = 0.7,
+  layerMidPts = c(0.025, 0.1, 0.225, 0.45, 0.8, 1.5)
 )
 }
 \arguments{
@@ -16,6 +18,10 @@ CubistIAK(
 \item{validate_data}{OPTIONAL Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.}
 
 \item{spatialCovs}{list of spatial covariates with 'dIMidPts' required. example c(''dIMidPts',elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')}
+
+\item{proportion_crossvalidation}{OPTIONAL Proportion of data used for cross validation. Between 0 and 1. Default to 0.7.}
+
+\item{layerMidPts}{OPTIONAL user-defined mid points for the validation statistics. example layerMidPts =  c(0.025 , 0.1 , 0.225 , 0.45 , 0.8 , 1.5)}
 }
 \value{
 an object with lmm.fit.selected,xkVal and vkVal

@@ -7,7 +7,8 @@
 SplineIAK(
   fit_data = fit_data,
   validate_data = validate_data,
-  spatialCovs = spatialCovs
+  spatialCovs = spatialCovs,
+  layerMidPts = layerMidPts
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ SplineIAK(
 \item{validate_data}{OPTIONAL Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.}
 
 \item{spatialCovs}{list of spatial covariates with 'dIMidPts' required. example c(''dIMidPts',elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4').}
+
+\item{layerMidPts}{OPTIONAL user-defined mid points for the validation statistics. example layerMidPts =  c(0.025 , 0.1 , 0.225 , 0.45 , 0.8 , 1.5)}
 }
 \value{
 an object with lmm.fit.selected,xkVal and vkVal
