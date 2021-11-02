@@ -874,13 +874,13 @@ xyDist <- function(xData , yData){
 ###                             fits regression to predict profile using fully fitted eas fns as calibration covariate data
 ###                             and the actual sampled (overlapping) horizon as prediction covariates 
 ####################################################################
-plotCovx <- function(lmm.fit , hx , dIPlot , addExpmntlV = TRUE , hzntlUnits = 'km' , ylim = NULL , roundTo = NULL , noPlot = FALSE , singlesByRegression = TRUE){
+plotCovx <- function(bins,lmm.fit , hx , dIPlot , addExpmntlV = TRUE , hzntlUnits = 'km' , ylim = NULL , roundTo = NULL , noPlot = FALSE , singlesByRegression = TRUE){
   
   if(is.null(roundTo)){ spline4ExpV <- TRUE }else{ spline4ExpV <- FALSE }
   
   if (hx[1] != 0){ stop('For the plotCov function, enter hx with first element 0!') }else{}
   hxBins <- cbind(hx[-length(hx)] , hx[-1])
-  hxModelPlot <- seq(0 , max(hx) , max(hx) / 500)
+  hxModelPlot <- seq(0 , max(hx) , max(hx) / bins)
   
   if(spline4ExpV){
     ### run a hack of mppsline funtion with residuals...

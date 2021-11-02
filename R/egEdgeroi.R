@@ -107,16 +107,18 @@ FitSplineModel <- function(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit,
   
 }
 
-FitCubistModel <- function(paramaters, tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs) {
+FitCubistModel <- function(paramaters, tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs,proportion_crossvalidation = 0.7) {
   ##############################################################
   ### an algorithm to select number of rules for cubist model
+  addScaledCovs2df <- proportion_crossvalidation
   
   print("entering cubist model")
+  print(addScaledCovs2df)
   #print(paramaters)
   if(is.na(paramaters$otherparamaters$nRules) | is.na(paramaters$otherparamaters$refineCubistModel)){
     if(is.na(paramaters$otherparamaters$nRules)){ nRulesVec <- seq(20) }else{ nRulesVec <- nRules }
     if(is.na(paramaters$otherparamaters$refineCubistModel)){ refineCubistModelVec <- c(FALSE , TRUE) }else{ refineCubistModelVec <- refineCubistModel }
-    tmp <- selectCubistOptsXV(cFit = cFit , zFit = zFit , covsFit = covsFit , allKnotsd = paramaters$otherparamaters$allKnotsd , nRulesVec = nRulesVec , refineCubistModelVec = refineCubistModelVec)
+    tmp <- selectCubistOptsXV(selectCubistOptsXV = selectCubistOptsXV, cFit = cFit , zFit = zFit , covsFit = covsFit , allKnotsd = paramaters$otherparamaters$allKnotsd , nRulesVec = nRulesVec , refineCubistModelVec = refineCubistModelVec)
     nRules <- tmp$nRules                            # new variable
     refineCubistModel <- tmp$refineCubistModel      # new variable even though initially set as boolean
     rmseMatList <- tmp$rmseMatList                  # new variable
@@ -180,10 +182,10 @@ LoadModel <- function(paramaters,spatialCovs) {
   zVal <- tmp$zVal
   profIDVal <- tmp$profIDVal
   rList <- tmp$rList
-  
+  proportion_crossvalidation <- paramaters$otherparamaters$proportion_crossvalidation
   if(paramaters$FitCubits){
     print("doing cubist")
-    ModelOutput <- FitCubistModel(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs) #................
+    ModelOutput <- FitCubistModel(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs,proportion_crossvalidation) #................
   }
   else if (paramaters$LoadModel) {
     print("loading directly from a file")
@@ -219,20 +221,26 @@ LoadData <- function(paramaters,datafeedin,spatialCovs){
 }
 
 #' Run Iak3d project with building spline model. Use after running either SplineIAK OR CubistIAK functions.
-#' Example: RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6))
+#' Example: RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6), bins = 500)
 #' @param lmm.fit.selected Included in the result of running either Cubist or Spline Mode.
 #' @param InputParamatersList Included in the result of running either Cubist or Spline Models. Attaches as input run to an output result and enables plots on the outputs for analysis.
 #' @param chooseToPlot Select a maximum of six co-ordinate points to plot for inspection, example: c(1,2,3,4,5,6). Plot is calebrated for 6 plots. These are rrediction plots that are saved in plotVal4Plot.pdf. Upper limit Limited by unique number of cVal. 
+#' @param distance_semivariogram  The distance value for the semivariogram plot, used to create sequences for plots of spatial autocorrelation (semivariogram) distance_semivariogram = 20
+#' @param bins bin intervals for plots. example bins = 200
+#' @param depth_interval_plots Depth Intervals of upper and lower ranges to inspect with Plots. Input as a dataframe with ranges being consistent with data. example : dIPlot <- data.frame('dU' = c(0 , 20 , 50 , 90 , 150 , 190)/100 , 'dL' = c(10 , 30 , 60 , 100 , 160 , 200)/100)
 #' @return saves plots in the working directory
 #' @export
-RunPlots <- function(fit = lmm.fit.selected, InputParamatersList = InputParamatersList,chooseToPlot = chooseToPlot) {
-  
+RunPlots <- function(fit = lmm.fit.selected, InputParamatersList = InputParamatersList,chooseToPlot = chooseToPlot, distance_semivariogram = distance_semivariogram, bins = bins, depth_interval_plots = depth_interval_plots) {
   max_pred_for_plot <- max(InputParamatersList$dIVal)
   lmm.fit.selected <- fit
-  dIPlot <- data.frame('dU' = c(0 , 20 , 50 , 90 , 150 , 190)/100 , 'dL' = c(10 , 30 , 60 , 100 , 160 , 200)/100)
-  hx <- seq(0 , 20 , 1)
+  dIPlot <- depth_interval_plots
+  #dIPlot <- data.frame('dU' = c(0 , 20 , 50 , 90 , 150 , 190)/100 , 'dL' = c(10 , 30 , 60 , 100 , 160 , 200)/100)
+  #dIPlot <- as.data.frame(lmm.fit.selected$dIData) 
+  colnames(dIPlot) <- c('dU','dL')
+  hx <- seq(0 , distance_semivariogram , 1)
+  
   grDevices::pdf(file = paste0(getwd() , '/varioFitgam22.pdf'))
-  tmp <- plotCovx(lmm.fit = lmm.fit.selected , hx = hx , dIPlot = dIPlot , addExpmntlV = TRUE , hzntlUnits = 'km')
+  tmp <- plotCovx(bins = bins,lmm.fit = lmm.fit.selected , hx = hx , dIPlot = dIPlot , addExpmntlV = TRUE , hzntlUnits = 'km')
   grDevices::dev.off()
   
   hdPlot <- seq(0 , max_pred_for_plot , 0.01)
@@ -256,7 +264,7 @@ RunPlots <- function(fit = lmm.fit.selected, InputParamatersList = InputParamate
   LastSeperation(ModelOutput,lmm.fit.selected ,chooseToPlot)
 
 }
-RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal,max_pred_for_plot) {
+RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal,max_pred_for_plot,layerMidPts) {
   
   nVal <- nrow(ModelOutput$cVal) #YES
   iU <- Matrix::which(!duplicated(ModelOutput$cVal)) #YES
@@ -280,7 +288,7 @@ RunValidation <- function(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmd
   pi90UkProfPred <- tmp$pi90UMap
   
   ### calc and print val stats...
-  tmp <- calcValStats(zVal = ModelOutput$zVal , dIVal = ModelOutput$dIVal , zkVal = zkVal , vkVal = vkVal , layerMidPts = c(0.025 , 0.1 , 0.225 , 0.45 , 0.8 , 1.5) , printValStats = TRUE)
+  tmp <- calcValStats(zVal = ModelOutput$zVal , dIVal = ModelOutput$dIVal , zkVal = zkVal , vkVal = vkVal , layerMidPts = layerMidPts, printValStats = TRUE)
   valStatsAllLayers <- tmp$valStatsAllLayers
   valStatsTot <- tmp$valStatsTot
   
@@ -324,7 +332,8 @@ LastSeperation <- function(ModelOutput,lmm.fit.selected , rand6ForPlot,rqrBTfmdP
     vkVal4Plot[iTmp] <- tmp$vMap 
   }
   
-  dIPred <- cbind(seq(0 , 1.98 , 0.02) , seq(0.02 , 2 , 0.02))
+  #dIPred <- cbind(seq(0 , 1.98 , 0.02) , seq(0.02 , 2 , 0.02))
+  dIPred <- lmm.fit.selected$dIData
   tmp <- predictIAK3D(xMap = cVal4PlotU , dIMap = dIPred , covsMap = covsVal4PlotU , lmmFit = lmm.fit.selected , rqrBTfmdPreds = rqrBTfmdPreds , constrainX4Pred = constrainX4Pred)
   
   zkProfPred <- tmp$zMap
@@ -412,11 +421,12 @@ reduce_data_based_on_covariate_selection <- function(data,covariate_subset) {
 #' @param fit_data Fit data to feed in such as EdgeroiFitData. Expected to be a dataframe.
 #' @param validate_data OPTIONAL Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.
 #' @param spatialCovs list of spatial covariates with 'dIMidPts' required. example c(''dIMidPts',elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4').
+#' @param layerMidPts OPTIONAL user-defined mid points for the validation statistics. example layerMidPts =  c(0.025 , 0.1 , 0.225 , 0.45 , 0.8 , 1.5)
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
 #' Splinedata <- SplineIAK(fit_data = EdgeroiFitData,validate_data = EdgeroiValidationData, spatialCovs = c('dIMidPts','elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
-SplineIAK <- function(fit_data = fit_data,validate_data = validate_data, spatialCovs = spatialCovs) {
+SplineIAK <- function(fit_data = fit_data,validate_data = validate_data, spatialCovs = spatialCovs,layerMidPts = layerMidPts) {
   
   fit_data <- reduce_data_based_on_covariate_selection(fit_data,spatialCovs)
   if (exists('validate_data') && is.data.frame(get('validate_data'))) {
@@ -428,7 +438,7 @@ SplineIAK <- function(fit_data = fit_data,validate_data = validate_data, spatial
     }
   
   data <- recombine_data(fit_data = fit_data, validate = validation, validate_data = validate_data)
-  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,validation,data,spatialCovs))
+  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,validation,data,spatialCovs,proportion_crossvalidation = NULL))
 }
 
 #' Run Iak3d project with building Cubist model
@@ -437,11 +447,13 @@ SplineIAK <- function(fit_data = fit_data,validate_data = validate_data, spatial
 #' @param fit_data Fit data to feed in such as EdgeroiFitData. Expected to be a dataframe.
 #' @param validate_data OPTIONAL Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.
 #' @param spatialCovs list of spatial covariates with 'dIMidPts' required. example c(''dIMidPts',elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4')
+#' @param proportion_crossvalidation OPTIONAL Proportion of data used for cross validation. Between 0 and 1. Default to 0.7.
+#' @param layerMidPts OPTIONAL user-defined mid points for the validation statistics. example layerMidPts =  c(0.025 , 0.1 , 0.225 , 0.45 , 0.8 , 1.5)
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
 #' Cubistdata <- CubistIAK(fit_data = EdgeroiFitData,validate_data = EdgeroiValidationData, spatialCovs = c('dIMidPts','elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
-CubistIAK <- function(fit_data = fit_data,validate_data = validate_data, spatialCovs = spatialCovs) {
+CubistIAK <- function(fit_data = fit_data,validate_data = validate_data, spatialCovs = spatialCovs, proportion_crossvalidation = 0.7,layerMidPts = c(0.025 , 0.1 , 0.225 , 0.45 , 0.8 , 1.5)) {
   #original usage
   #Cubistdata <- CubistIAK(Uniform_Data_Edgeroi,TRUE,c('elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
   fit_data <- reduce_data_based_on_covariate_selection(fit_data,spatialCovs)
@@ -454,15 +466,15 @@ CubistIAK <- function(fit_data = fit_data,validate_data = validate_data, spatial
     }
   
   data <- recombine_data(fit_data = fit_data, validate = validation, validate_data = validate_data)
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,validation, data,spatialCovs))
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,validation, data,spatialCovs,proportion_crossvalidation,layerMidPts))
 }
 
 
 ModelFromFile <- function(datafeedin){
   #expect a cmFit.RData file to load 
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,validation,data))
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,validation,data,proportion_crossvalidation = NULL,layerMidPts = layerMidPts))
 }
-RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatialCovs){
+RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatialCovs,proportion_crossvalidation = 0.7,layerMidPts =  c(0.025 , 0.1 , 0.225 , 0.45 , 0.8 , 1.5)){
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
@@ -499,7 +511,7 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatia
   otherparamaters <- list(plotVargiogramFit=plotVargiogramFit,valNow=valNow,val4PlotNow=val4PlotNow,mapNow=mapNow,printnllTime=printnllTime,
                           CRSAusAlbers=CRSAusAlbers,CRSAusAlbersNEW=CRSAusAlbersNEW,CRSLongLat=CRSLongLat, nRules= nRules,refineCubistModel=refineCubistModel,
                           constrainX4Pred=constrainX4Pred,prodSum=prodSum,nud=nud,lnTfmdData=lnTfmdData,rqrBTfmdPreds=rqrBTfmdPreds,useReml=useReml,
-                          testCL=testCL,allKnotsd=allKnotsd)
+                          testCL=testCL,allKnotsd=allKnotsd,proportion_crossvalidation = proportion_crossvalidation)
   
   #Create main parameter list
   paramaters <- list(fitCubistModelNow=fitCubistModelNow,useCubistForTrend=useCubistForTrend,fitModelNow=fitModelNow, otherparamaters=otherparamaters)
@@ -567,7 +579,7 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatia
     namePlot = paste0(getwd(), '/plotVal.pdf')
    
     max_pred_for_plot <- max(datafeedin$covsFit$dIMidPts)
-    xkvkVal <- RunValidation(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal,max_pred_for_plot)
+    xkvkVal <- RunValidation(ModelOutput,dataDir,namePlot,lmm.fit.selected,rqrBTfmdPreds,constrainX4Pred,fnamezkVal,fnamevkVal,max_pred_for_plot, layerMidPts)
    
     #Move this to plotting
     #LastSeperation(ModelOutput,lmm.fit.selected ,rand6ForPlot)

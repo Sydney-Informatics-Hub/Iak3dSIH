@@ -3,18 +3,27 @@
 \name{RunPlots}
 \alias{RunPlots}
 \title{Run Iak3d project with building spline model. Use after running either SplineIAK OR CubistIAK functions.
-Example: RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6))}
+Example: RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6), bins = 500)}
 \usage{
 RunPlots(
   fit = lmm.fit.selected,
   InputParamatersList = InputParamatersList,
-  chooseToPlot = chooseToPlot
+  chooseToPlot = chooseToPlot,
+  distance_semivariogram = distance_semivariogram,
+  bins = bins,
+  depth_interval_plots = depth_interval_plots
 )
 }
 \arguments{
 \item{InputParamatersList}{Included in the result of running either Cubist or Spline Models. Attaches as input run to an output result and enables plots on the outputs for analysis.}
 
 \item{chooseToPlot}{Select a maximum of six co-ordinate points to plot for inspection, example: c(1,2,3,4,5,6). Plot is calebrated for 6 plots. These are rrediction plots that are saved in plotVal4Plot.pdf. Upper limit Limited by unique number of cVal.}
+
+\item{distance_semivariogram}{The distance value for the semivariogram plot, used to create sequences for plots of spatial autocorrelation (semivariogram) distance_semivariogram = 20}
+
+\item{bins}{bin intervals for plots. example bins = 200}
+
+\item{depth_interval_plots}{Depth Intervals of upper and lower ranges to inspect with Plots. Input as a dataframe with ranges being consistent with data. example : dIPlot <- data.frame('dU' = c(0 , 20 , 50 , 90 , 150 , 190)/100 , 'dL' = c(10 , 30 , 60 , 100 , 160 , 200)/100)}
 
 \item{lmm.fit.selected}{Included in the result of running either Cubist or Spline Mode.}
 }
@@ -23,5 +32,5 @@ saves plots in the working directory
 }
 \description{
 Run Iak3d project with building spline model. Use after running either SplineIAK OR CubistIAK functions.
-Example: RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6))
+Example: RunPlots(fit = Cubistdata$lmm.fit.selected, InputParamatersList = Cubistdata$InputParamatersList,c(1,2,3,4,5,6), bins = 500)
 }

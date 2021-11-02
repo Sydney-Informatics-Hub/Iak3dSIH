@@ -48,7 +48,10 @@ To run further plots using model output
 ```r
 RunPlots(fit = Cubistdata$lmm.fit.selected, 
             InputParamatersList = Cubistdata$InputParamatersList,
-            chooseToPlot = c(1,2,3,4,5,6))
+            chooseToPlot = c(1,2,3,4,5,6),
+            distance_semivariogram = 20,
+            bins = 500,
+            depth_interval_plots = data.frame('dL' = c(0,15 , 30 , 60)/100 , 'dU' = c(15,30 , 60 , 90)/100))
 ```
 
 ## Example workflow on Prediction using IAK results with Edgeroi data.
