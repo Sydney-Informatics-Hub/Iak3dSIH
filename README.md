@@ -94,7 +94,8 @@ An example usage with option parameters:
 ```r
 Cubistdata <- CubistIAK(fit_data = EdgeroiFitData,
                         validate_data = EdgeroiValidationData, 
-                        spatialCovs = c('dIMidPts','elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),                             proportion_crossvalidation = 0.7, 
+                        spatialCovs = c('dIMidPts','elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'), 
+                        proportion_crossvalidation = 0.7, 
                         layerMidPts = c(0.025, 0.1, 0.225, 0.45, 0.8, 1.5))
                         
 ```
