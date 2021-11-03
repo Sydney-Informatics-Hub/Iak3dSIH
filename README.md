@@ -86,7 +86,20 @@ model run. At the moment, dIMidPts is a required parameter with the spatialCovs 
 A special mention on modelX within the lmm.fit.selected variable,
 which holds the fitted model which can be used for prediction purposes (below). Information on negative log-likelihood and semivariogram parameters are also given lmm.fit.selected    variable. zkVal and vkVal variables are also returned as outputs, where zkVal is the horizontal predictions made using the validation set, and vkVal are the vertical predictions made using the validation set.
 
-To run further plots using model output
+Along with the above necessary parameters for running spline and cubist, optional parameters include : 
+proportion_crossvalidation - Proportion of data used for cross validation. Between 0 and 1, and defaults to 0.7.
+layerMidPts - User defined mid points for the validation statistics. 
+
+An example usage with option parameters:
+```r
+Cubistdata <- CubistIAK(fit_data = EdgeroiFitData,
+                        validate_data = EdgeroiValidationData, 
+                        spatialCovs = c('dIMidPts','elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'),                             proportion_crossvalidation = 0.7, 
+                        layerMidPts = c(0.025, 0.1, 0.225, 0.45, 0.8, 1.5))
+                        
+```
+
+To run further plots saved in working directory using the IAK model outputs:
 
 ```r
 RunPlots(fit = Cubistdata$lmm.fit.selected, 
