@@ -605,7 +605,7 @@ selectKnots <- function(dIData , zData , covsData , modelX , plotSplines = FALSE
     knotsInit <- knotsInit[seq(2 , length(knotsInit) - 1 , 2)]
 
     if(usedMdPts){
-        XInit <- bs(x = dIMdPt , knots = knotsInit , degree = degreeSpline , intercept = T , Boundary.knots = bdryKnots)
+        XInit <- splines::bs(x = dIMdPt , knots = knotsInit , degree = degreeSpline , intercept = T , Boundary.knots = bdryKnots)
     }else{
         allKnotsd <- c(bdryKnots[1] , knotsInit , bdryKnots[2])
         tmp <- makeXvX(covData = NULL , dIData = dIData , modelX = 'const' , allKnotsd = allKnotsd , nDiscPts = 10 , lnTfmdData = FALSE)
@@ -615,7 +615,7 @@ selectKnots <- function(dIData , zData , covsData , modelX , plotSplines = FALSE
     aicInit <- lmInit$AIC
 
     if(plotSplines){
-        XPred <- bs(x = dPred , knots = knotsInit , degree = degreeSpline , intercept = T , Boundary.knots = bdryKnots)
+        XPred <- splines::bs(x = dPred , knots = knotsInit , degree = degreeSpline , intercept = T , Boundary.knots = bdryKnots)
         zPred <- XPred %*% lmInit$betahat
         dev.new()
         plot(zRes , -dIMdPt , ylim = c(-bdryKnots[2] , 0))
@@ -631,7 +631,7 @@ selectKnots <- function(dIData , zData , covsData , modelX , plotSplines = FALSE
         aicTmp <- NA * numeric(length(knotsCurrent))
         for(j in 1:length(knotsCurrent)){
           if(usedMdPts){
-            XRed <- bs(x = dIMdPt , knots = knotsCurrent[-j] , degree = degreeSpline , intercept = T , Boundary.knots = bdryKnots)
+            XRed <- splines::bs(x = dIMdPt , knots = knotsCurrent[-j] , degree = degreeSpline , intercept = T , Boundary.knots = bdryKnots)
           }else{
             allKnotsd <- c(bdryKnots[1] , knotsCurrent[-j] , bdryKnots[2])
             tmp <- makeXvX(covData = NULL , dIData = dIData , modelX = 'const' , allKnotsd = allKnotsd , nDiscPts = 10 , lnTfmdData = FALSE)
@@ -656,15 +656,14 @@ selectKnots <- function(dIData , zData , covsData , modelX , plotSplines = FALSE
 
     if(plotSplines){
         if(usedMdPts){
-          XRed <- bs(x = dIMdPt , knots = knotsCurrent , degree = degreeSpline , intercept = T , Boundary.knots = bdryKnots)
+          XRed <- splines::bs(x = dIMdPt , knots = knotsCurrent , degree = degreeSpline , intercept = T , Boundary.knots = bdryKnots)
         }else{      
           allKnotsd <- c(bdryKnots[1] , knotsCurrent , bdryKnots[2])
           tmp <- makeXvX(covData = NULL , dIData = dIData , modelX = 'const' , allKnotsd = allKnotsd , nDiscPts = 10 , lnTfmdData = FALSE)
           XRed <- tmp$X
         }  
         lmRed <- lmGivenX(zData = zRes , XData = XRed , method = 'REML' , XFULL = XInit)
-        
-        XPred <- bs(x = dPred , knots = knotsCurrent , degree = degreeSpline , intercept = T , Boundary.knots = bdryKnots)
+        XPred <- splines::bs(x = dPred , knots = knotsCurrent , degree = degreeSpline , intercept = T , Boundary.knots = bdryKnots)
         zPred <- XPred %*% lmRed$betahat
         lines(zPred , -dPred , col = 'red' , lty = 2 , lwd = 2)
     }else{}

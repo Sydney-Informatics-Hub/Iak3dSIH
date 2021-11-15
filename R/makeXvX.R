@@ -255,7 +255,7 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
             if(length(id2Int) > 0){ XTmp[,id2Int] <- XTmp[,id2Int] * kronecker(dDiscPts ^ 2 , matrix(1 , 1 , length(id2Int))) }else{}
             if(length(id3Int) > 0){ XTmp[,id3Int] <- XTmp[,id3Int] * kronecker(dDiscPts ^ 3 , matrix(1 , 1 , length(id3Int))) }else{}
             if(length(idSpline) > 0){ 
-              XTmp[,idSpline] <- XTmp[,idSpline] * bs(x = dDiscPts , knots = intKnots , degree = 3 , intercept = F , Boundary.knots = bdryKnots) 
+              XTmp[,idSpline] <- XTmp[,idSpline] * splines::bs(x = dDiscPts , knots = intKnots , degree = 3 , intercept = F , Boundary.knots = bdryKnots) 
             }else{}
 
             if(setXLims){
@@ -316,7 +316,7 @@ makeXvX <- function(covData = NA , dIData , modelX , allKnotsd = c() , iU = NA ,
               }else{
                 dDiscPts <- 0.5 * (dIData[i,1] + dIData[i,2])
               }
-              XTmp <- bs(x = dDiscPts , knots = intKnots , degree = 3 , intercept = F , Boundary.knots = bdryKnots) 
+              XTmp <- splines::bs(x = dDiscPts , knots = intKnots , degree = 3 , intercept = F , Boundary.knots = bdryKnots) 
               if(setXLims){
                 XLims[1,idSpline] <- apply(rbind(XTmp , XLims[1,idSpline]) , 2 , minNonZero)
                 XLims[2,idSpline] <- apply(rbind(XTmp , XLims[2,idSpline]) , 2 , maxNonZero)

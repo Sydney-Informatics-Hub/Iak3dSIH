@@ -8,7 +8,8 @@ SplineIAK(
   fit_data = fit_data,
   validate_data = validate_data,
   spatialCovs = spatialCovs,
-  layerMidPts = layerMidPts
+  layerMidPts = layerMidPts,
+  allKnotsd = c()
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ SplineIAK(
 \item{spatialCovs}{list of spatial covariates with 'dIMidPts' required. example c(''dIMidPts',elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4').}
 
 \item{layerMidPts}{OPTIONAL user-defined mid points for the validation statistics. example layerMidPts =  c(0.025 , 0.1 , 0.225 , 0.45 , 0.8 , 1.5)}
+
+\item{allKnotsd}{OPTIONAL  knot intervals for spline i.e. c(0 , 0.3 , 1) depending on depth. Calculated if not given.}
 }
 \value{
 an object with lmm.fit.selected,xkVal and vkVal

@@ -185,7 +185,7 @@ allKnotsd2X <- function(dIMidPts , allKnotsd){
     intKnots <- intKnots[-length(intKnots)]
     bdryKnots <- c(allKnotsd[1] , allKnotsd[length(allKnotsd)])
     
-    XSpline <- bs(dIMidPts , knots = intKnots , degree = 3 , intercept = F , Boundary.knots = bdryKnots)
+    XSpline <- splines::bs(dIMidPts , knots = intKnots , degree = 3 , intercept = F , Boundary.knots = bdryKnots)
     colnames(XSpline) <- paste0('dSpline.' , seq(ncol(XSpline)))
   }else{
     XSpline <- matrix(NA , n , 0)

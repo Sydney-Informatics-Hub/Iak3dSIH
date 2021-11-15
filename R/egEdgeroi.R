@@ -145,7 +145,7 @@ FitCubistModel <- function(paramaters, tmp,cFit, dIFit, covsFit, zFit, profIDFit
    # save(cmFit , file = paste0(dataDir , '/cmFit.RData'))
     
   }
-  
+
   modelX <- cmFit
   modelX$type = "NOTgam2"
   # cfit something different now.......
@@ -195,6 +195,7 @@ LoadModel <- function(paramaters,spatialCovs) {
   else {
     print("doing spline")
     #spline model
+    
     ModelOutput <- FitSplineModel(paramaters,tmp,cFit, dIFit, covsFit, zFit, profIDFit, cVal, dIVal, covsVal, zVal, profIDVal, rList,spatialCovs) # first seperation into Spline and return stuff
   }
   return(ModelOutput)
@@ -422,11 +423,12 @@ reduce_data_based_on_covariate_selection <- function(data,covariate_subset) {
 #' @param validate_data OPTIONAL Validation data to feed in such as EdgeroiValidationData. Expected to be a dataframe.
 #' @param spatialCovs list of spatial covariates with 'dIMidPts' required. example c(''dIMidPts',elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4').
 #' @param layerMidPts OPTIONAL user-defined mid points for the validation statistics. example layerMidPts =  c(0.025 , 0.1 , 0.225 , 0.45 , 0.8 , 1.5)
+#' @param allKnotsd  OPTIONAL  knot intervals for spline i.e. c(0 , 0.3 , 1) depending on depth. Calculated if not given.
 #' @return an object with lmm.fit.selected,xkVal and vkVal
 #' @export
 #' @examples
 #' Splinedata <- SplineIAK(fit_data = EdgeroiFitData,validate_data = EdgeroiValidationData, spatialCovs = c('dIMidPts','elevation' , 'twi' , 'radK' , 'landsat_b3' , 'landsat_b4'))
-SplineIAK <- function(fit_data = fit_data,validate_data = validate_data, spatialCovs = spatialCovs,layerMidPts = layerMidPts) {
+SplineIAK <- function(fit_data = fit_data,validate_data = validate_data, spatialCovs = spatialCovs,layerMidPts = layerMidPts,allKnotsd = c()) {
   
   fit_data <- reduce_data_based_on_covariate_selection(fit_data,spatialCovs)
   if (exists('validate_data') && is.data.frame(get('validate_data'))) {
@@ -438,7 +440,7 @@ SplineIAK <- function(fit_data = fit_data,validate_data = validate_data, spatial
     }
   
   data <- recombine_data(fit_data = fit_data, validate = validation, validate_data = validate_data)
-  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,validation,data,spatialCovs,proportion_crossvalidation = NULL))
+  return(RunEdgeroi(fitCubistModelNow = FALSE,LoadModel = FALSE,validation,data,spatialCovs,allKnotsd,proportion_crossvalidation = NULL))
 }
 
 #' Run Iak3d project with building Cubist model
@@ -466,15 +468,15 @@ CubistIAK <- function(fit_data = fit_data,validate_data = validate_data, spatial
     }
   
   data <- recombine_data(fit_data = fit_data, validate = validation, validate_data = validate_data)
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,validation, data,spatialCovs,proportion_crossvalidation,layerMidPts))
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = FALSE,validation, data,spatialCovs,allKnotsd = c(),proportion_crossvalidation,layerMidPts))
 }
 
 
 ModelFromFile <- function(datafeedin){
   #expect a cmFit.RData file to load 
-  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,validation,data,proportion_crossvalidation = NULL,layerMidPts = layerMidPts))
+  return(RunEdgeroi(fitCubistModelNow = TRUE,LoadModel = TRUE,validation,data,allKnotsd,proportion_crossvalidation = NULL,layerMidPts = layerMidPts))
 }
-RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatialCovs,proportion_crossvalidation = 0.7,layerMidPts =  c(0.025 , 0.1 , 0.225 , 0.45 , 0.8 , 1.5)){
+RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatialCovs,allKnotsd,proportion_crossvalidation = 0.7,layerMidPts =  c(0.025 , 0.1 , 0.225 , 0.45 , 0.8 , 1.5)){
   assign("last.warning", NULL, envir = baseenv())
   ##############################################################
   ### Model paramaters 
@@ -504,7 +506,7 @@ RunEdgeroi <- function(fitCubistModelNow,LoadModel,validation, datafeedin,spatia
   rqrBTfmdPreds <- FALSE # only relevant if data were log-transformed - back transforms via exp(z + 0.5 * v), ie to minimize expected sqd err
   useReml <- TRUE
   testCL <- FALSE # Keep False for now until associated compLikMats.RData sourced and fed as 
-  allKnotsd <- c()
+  #allKnotsd <- c()
   #incdSpline <- FALSE # wasnt passed through but set afterwards depended on the allKnotsd condition of length 
   # load all in R package development used instead of sourcing various files
   

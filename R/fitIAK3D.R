@@ -35,10 +35,6 @@ fitIAK3D <- function(xData , dIData , zData , covsData , modelX , modelx = 'mate
                 lmmFit = list() , rqrBTfmdPreds = TRUE , parsInit = NULL , attachBigMats = TRUE , testMC = TRUE){
 
   
-  # if(!identical(class(xData) , 'matrix')){ stop('Stopping - for fitIAKD3D function, enter xData as a matrix') }else{}
-  # if(!identical(class(dIData) , 'matrix')){ stop('Stopping - for fitIAKD3D function, enter dIData as a matrix with 2 columns') }else{}
-    # KM TRUE
-    #browser()
   
 ########################################################
 ### if xData or dIData were dataframes, convert to matrices here::here.

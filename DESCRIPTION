@@ -21,7 +21,6 @@ Imports:
   deldir,
   lme4,
   aqp,
-  GSIF,
   parallel,
   here,
   tibble,

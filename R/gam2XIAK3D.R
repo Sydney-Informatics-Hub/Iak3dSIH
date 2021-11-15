@@ -77,8 +77,7 @@ gam2X <- function(gamModel , dataFit = NULL , colsRmv = NULL , allKnotsd = NULL)
       intKnots <- gamModel$allKnotsd[-1]
       intKnots <- intKnots[-length(intKnots)]
       bdryKnots <- c(gamModel$allKnotsd[1] , gamModel$allKnotsd[length(gamModel$allKnotsd)])
-
-      XSpline <- bs(dataFit$dIMidPts , knots = intKnots , degree = 3 , intercept = F , Boundary.knots = bdryKnots)
+      XSpline <- splines::bs(dataFit$dIMidPts , knots = intKnots , degree = 3 , intercept = F , Boundary.knots = bdryKnots)
       colnames(XSpline) <- paste0('dSpline.' , seq(ncol(XSpline)))
       X <- cbind(X , XSpline)
 
