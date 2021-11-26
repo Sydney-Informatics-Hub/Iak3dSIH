@@ -29,7 +29,7 @@ names are present (mentioned below).
 ```r
 #install.packages("devtools") #install devtools if required
 
-devtools::install_github("informatics/Iak3dSIH")
+devtools::install_github("Sydney-Informatics-Hub/Iak3dSIH")
 ```
 
 3. If this doesn't work you can instead download the package as a zip file from here, then install it locally from source, with
